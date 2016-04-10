@@ -9,6 +9,7 @@ import musicpd
 import sys
 import argparse
 import shell, MPDdatabase, util, config_file
+import formatter
 
 
 
@@ -55,6 +56,8 @@ def parse_args ():
             help='swap two tracks in the playlist')
     parser.add_argument ('--shell', '-sh', action='store_true', default = False,
             help='invoke shell')
+    parser.add_argument ('--format', nargs= '+', default = False,
+                         help='change display format, write \'kpd --format help\' for usage')
 
     args = parser.parse_args ()
 
@@ -64,15 +67,16 @@ def parse_args ():
 
 if __name__ == '__main__':
 
+    ## config file
+    DBlocation, host, port = config_file.parse_file ()
+    ##end config_file
+
 #MPD connect and client init
     client = musicpd.MPDClient ()
-    client.connect ('localhost', '6600')
+    client.connect (host, port)
     args = parse_args ()
     status = client.status ()
 
-    ## config file
-    DBlocation = config_file.parse_file ()
-    ##end config_file
 
     #pipe from shell
     if not sys.stdin.isatty() and args.add != False:
@@ -116,7 +120,7 @@ if __name__ == '__main__':
         util.update(client)
 
     if args.filter != False and not args.search:
-        print ('Sei \'no stronzo')
+        print ('filter can be used only concatenad to a search')
         exit(1)
     #search
     if args.search:
@@ -141,3 +145,6 @@ if __name__ == '__main__':
     #seek function
     if args.seek != False:
         util.seek (client, args.seek, status)
+    #print in a different format
+    if args.format != False:
+        formatter.print_status (client, args.format[0])
