@@ -132,7 +132,6 @@ def previous (client):
     current_status (client)
 
 def mpdrandom (client, state):
-        
         if state == 'on':
             client.random (1)
         elif state == 'off':
@@ -144,15 +143,18 @@ def update (client):
     client.update ()
 
 def add(result, client):
+    print (result)
     for entry in result:
-        print(entry)
-        client.add(entry[:-1])
+        entry = entry.rstrip ('\n')
+    #    print(entry)
+        client.add (entry)
 
 
 def mpdsearch (searchItem, argv, DBlocation, argFilter):
     retlist = MPDdatabase.searchDB(searchItem, DBlocation)
     if argFilter:
         retlist = MPDdatabase.filterDB(argv, retlist)
+        #print (retlist)
     res = polish_return (retlist)
     for entry in res:
         print(entry)

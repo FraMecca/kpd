@@ -81,7 +81,8 @@ if __name__ == '__main__':
     #pipe from shell
     if not sys.stdin.isatty() and args.add != False:
         for line in sys.stdin:
-            client.add (line[:-1])
+            line = line.rstrip ('\n')
+            client.add (line)
         exit ()
     #end pipe from shell
 
@@ -125,13 +126,14 @@ if __name__ == '__main__':
     
     #search
     if args.search:
+        print (args.add)
         if args.filter:
             res = util.mpdsearch (args.search, sys.argv, DBlocation, args.filter)
         else:
             res = util.mpdsearch (args.search, sys.argv, DBlocation, False)
         if args.add: #it only works if '-a' is BEFORE '-s'! WTF?
             for entry in res:
-                client.add(entry) 
+                client.add(entry)
     ##end search
 
     if args.shuffle:
