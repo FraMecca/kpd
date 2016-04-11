@@ -126,12 +126,20 @@ if __name__ == '__main__':
     
     #search
     if args.search:
-        print (args.add)
+        if args.add:
+            flagAdd = True
+            try:
+                sys.argv.remove ('-a')
+            except ValueError:
+                sys.argv.remove ('--add')
+
+        else:
+            flagAdd = False
         if args.filter:
             res = util.mpdsearch (args.search, sys.argv, DBlocation, args.filter)
         else:
             res = util.mpdsearch (args.search, sys.argv, DBlocation, False)
-        if args.add: #it only works if '-a' is BEFORE '-s'! WTF?
+        if flagAdd: #it only works if '-a' is BEFORE '-s'! WTF?
             for entry in res:
                 client.add(entry)
     ##end search
