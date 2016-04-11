@@ -10,17 +10,6 @@ def display_help ():
            \\v - vertical tab
            \\r - carriage return''')
 
-
-# artist, 
-# name,
-# album,
-# title,
-# track
-# total
-# time
-# file
-
-
 def raise_error (string):
     print ('there is no ' + string + ' entry in song metadata')
     exit (1)

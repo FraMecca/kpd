@@ -1,6 +1,5 @@
 import os
 
-
 def database (entry, dbLocation, hostip, portnumber):
     return entry, hostip, portnumber
 def host (entry, dbLocation, hostip, portnumber):
@@ -37,6 +36,5 @@ def parse_file ():
             fp.write ('host = ' + host + '\n')
             fp.write ('port = ' + port + '\n')
         exit (2)
-
 
     return dbLocation, hostip, portnumber

@@ -1,22 +1,10 @@
 #!/usr/bin/python3
 
-
-##SHELL
-#in caso di nozip in config_file allora funzione spacchetta
-#config file meglio
-
 import musicpd
 import sys
 import argparse
 import shell, MPDdatabase, util, config_file
 import formatter
-
-
-
-##sarebbe carino se il file di configurazione decidesse l'output!
-
-
-
 
 #parse args
 def parse_args ():
@@ -64,7 +52,6 @@ def parse_args ():
     return args
 #end parse_args
 
-
 if __name__ == '__main__':
 
     ## config file
@@ -76,7 +63,6 @@ if __name__ == '__main__':
     client.connect (host, port)
     args = parse_args ()
     status = client.status ()
-
 
     #pipe from shell
     if not sys.stdin.isatty() and args.add != False:

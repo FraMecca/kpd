@@ -3,7 +3,6 @@ import readline
 import sys
 import util
 
-
 def keepConnected(client):
     conn = False
     while conn == False:
@@ -28,7 +27,7 @@ def evaluate (inp, client, l, DBlocation):
                     util.pause (client)
                 else:
                     util.play (client, int(inp[1]))
-            else:                     
+            else: 
                 if len(inp) == 1:
                     util.play (client, 0)
                 else:
@@ -88,5 +87,3 @@ def shell (client, DBlocation):
             l = evaluate(inp, client, l, DBlocation)
         else:
             util.current_status (client)
-
-
