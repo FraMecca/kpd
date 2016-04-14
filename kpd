@@ -6,15 +6,13 @@ import argparse
 import shell, MPDdatabase, util, config_file
 import formatter
 
-#parse args
 def parse_args ():
-#arguments
     parser = argparse.ArgumentParser ()
     parser.add_argument ('-p', '--play', nargs = '?', default = False,
             help='toggle play, input number to play song in playlist')
     parser.add_argument ('-n', '--next', action="store_true", default=False,
             help='play next track')
-    parser.add_argument ('-ps', '--previous', '--previous', action="store_true", default=False,
+    parser.add_argument ('-ps', '--previous', '--prev', action="store_true", default=False,
             help='play previous track')
     parser.add_argument ('--stop', action="store_true", default=False,
             help='stop playback')
@@ -27,7 +25,7 @@ def parse_args ():
     parser.add_argument ('-s', '--search', type = str, nargs = '?', default = False,
             help='search a string in the database, casi insensitive')
     parser.add_argument ('-f', '--filter', nargs = '+', default = False,
-            help='filter search result, can use \'artist\', \'album\', \'title\', grep like functionality')
+            help='filter search result, can use \'artist\', \'album\', \'title\', grep like functionality, comma to divide various entry')
     parser.add_argument ('--clear', action = "store_true", default=False,
             help='clear playlist')
     parser.add_argument ('-pl', '--playlist', action = "store_true", default=False,
@@ -48,104 +46,70 @@ def parse_args ():
                          help='change display format, write \'kpd --format help\' for usage')
 
     args = parser.parse_args ()
+    dictArgs = vars (args)
 
-    return args
+    return args, dictArgs
 #end parse_args
+
+def order_args (argv):
+    argsDict1 = {'-h':'help', '-p':'play', '-n':'next', '-u':'update', '-s':'search', '-f':'filter', '-pl':'playlist', '-sh':'shell', '-a':'add'}
+    argsDict2 = {'--help':'help', '--play':'play', '--next':'next', '--update':'update', '--search':'search', '--filter':'filter', '--playlist':'playlist', \
+                 '--stop':'stop', '--random':'random', '--clear':'clear', '--seek':'seek', '--shuffle':'shuffle', '--consume':'consume', '--single':'single','--swap':'swap',\
+                 '--shell':'shell', '--prev':'previous', '--previous':'previous', '--add':'add'}
+    argsOrder = list ()
+    for el in argv:
+        if el in argsDict1:
+            argsOrder.append (argsDict1[el])
+        if el in argsDict2:
+            argsOrder.append (argsDict2[el])
+    return argsOrder
+
 
 if __name__ == '__main__':
 
-    ## config file
     DBlocation, host, port = config_file.parse_file ()
-    ##end config_file
+    argsOrder = order_args (sys.argv)
+    args, dictArgs = parse_args ()
+    client = util.mpdclient (DBlocation, host, port, args.filter)
 
-#MPD connect and client init
-    client = musicpd.MPDClient ()
-    client.connect (host, port)
-    args = parse_args ()
-    status = client.status ()
+    print (args.search)
+## check -f -s
+    if args.filter != False and not args.search: ##Check also indexes, -f non prima di -s
+        print ('filter can be used only concatenated to a search')
+        exit(1)
+
+## no args
+    if not len (sys.argv) > 1:
+        if  client.status['state'] != 'stop':
+            util.current_status (client)
+        else:
+            util.playlist (client, None)
+        exit ()
+
+######
+    searchRes = None
+    retUtil = None
+
+    for el in argsOrder:
+        if dictArgs[el] != False:
+            methodToCall = getattr (util, el)
+            retUtil = methodToCall (client, dictArgs[el], searchRes)
+
+            if retUtil != None: #the only alternative is a return null in every funct
+                searchRes = retUtil
+        print (sys.argv)
 
     #pipe from shell
     if not sys.stdin.isatty() and args.add != False:
         for line in sys.stdin:
             line = line.rstrip ('\n')
             client.add (line)
-        exit ()
+#        exit ()
     #end pipe from shell
 
-    if not len (sys.argv) > 1:
-        if  status['state'] != 'stop':
-            util.current_status (client)
-        else:
-            util.print_playlist (client)
-        exit ()
-
-    if args.play != False:
-        try:
-            if args.play == None:
-                if status['state'] == 'stop':
-                    util.play (client, 0)
-                else:
-                    util.pause (client)
-            else:
-                util.play (client, int (args.play))
-        except:
-            print ('mpd error: bad song index')
-            exit (1)
-
     if args.shell:
-        shell.shell (client, DBlocation)
+        util.shell (client, DBlocation)
 
-    if args.next:
-        util.next (client)
-    if args.previous:
-        util.previous (client)
-    if args.stop:
-        util.stop (client)
-    if args.random != False:
-        util.mpdrandom (client, args.random)
-    if args.update:
-        util.update(client)
-
-    if args.filter != False and not args.search:
-        print ('filter can be used only concatenated to a search')
-        exit(1)
-    
-    #search
-    if args.search:
-        if args.add:
-            flagAdd = True
-            try:
-                sys.argv.remove ('-a')
-            except ValueError:
-                sys.argv.remove ('--add')
-
-        else:
-            flagAdd = False
-        if args.filter:
-            res = util.mpdsearch (args.search, sys.argv, DBlocation, args.filter)
-        else:
-            res = util.mpdsearch (args.search, sys.argv, DBlocation, False)
-        if flagAdd: #it only works if '-a' is BEFORE '-s'! WTF?
-            for entry in res:
-                client.add(entry)
-    ##end search
-
-    if args.shuffle:
-        util.shuffle (client)
-    if args.clear:
-         util.clear (client)
-    if args.swap:
-        util.swap (client, int (args.swap[0]) - 1, int (args.swap[1]) - 1)
-    if args.consume != False:
-        util.consume (client, args.consume)
-    if args.single != False:
-        util.single (client, args.single)
-    if args.playlist:
-        util.print_playlist (client)
-
-    #seek function
-    if args.seek != False:
-        util.seek (client, args.seek, status)
     #print in a different format
-    if args.format != False:
+    if args.format != False: ### E` BRUTTO!, dovrebbe influenzare tutti i print_status (!, evidenzia la bruttura)
         formatter.print_status (client, args.format[0])

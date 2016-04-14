@@ -9,7 +9,7 @@ def keepConnected(client):
         conn = True
         try:
             client.connect('127.0.0.1', '6600')
-        except SocketErrori as e:
+        except SocketError as e:
             conn = False
             time.sleep(2)
 
@@ -21,19 +21,7 @@ def evaluate (inp, client, l, DBlocation):
         inp.pop()
     
     if inp[0] == 'p' or 'play' == (inp[0]):
-        try:
-            if not status['state'] == 'stop':
-                if len(inp) == 1:
-                    util.pause (client)
-                else:
-                    util.play (client, int(inp[1]))
-            else: 
-                if len(inp) == 1:
-                    util.play (client, 0)
-                else:
-                    util.play (client, int(inp[1]))
-        except:
-           print('mpd error: bad song index') 
+        util.play (client, inp[1])
     elif inp[0] == 'pause':
         util.pause (client)
     elif inp[0] == 'next' or inp[0] == 'n':
@@ -75,14 +63,15 @@ def evaluate (inp, client, l, DBlocation):
 
 def shell (client, DBlocation):
     l = list()
+    print (type (client))
     while 1:
         sys.stdout.write(': ')
         inp = input ()
         readline.get_line_buffer ()
         try:
-            client.ping()
+            client.client.ping()
         except:
-            keepConnected(client)
+            keepConnected(client.client)
         if inp:
             l = evaluate(inp, client, l, DBlocation)
         else:

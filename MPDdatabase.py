@@ -1,6 +1,6 @@
-import gzip
+import gzip, pickle
 
-def load_DB_into_memory (filename):
+def _load_DB_into_memory (filename):
     fp = gzip.open (filename, mode = 'rt')
 #    fp = open ('/home/user/.mpd/database_unzipped', mode = 'rt')
     listDB = list ()
@@ -43,6 +43,11 @@ def load_DB_into_memory (filename):
     fp.close ()
     return listDB
 
+def load_DB_into_memory (filename):
+    with open ('/home/user/.mpd/kpd_db', mode = 'rb') as fp:
+        listDB = pickle.load (fp)
+    return listDB
+
 def check (key, flag, dictDB):
     
     for entry in dictDB.values():
@@ -61,7 +66,7 @@ def search (key, listDB):
             if not type(entry) == float:   
                 if key.lower() in entry.lower():
                     retlist.append(dictDB)
-                    break
+                    break #does not check other keys in dict
     return retlist
 
 def filter (flag, retlistDB, key):
@@ -78,17 +83,14 @@ def searchDB (searchArg, DBlocation):
     return retlist
 
 def polish_argStr(argStr):
-    
     try:
         idx = argStr.index('-f')
     except:
         idx = argStr.index('--filter')
     argStr = [entry.lower() for entry in argStr]
     return argStr[idx:]
-    
-    
+
 def filterDB (argStr, searchlist):
-    
     retlist = searchlist
     dictKey = ('artist', 'album', 'title')
     argStr = polish_argStr(argStr)

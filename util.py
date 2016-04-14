@@ -1,23 +1,40 @@
 import musicpd
 import MPDdatabase
-import config_file
+#import config_file
+import shell as sh
+from sys import argv
+
+class mpdclient:
+    def __init__ (self, DBlocation, host, port, argFilter):
+        self.DBlocation = DBlocation
+        self.client = musicpd.MPDClient ()
+        self.client.connect (host, port)
+        self.status = self.client.status ()
+        if argFilter:
+            self.needToFilter = argFilter
+        else:
+            self.needToFilter = False
+
+
+
 
 def seek_track (client, n, status, mode = 's'):
     time = status['time'].split(':')
     elapsedTime = int (time[0])
     if mode == 's':
-        client.seekid (status['songid'], n)
+        client.client.seekid (status['songid'], n)
     elif mode == '+':
-        client.seekid (status['songid'], n + elapsedTime)
+        client.client.seekid (status['songid'], n + elapsedTime)
     elif mode == '-':
-        client.seekid (status['songid'], elapsedTime - n)
+        client.client.seekid (status['songid'], elapsedTime - n)
     elif mode == '%':
         totalTime = int (time[1])
-        client.seekid (status['songid'], totalTime * n / 100)
+        client.client.seekid (status['songid'], totalTime * n / 100)
     else:
         raise ValueError
 
-def seek (client, state, status):
+def seek (client, state):
+    status = client.status
     try:
         if '%' in state:
             n = int (state.split ('%')[0])
@@ -46,10 +63,10 @@ def convert_time (inTime):
         l = l + '0'
     return l
 
-def print_playlist (client):
+def playlist (client, args, null):
     i = 1
     l = ''
-    for item in client.playlistinfo ():
+    for item in client.client.playlistinfo ():
         if 'artist' in item:
             l += item['artist']
         if 'title' in item:
@@ -76,8 +93,8 @@ def get_generic_info (status):
     return genericInfo
 
 def current_status (client):
-    status = client.status ()
-    song = client.currentsong ()
+    status = client.client.status ()
+    song = client.client.currentsong ()
     try:
         artist = song['artist']
     except:
@@ -112,79 +129,111 @@ def polish_return (retlist):
         finalList.append(dictDB['directory'].strip('\n')+"/"+dictDB['fsName'].strip('\n'))
     return finalList
 
-def play (client, n):
-    if n is 0:
-        client.play ()
+def mpdplay (client, n):
+    if n == 0:
+        client.client.play ()
     else:
-        client.play (n-1)
+        n = int (n)
+        client.client.play (n-1)
     current_status (client)
+
+
+def play (client, args, null):
+    try:
+        if args == None:
+            if client.status['state'] == 'stop':
+                mpdplay (client, 0)
+            else:
+                pause (client)
+        else:
+            mpdplay (client, int (args))
+
+    except:
+        print ('mpd error: bad song index')
+        exit (1)
 
 def pause (client):
-    client.pause ()
+    client.client.pause ()
     current_status (client)
 
-def next (client):
-    client.next ()
-    current_status (client)
+def next (client, args, null):
+    try:
+        client.client.next ()
+        current_status (client)
+    except:
+        print ('out of bounds')
+        exit (2)
 
-def previous (client):
-    client.previous ()
-    current_status (client)
+def previous (client, args, null):
+    try:
+        client.client.previous ()
+        current_status (client)
+    except:
+        print ('out of bounds')
+        exit (2)
 
-def mpdrandom (client, state):
+def random (client, state):
         if state == 'on':
-            client.random (1)
+            client.client.random (1)
         elif state == 'off':
-            client.random (0)
+            client.client.random (0)
         else:
             print ('Toggle on or off')
 
-def update (client):
-    client.update ()
+def update (client, args, null):
+    client.client.update ()
 
-def add(result, client):
-    print (result)
+def add(client, args, result):
     for entry in result:
         entry = entry.rstrip ('\n')
-    #    print(entry)
         client.add (entry)
 
+def filter (client, args, res):
+    pass
 
-def mpdsearch (searchItem, argv, DBlocation, argFilter):
+def search (client, searchItem, null):
+    argFilter = client.needToFilter
+    DBlocation = client.DBlocation
     retlist = MPDdatabase.searchDB(searchItem, DBlocation)
     if argFilter:
         retlist = MPDdatabase.filterDB(argv, retlist)
-        #print (retlist)
     res = polish_return (retlist)
     for entry in res:
         print(entry)
     return res
 
-def shuffle (client):
-    client.shuffle ()
+def shuffle (client, args, null):
+    client.client.shuffle ()
 
-def clear (client):
-    client.clear ()
+def clear (client, args, null):
+    client.client.clear ()
 
-def swap (client, a, b):
+def swap (client, args, null):
+    _swap (client.client, int (args[0]) - 1, int (args[1]) - 1)
+
+
+def _swap (client, a, b):
     client.swap (a, b)
 
-def stop (client):
-    client.stop ()
+def stop (client, args, null):
+    client.client.stop ()
 
 def consume (client, state):
     if state == 'on':
-        client.consume (1)
+        client.client.consume (1)
     elif state == 'off':
-        client.consume (0)
+        client.client.consume (0)
     else:
         print ('Toggle on or off')
 
 def single (client, state):
     if state == 'on':
-        client.single (1)
+        client.client.single (1)
     elif state == 'off':
-        client.single (0)
+        client.client.single (0)
     else:
         print ('Toggle on or off')
+
+def shell (client, DBlocation):
+    return (sh.shell (client, DBlocation))
 #end util.py
