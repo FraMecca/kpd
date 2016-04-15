@@ -1,6 +1,6 @@
-import gzip, pickle
+import gzip, pickle, os
 
-def _load_DB_into_memory (filename):
+def load_DB_into_memory_mpd (filename):
     fp = gzip.open (filename, mode = 'rt')
 #    fp = open ('/home/user/.mpd/database_unzipped', mode = 'rt')
     listDB = list ()
@@ -43,8 +43,19 @@ def _load_DB_into_memory (filename):
     fp.close ()
     return listDB
 
-def load_DB_into_memory (filename):
-    with open ('/home/user/.mpd/kpd_db', mode = 'rb') as fp:
+def check_db_status (pickleDB, DBlocation):
+    if os.path.getctime (pickleDB) < os.path.getctime (DBlocation):
+        return False
+    else:
+        return True
+
+def load_DB_into_memory_pickle (DBlocation, pickleDB):
+    if check_db_status (pickleDB, DBlocation) == False:
+        print ('warning: pickle serial db is older than mpd database\nwill now update')
+        with open (pickleDB, mode = 'wb') as fp:
+            listDB = load_DB_into_memory_mpd (DBlocation)
+            pickle.dump (listDB, fp)
+    with open (pickleDB, mode = 'rb') as fp:
         listDB = pickle.load (fp)
     return listDB
 
@@ -75,9 +86,15 @@ def filter (flag, retlistDB, key):
             lastlist.append(dictDB)
     return lastlist
 
-def searchDB (searchArg, DBlocation):
+def searchDB (searchArg, DBlocation, searchMode, pickleDB):
     res = list()
-    listDB = load_DB_into_memory(DBlocation)
+    if searchMode == 'mpd':
+        listDB = load_DB_into_memory_mpd (DBlocation)
+    elif searchMode == 'pickle':
+        listDB = load_DB_into_memory_pickle (DBlocation, pickleDB)
+    else:
+        print ('wrong search_mode')
+        exit (1)
     retlist = search(searchArg, listDB)
     return retlist
 

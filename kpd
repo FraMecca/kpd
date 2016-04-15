@@ -48,6 +48,8 @@ def parse_args ():
                          help='print output on screen, default enabled')
     parser.add_argument ('--no-output', action = "store_true", default = False,
                          help='do not print output on screen')
+    parser.add_argument ('--search-mode', type = str, nargs = '?', default = False,
+                         help='switch search mode: options are \'mpd\' (mpd database lookup) or \'pickle\' (pickle lib serial database, faster)')
 
     args = parser.parse_args ()
     dictArgs = vars (args)
@@ -59,7 +61,7 @@ def order_args (argv):
     argsDict1 = {'-h':'help', '-p':'play', '-n':'next', '-u':'update', '-s':'search', '-f':'filter', '-pl':'playlist', '-sh':'shell', '-a':'add'}
     argsDict2 = {'--help':'help', '--play':'play', '--next':'next', '--update':'update', '--search':'search', '--filter':'filter', '--playlist':'playlist', \
                  '--stop':'stop', '--random':'random', '--clear':'clear', '--seek':'seek', '--shuffle':'shuffle', '--consume':'consume', '--single':'single','--swap':'swap',\
-                 '--shell':'shell', '--prev':'previous', '--previous':'previous', '--add':'add', '--output':'output', '--no-output':'no_output'}
+                 '--shell':'shell', '--prev':'previous', '--previous':'previous', '--add':'add', '--output':'output', '--no-output':'no_output', '--search-mode':'search_mode'}
     argsOrder = list ()
     for el in argv:
         if el in argsDict1:
@@ -71,10 +73,10 @@ def order_args (argv):
 
 if __name__ == '__main__':
 
-    DBlocation, host, port = config_file.parse_file ()
+    DBlocation, searchMode, host, port, pickleDB = config_file.parse_file ()
     argsOrder = order_args (sys.argv)
     args, dictArgs = parse_args ()
-    client = util.mpdclient (DBlocation, host, port, args.filter)
+    client = util.mpdclient (DBlocation, searchMode, host, port,pickleDB, args.filter)
 
 ## check -f -s
     if args.filter != False and not args.search: ##Check also indexes, -f non prima di -s

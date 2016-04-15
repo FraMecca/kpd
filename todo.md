@@ -45,9 +45,10 @@
 
 - 	add
 
+- Pickle per il database
+
 # Da finire:
 - shell (URGENTE)
 
 # Da implementare:
- - Pickle per il database
- - opzioni su file di config (vedi bot promemoria)
+ - ? opzioni su file di config (vedi bot promemoria)

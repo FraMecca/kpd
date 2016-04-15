@@ -4,11 +4,13 @@ from sys import argv
 import sys
 
 class mpdclient:
-    def __init__ (self, DBlocation, host, port, argFilter):
+    def __init__ (self, DBlocation, searchMode, host, port, pickleDB, argFilter):
         self.DBlocation = DBlocation
         self.client = musicpd.MPDClient ()
         self.client.connect (host, port)
         self.status = self.client.status ()
+        self.searchMode = searchMode
+        self.pickleDB = pickleDB
         if argFilter:
             self.needToFilter = argFilter
         else:
@@ -77,11 +79,14 @@ def convert_time (inTime):
 def playlist (client, args, null):
     i = 1
     l = ''
+    print (client.client.playlistinfo ())
     for item in client.client.playlistinfo ():
         if 'artist' in item:
             l += item['artist']
         if 'title' in item:
             l += ' - ' + item['title']
+        if not l:
+            l = item['file']
         print (str (i) + '.', l)
         i += 1
         l = ''
@@ -204,7 +209,7 @@ def filter (client, args, res):
 def search (client, searchItem, null):
     argFilter = client.needToFilter
     DBlocation = client.DBlocation
-    retlist = MPDdatabase.searchDB(searchItem, DBlocation)
+    retlist = MPDdatabase.searchDB(searchItem, DBlocation, client.searchMode, client.pickleDB)
     if argFilter:
         retlist = MPDdatabase.filterDB(argv, retlist)
     res = polish_return (retlist)
@@ -255,5 +260,8 @@ def output (client, args, null):
 
 def no_output (client, args, null):
     sys.stdout = nostdout (sys.stdout)
+
+def search_mode (client, args, null):
+    client.searchMode = args
 
 #end util.py
