@@ -79,7 +79,6 @@ def convert_time (inTime):
 def playlist (client, args, null):
     i = 1
     l = ''
-    print (client.client.playlistinfo ())
     for item in client.client.playlistinfo ():
         if 'artist' in item:
             l += item['artist']
