@@ -1,8 +1,7 @@
-import musicpd
-import MPDdatabase
-#import config_file
+import musicpd, MPDdatabase
 import shell as sh
 from sys import argv
+import sys
 
 class mpdclient:
     def __init__ (self, DBlocation, host, port, argFilter):
@@ -14,10 +13,21 @@ class mpdclient:
             self.needToFilter = argFilter
         else:
             self.needToFilter = False
+    def update_status (self):
+        self.status = self.client.status ()
+
+class nostdout (object):
+    def __init__ (self, std):
+        self.stdout = std
+    def write(self, x = None):
+        pass
+    def flush (self, x = None):
+        pass
+    def restore_std (self):
+        return self.stdout
 
 
-
-
+#functions
 def seek_track (client, n, status, mode = 's'):
     time = status['time'].split(':')
     elapsedTime = int (time[0])
@@ -33,7 +43,7 @@ def seek_track (client, n, status, mode = 's'):
     else:
         raise ValueError
 
-def seek (client, state):
+def seek (client, state, null):
     status = client.status
     try:
         if '%' in state:
@@ -137,7 +147,6 @@ def mpdplay (client, n):
         client.client.play (n-1)
     current_status (client)
 
-
 def play (client, args, null):
     try:
         if args == None:
@@ -172,7 +181,7 @@ def previous (client, args, null):
         print ('out of bounds')
         exit (2)
 
-def random (client, state):
+def random (client, state, null):
         if state == 'on':
             client.client.random (1)
         elif state == 'off':
@@ -186,7 +195,7 @@ def update (client, args, null):
 def add(client, args, result):
     for entry in result:
         entry = entry.rstrip ('\n')
-        client.add (entry)
+        client.client.add (entry)
 
 def filter (client, args, res):
     pass
@@ -218,7 +227,7 @@ def _swap (client, a, b):
 def stop (client, args, null):
     client.client.stop ()
 
-def consume (client, state):
+def consume (client, state, null):
     if state == 'on':
         client.client.consume (1)
     elif state == 'off':
@@ -226,7 +235,7 @@ def consume (client, state):
     else:
         print ('Toggle on or off')
 
-def single (client, state):
+def single (client, state, null):
     if state == 'on':
         client.client.single (1)
     elif state == 'off':
@@ -236,4 +245,15 @@ def single (client, state):
 
 def shell (client, DBlocation):
     return (sh.shell (client, DBlocation))
+
+def output (client, args, null):
+    if sys.stdout == sys.__stdout__:
+        pass
+    else:
+        sys.stdout = nostdout.restore_std (sys.stdout)
+
+def no_output (client, args, null):
+    print ('no_output')
+    sys.stdout = nostdout (sys.stdout)
+
 #end util.py

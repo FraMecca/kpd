@@ -44,6 +44,10 @@ def parse_args ():
             help='invoke shell')
     parser.add_argument ('--format', nargs= '+', default = False,
                          help='change display format, write \'kpd --format help\' for usage')
+    parser.add_argument ('--output', action = "store_true", default = False,
+                         help='print output on screen, default enabled')
+    parser.add_argument ('--no-output', action = "store_true", default = False,
+                         help='do not print output on screen')
 
     args = parser.parse_args ()
     dictArgs = vars (args)
@@ -55,7 +59,7 @@ def order_args (argv):
     argsDict1 = {'-h':'help', '-p':'play', '-n':'next', '-u':'update', '-s':'search', '-f':'filter', '-pl':'playlist', '-sh':'shell', '-a':'add'}
     argsDict2 = {'--help':'help', '--play':'play', '--next':'next', '--update':'update', '--search':'search', '--filter':'filter', '--playlist':'playlist', \
                  '--stop':'stop', '--random':'random', '--clear':'clear', '--seek':'seek', '--shuffle':'shuffle', '--consume':'consume', '--single':'single','--swap':'swap',\
-                 '--shell':'shell', '--prev':'previous', '--previous':'previous', '--add':'add'}
+                 '--shell':'shell', '--prev':'previous', '--previous':'previous', '--add':'add', '--output':'output', '--no-output':'no_output'}
     argsOrder = list ()
     for el in argv:
         if el in argsDict1:
@@ -72,7 +76,6 @@ if __name__ == '__main__':
     args, dictArgs = parse_args ()
     client = util.mpdclient (DBlocation, host, port, args.filter)
 
-    print (args.search)
 ## check -f -s
     if args.filter != False and not args.search: ##Check also indexes, -f non prima di -s
         print ('filter can be used only concatenated to a search')
@@ -83,29 +86,30 @@ if __name__ == '__main__':
         if  client.status['state'] != 'stop':
             util.current_status (client)
         else:
-            util.playlist (client, None)
+            util.playlist (client, None, None)
         exit ()
 
-######
+# pipe from shell
+    if not sys.stdin.isatty() and args.add != False:
+        for line in sys.stdin:
+            line = line.rstrip ('\n')
+            client.client.add (line)
+        exit ()
+# end pipe from shell
+
+# evaluate arguments if not pipe
     searchRes = None
     retUtil = None
 
     for el in argsOrder:
         if dictArgs[el] != False:
+            client.update_status ()
             methodToCall = getattr (util, el)
             retUtil = methodToCall (client, dictArgs[el], searchRes)
 
             if retUtil != None: #the only alternative is a return null in every funct
                 searchRes = retUtil
-        print (sys.argv)
 
-    #pipe from shell
-    if not sys.stdin.isatty() and args.add != False:
-        for line in sys.stdin:
-            line = line.rstrip ('\n')
-            client.add (line)
-#        exit ()
-    #end pipe from shell
 
     if args.shell:
         util.shell (client, DBlocation)

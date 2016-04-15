@@ -49,7 +49,6 @@ def load_DB_into_memory (filename):
     return listDB
 
 def check (key, flag, dictDB):
-    
     for entry in dictDB.values():
         if type(entry) == str:
             if flag == 'any':
@@ -63,7 +62,7 @@ def search (key, listDB):
     retlist = list()
     for dictDB in listDB:
         for entry in dictDB.values():
-            if not type(entry) == float:   
+            if not type(entry) == float:
                 if key.lower() in entry.lower():
                     retlist.append(dictDB)
                     break #does not check other keys in dict
@@ -72,7 +71,7 @@ def search (key, listDB):
 def filter (flag, retlistDB, key):
     lastlist = list()
     for dictDB in retlistDB:
-        if check(key, flag, dictDB):  
+        if check(key, flag, dictDB):
             lastlist.append(dictDB)
     return lastlist
 
@@ -87,8 +86,16 @@ def polish_argStr(argStr):
         idx = argStr.index('-f')
     except:
         idx = argStr.index('--filter')
-    argStr = [entry.lower() for entry in argStr]
-    return argStr[idx:]
+    argStr = [ch.lower() for ch in argStr]
+    retSt = argStr[idx:]
+    #save just the part with filter items
+    i = 0
+    for entry in retSt:
+        if '-' in entry[0] and (entry != '-f' and entry != '--filter'):
+            break
+        else:
+            i += 1
+    return retSt[:i]
 
 def filterDB (argStr, searchlist):
     retlist = searchlist

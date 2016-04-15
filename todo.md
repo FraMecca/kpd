@@ -41,9 +41,11 @@
 
 -   update(client)
 
+- 	filter
+
+- 	add
+
 # Da finire:
-- filter
-- add
 - shell (URGENTE)
 
 # Da implementare:
