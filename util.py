@@ -17,6 +17,7 @@ class mpdclient:
         self.status = self.client.status ()
 
 class nostdout (object):
+    pass
     def __init__ (self, std):
         self.stdout = std
     def write(self, x = None):
@@ -253,7 +254,6 @@ def output (client, args, null):
         sys.stdout = nostdout.restore_std (sys.stdout)
 
 def no_output (client, args, null):
-    print ('no_output')
     sys.stdout = nostdout (sys.stdout)
 
 #end util.py
