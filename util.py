@@ -203,7 +203,11 @@ def add(client, args, result):
         client.client.add (entry)
 
 def filter (client, args, res):
-    pass
+    if not '-s' in argv:
+        print('filter option can only be used concatenated to a search')
+        exit(2)
+    else:
+        pass
 
 def search (client, searchItem, null):
     argFilter = client.needToFilter
