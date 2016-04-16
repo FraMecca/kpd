@@ -78,11 +78,6 @@ if __name__ == '__main__':
     args, dictArgs = parse_args ()
     client = util.mpdclient (DBlocation, searchMode, host, port,pickleDB, args.filter)
 
-## check -f -s
-    if args.filter != False and not args.search: ##Check also indexes, -f non prima di -s
-        print ('filter can be used only concatenated to a search')
-        exit(1)
-
 ## no args
     if not len (sys.argv) > 1:
         if  client.status['state'] != 'stop':
