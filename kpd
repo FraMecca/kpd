@@ -3,7 +3,7 @@
 import musicpd
 import sys
 import argparse
-import shell, MPDdatabase, util, config_file
+import MPDdatabase, util, config_file
 import formatter
 
 def parse_args ():
@@ -42,8 +42,6 @@ def parse_args ():
             help='single mode [on,off]')
     parser.add_argument ('--swap', nargs = 2, default=False,
             help='swap two tracks in the playlist')
-    parser.add_argument ('--shell', '-sh', action='store_true', default = False,
-            help='invoke shell')
     parser.add_argument ('--format', nargs= '+', default = False,
                          help='change display format, write \'kpd --format help\' for usage')
     parser.add_argument ('--output', action = "store_true", default = False,
@@ -60,11 +58,10 @@ def parse_args ():
 #end parse_args
 
 def order_args (argv):
-    argsDict1 = {'-h':'help', '-p':'play', '-n':'next', '-u':'update', '-s':'search', '-f':'filter', '-pl':'playlist', '-sh':'shell', '-a':'add'}
+    argsDict1 = {'-h':'help', '-p':'play', '-n':'next', '-u':'update', '-s':'search', '-f':'filter', '-pl':'playlist', '-a':'add'}
     argsDict2 = {'--help':'help', '--play':'play', '--next':'next', '--update':'update', '--search':'search', '--filter':'filter', '--playlist':'playlist', \
                  '--stop':'stop', '--random':'random', '--clear':'clear', '--seek':'seek', '--shuffle':'shuffle', '--consume':'consume', '--single':'single','--swap':'swap',\
-                 '--shell':'shell', '--prev':'previous', '--previous':'previous', '--add':'add', '--output':'output', '--no-output':'no_output',\
-                 '--search-mode':'search_mode', '--pause':'pause'}
+                 '--prev':'previous', '--previous':'previous', '--add':'add', '--output':'output', '--no-output':'no_output', '--search-mode':'search_mode', '--pause':'pause'}
     argsOrder = list ()
     for el in argv:
         if el in argsDict1:
@@ -109,10 +106,6 @@ if __name__ == '__main__':
 
             if retUtil != None: #the only alternative is a return null in every funct
                 searchRes = retUtil
-
-
-    if args.shell:
-        util.shell (client, DBlocation)
 
     #print in a different format
     if args.format != False: ### E` BRUTTO!, dovrebbe influenzare tutti i print_status (!, evidenzia la bruttura)

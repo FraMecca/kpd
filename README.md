@@ -1,6 +1,5 @@
 # kpd-client
 This is a mpd client written entirely in python.
-It offers a shell mode from which you can run commands within the client using a readline library.
 It is very similar to mpc in functionality but the with a more efficent and less strict search.
 
 It requires python-musicpd module to run, install it with pip.
@@ -60,7 +59,6 @@ optional arguments:
   --consume [CONSUME]   consume mode [on,off]
   --single [SINGLE]     single mode [on,off]
   --swap SWAP SWAP      swap two tracks in the playlist
-  --shell, -sh          invoke shell
   --format FORMAT [FORMAT ...]
                         change display format, write 'kpd --format help' for
                         usage
@@ -125,3 +123,10 @@ pickle_DB_location = /home/user/.mpd/kpd_db
 With these parameters the client will use the [pickle](https://docs.python.org/3.4/library/pickle.html) python library to store the database in serial format.
 If `searchmode = mpd` is specified in the config file kpd will search using the zipped mpd database that is stored in the mpd directory.
 The pickle method is way faster and strongly suggested, however a secondary database will be written to disk.
+
+### Add result
+The result of the search can be added to the playlist with `--add` or `-a` arguments. kpd can also be used in a pipe like this:
+
+```
+$ kpd -s kyuss -f queen hula | kpd -a
+```

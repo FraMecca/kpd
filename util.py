@@ -1,5 +1,4 @@
 import musicpd, MPDdatabase
-import shell as sh
 from sys import argv
 import sys
 
@@ -158,7 +157,7 @@ def play (client, args, null):
             if client.status['state'] == 'stop':
                 mpdplay (client, 0)
             else:
-                pause (client)
+                pause (client, None, None)
         else:
             mpdplay (client, int (args))
 
@@ -251,9 +250,6 @@ def single (client, state, null):
         client.client.single (0)
     else:
         print ('Toggle on or off')
-
-def shell (client, args, null):
-    return (sh.shell (client, client.DBlocation))
 
 def output (client, args, null):
     if sys.stdout == sys.__stdout__:
