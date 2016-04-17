@@ -166,7 +166,7 @@ def play (client, args, null):
         print ('mpd error: bad song index')
         exit (1)
 
-def pause (client):
+def pause (client, args, null):
     client.client.pause ()
     current_status (client)
 
@@ -252,8 +252,8 @@ def single (client, state, null):
     else:
         print ('Toggle on or off')
 
-def shell (client, DBlocation):
-    return (sh.shell (client, DBlocation))
+def shell (client, args, null):
+    return (sh.shell (client, client.DBlocation))
 
 def output (client, args, null):
     if sys.stdout == sys.__stdout__:

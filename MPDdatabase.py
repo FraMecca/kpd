@@ -2,7 +2,6 @@ import gzip, pickle, os
 
 def load_DB_into_memory_mpd (filename):
     fp = gzip.open (filename, mode = 'rt')
-#    fp = open ('/home/user/.mpd/database_unzipped', mode = 'rt')
     listDB = list ()
     line = fp.readline()
     songdir = list()

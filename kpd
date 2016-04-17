@@ -10,6 +10,8 @@ def parse_args ():
     parser = argparse.ArgumentParser ()
     parser.add_argument ('-p', '--play', nargs = '?', default = False,
             help='toggle play, input number to play song in playlist')
+    parser.add_argument ('--pause', nargs = '?', default = False,
+            help='toggle pause')
     parser.add_argument ('-n', '--next', action="store_true", default=False,
             help='play next track')
     parser.add_argument ('-ps', '--previous', '--prev', action="store_true", default=False,
@@ -25,7 +27,7 @@ def parse_args ():
     parser.add_argument ('-s', '--search', type = str, nargs = '?', default = False,
             help='search a string in the database, casi insensitive')
     parser.add_argument ('-f', '--filter', nargs = '+', default = False,
-            help='filter search result, can use \'artist\', \'album\', \'title\', grep like functionality, comma to divide various entry')
+            help='filter search result, can use \'artist\', \'album\', \'title\', grep like functionality')
     parser.add_argument ('--clear', action = "store_true", default=False,
             help='clear playlist')
     parser.add_argument ('-pl', '--playlist', action = "store_true", default=False,
@@ -61,7 +63,8 @@ def order_args (argv):
     argsDict1 = {'-h':'help', '-p':'play', '-n':'next', '-u':'update', '-s':'search', '-f':'filter', '-pl':'playlist', '-sh':'shell', '-a':'add'}
     argsDict2 = {'--help':'help', '--play':'play', '--next':'next', '--update':'update', '--search':'search', '--filter':'filter', '--playlist':'playlist', \
                  '--stop':'stop', '--random':'random', '--clear':'clear', '--seek':'seek', '--shuffle':'shuffle', '--consume':'consume', '--single':'single','--swap':'swap',\
-                 '--shell':'shell', '--prev':'previous', '--previous':'previous', '--add':'add', '--output':'output', '--no-output':'no_output', '--search-mode':'search_mode'}
+                 '--shell':'shell', '--prev':'previous', '--previous':'previous', '--add':'add', '--output':'output', '--no-output':'no_output',\
+                 '--search-mode':'search_mode', '--pause':'pause'}
     argsOrder = list ()
     for el in argv:
         if el in argsDict1:

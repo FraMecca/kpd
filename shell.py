@@ -8,62 +8,23 @@ def keepConnected(client):
     while conn == False:
         conn = True
         try:
-            client.connect('127.0.0.1', '6600')
+            client.client.connect(client.host, client.port)
         except SocketError as e:
             conn = False
             time.sleep(2)
 
 def evaluate (inp, client, l, DBlocation):
     inp = inp.split (' ')
-    status = client.status ()
+    client.update_status ()
+    status = client.status
+    
     
     if len(inp) > 1 and not str(inp[1]):
         inp.pop()
-    
-    if inp[0] == 'p' or 'play' == (inp[0]):
-        util.play (client, inp[1])
-    elif inp[0] == 'pause':
-        util.pause (client)
-    elif inp[0] == 'next' or inp[0] == 'n':
-        util.next (client)
-    elif inp[0] == 'previous' or inp[0] == 'ps':
-        util.previous (client)
-    elif inp[0] == 'stop':
-        util.stop (client)
-    elif inp[0] == 'pl' or inp[0] == 'playlist':
-        util.print_playlist (client)
-    elif inp[0] == 'update' or inp[0] == 'u':
-        util.update (client)
-    elif inp[0] == 'clear':
-        util.clear (client)
-    elif inp[0] == 'random':
-        util.mpdrandom (client, inp[1])
-    elif inp[0] == 'shuffle':
-        util.shuffle (client)
-    elif inp[0] == 'consume':
-        util.consume (client, inp[1])
-    elif inp[0] == 'swap':
-        util.swap (client, int (inp[1]) - 1, int (inp[2]) - 1)
-    elif inp[0] == 'single':
-        util.single (client, inp[1])
-    elif inp[0] == 'search' or inp[0] == 's':
-        if '-f' in inp  or '--filter' in inp:
-            l = util.mpdsearch(inp[1], inp, DBlocation, True)
-        else:
-            l = util.mpdsearch(inp[1], inp, DBlocation, False)
-    elif inp[0] == 'a' or inp[0] == 'add':
-        if l:
-            for line in l:
-                client.add (line)
-        else:
-            print('You have to search first!')
-    elif inp[0] == 'q' or inp[0] == 'quit':
-        quit()
-    return l
+    pass;
 
 def shell (client, DBlocation):
     l = list()
-    print (type (client))
     while 1:
         sys.stdout.write(': ')
         inp = input ()
@@ -71,7 +32,7 @@ def shell (client, DBlocation):
         try:
             client.client.ping()
         except:
-            keepConnected(client.client)
+            keepConnected(client)
         if inp:
             l = evaluate(inp, client, l, DBlocation)
         else:
