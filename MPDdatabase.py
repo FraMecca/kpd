@@ -25,7 +25,8 @@ def load_DB_into_memory_mpd (filename):
         elif 'Artist' == entry[0]:
             dictMpd['artist'] = entry[1]
         elif 'Time' == entry[0]:
-            dictMpd['time'] = float (entry[1])
+            pass
+#            dictMpd['time'] = float (entry[1])
         elif 'Album' == entry[0]:
             dictMpd['album'] = entry[1]
         elif 'Title' == entry[0]:
@@ -43,7 +44,7 @@ def load_DB_into_memory_mpd (filename):
     return listDB
 
 def check_db_status (pickleDB, DBlocation):
-    if os.path.getctime (pickleDB) < os.path.getctime (DBlocation):
+    if not os.path.isfile (pickleDB) or os.path.getctime (pickleDB) < os.path.getctime (DBlocation):
         return False
     else:
         return True
