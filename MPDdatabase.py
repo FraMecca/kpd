@@ -14,7 +14,7 @@ def load_DB_into_memory_mpd (filename):
         if 'begin' == entry[0]:
             songdir.append(entry[1])
         if 'song_begin' in entry[0]:
-            dictMpd = {'directory': '' , 'fsName': '' , 'time': '', 'album': '', 'date': '', 'title': '', 'track': '', 'artist': ''}
+            dictMpd = {'directory': '' , 'fsName': '', 'album': '', 'date': '', 'title': '', 'track': '', 'artist': ''}
             dictMpd['fsName'] = entry[1]
             if songdir:
                 dictMpd['directory'] = songdir[-1]
@@ -70,16 +70,13 @@ def check (key, flag, dictDB):
     return False
 
 def search (key, listDB):
-    retlist = list()
     for dictDB in listDB:
-        for entry in dictDB.values():
-            if not type(entry) == float:
-                if key.lower() in entry.lower():
-                    retlist.append(dictDB)
-                    break #does not check other keys in dict
-    return retlist
+        for entry in dictDB.values ():
+            if key in entry.lower ():
+                yield dictDB
+                break;
 
-def filter (flag, retlistDB, key):
+def _filter (flag, retlistDB, key):
     lastlist = list()
     for dictDB in retlistDB:
         if check(key, flag, dictDB):
@@ -95,6 +92,7 @@ def searchDB (searchArg, DBlocation, searchMode, pickleDB):
     else:
         print ('wrong search_mode')
         exit (1)
+
     retlist = search(searchArg, listDB)
     return retlist
 
@@ -124,6 +122,6 @@ def filterDB (argStr, searchlist):
             flag = argStr.pop()
         else:
             flag = 'any'
-        retlist = filter(flag, retlist, entry)
+        retlist = _filter(flag, retlist, entry)
 
     return retlist

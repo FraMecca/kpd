@@ -52,3 +52,10 @@
 
 # Da implementare:
  - ? opzioni su file di config (vedi bot promemoria)
+
+
+PERFORMANCE:
+- non concatenare con +, usa .join ()
+- usa map invece di append per le liste, o comprehension, http://www.python.org/doc/essays/list2str/
+- avoid dots, usa tipo upper = str.upper, usa local variables
+- pensa agli import

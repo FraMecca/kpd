@@ -207,7 +207,6 @@ def filter (client, args, res):
         exit(2)
     else:
         pass
-
 def search (client, searchItem, null):
     argFilter = client.needToFilter
     DBlocation = client.DBlocation
