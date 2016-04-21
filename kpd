@@ -1,10 +1,6 @@
 #!/usr/bin/python3
 
-import musicpd
-import sys
-import argparse
-import MPDdatabase, util, config_file
-import formatter
+import musicpd, sys, argparse, MPDdatabase, util, config_file, formatter
 
 def parse_args ():
     parser = argparse.ArgumentParser ()

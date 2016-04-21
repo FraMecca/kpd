@@ -1,7 +1,7 @@
 import os
 
 values = {'db': '', 'host':'', 'port':'', 'searchmode':'', 'pickle_DB_location':''}
-
+# @profile
 def parse_file ():
     confFile = os.path.expanduser ("~") + '/.kpd.conf'
     if os.path.isfile (confFile):
@@ -9,11 +9,18 @@ def parse_file ():
         with open (confFile, 'r') as fp:
             configs = [line.rstrip ('\n') for line in fp]
         for line in configs:
-            if ' = ' in line:
-                entry = line.split (' = ')
-            else:
-                entry = line.split ('=')
-            values[entry[0]] = entry [1]
+            # if not line or line[0] == '#':
+                # pass
+            # else: 
+        # these line could have done for comments in config file
+                if ' = ' in line:
+                    entry = line.split (' = ')
+                else:
+                    entry = line.split ('=')
+                try:
+                    values[entry[0]] = entry [1]
+                except IndexError:
+                    pass
 
     else:
         print ('a config file is needed...\nInput mpd database location: ')
@@ -35,4 +42,5 @@ def parse_file ():
                 fp.write ('pickle_DB_location = ' + pickle_DB_location + '\n')
         exit (2)
 
+    # print ( values['db'], values['searchmode'], values['host'], values['port'], values['pickle_DB_location'])
     return values['db'], values['searchmode'], values['host'], values['port'], values['pickle_DB_location']

@@ -61,12 +61,11 @@ def load_DB_into_memory_pickle (DBlocation, pickleDB):
 
 def check (key, flag, dictDB):
     for entry in dictDB.values():
-        if type(entry) == str:
-            if flag == 'any':
-                if key.lower() in entry.lower():
-                    return True
-            elif key.lower() in dictDB[flag].lower():
+        if flag == 'any':
+            if key.lower() in entry.lower():
                 return True
+        elif key.lower() in dictDB[flag].lower():
+            return True
     return False
 
 def search (key, listDB):
@@ -84,7 +83,6 @@ def _filter (flag, retlistDB, key):
     return lastlist
 
 def searchDB (searchArg, DBlocation, searchMode, pickleDB):
-    res = list()
     if searchMode == 'mpd':
         listDB = load_DB_into_memory_mpd (DBlocation)
     elif searchMode == 'pickle':
@@ -93,8 +91,7 @@ def searchDB (searchArg, DBlocation, searchMode, pickleDB):
         print ('wrong search_mode')
         exit (1)
 
-    retlist = search(searchArg, listDB)
-    return retlist
+    return search(searchArg, listDB)
 
 def polish_argStr(argStr):
     try:
