@@ -19,14 +19,14 @@ typedef struct directory_list_t {
 	struct directory_list_t *prev;
 } directory_list_t;
 
-list_t *get_list_head (list_t *listDB)
+list_t *initialize_list ()
 {
-	if (listDB == NULL) {
-		listDB = (list_t *) malloc (sizeof (list_t));
-		listDB->prev = NULL;
-		listDB->next = NULL;
-	}
-	return listDB;
+	list_t *ptr;
+	ptr = (list_t *) malloc (sizeof (list_t));
+	memset (ptr, 0, sizeof (list_t));
+	ptr->prev = NULL;
+	ptr->next = NULL;
+	return ptr;
 }
 
 list_t *return_to_head (list_t *listDB)
@@ -34,17 +34,14 @@ list_t *return_to_head (list_t *listDB)
 	while (listDB->prev != NULL) {
 		listDB = listDB->prev;
 	}
-	printf (listDB->fsName);
 	return listDB;
 }
 
-
 list_t *insert_tail (list_t *listDB)
 {
-	list_t *ptr = (list_t *) malloc (sizeof (list_t));
-	listDB->next = ptr;
+	list_t *ptr = initialize_list ();
 	ptr->prev = listDB;
-	ptr->next = NULL;
+	listDB->next = ptr;
 	return ptr;
 }
 
@@ -72,6 +69,7 @@ directory_list_t *pop_directory (directory_list_t *dirs)
 		return dirs;
 	}
 	ptr = dirs->prev;
+	free (dirs->name);
 	free (dirs);
 	if (ptr != NULL) {
 		ptr->next = NULL;
@@ -81,9 +79,7 @@ directory_list_t *pop_directory (directory_list_t *dirs)
 
 list_t* insert_line_in_memory (char *line, list_t *listDB, directory_list_t **dirsRef)
 {
-	list_t *ptr;
 	char *partOneSt, *partTwoSt;
-	char * stringa;
 	
 	directory_list_t *dirs = dirsRef[0];
 
@@ -92,7 +88,6 @@ list_t* insert_line_in_memory (char *line, list_t *listDB, directory_list_t **di
 	if (partTwoSt != NULL) {
 		partTwoSt = partTwoSt + 1;
 	}
-	stringa = strdup (line);
 
 	/*printf ("partone: %s-\npartTwo: %s\nstring == %s\n", partOneSt, partTwoSt, stringa);*/
 
@@ -102,58 +97,52 @@ list_t* insert_line_in_memory (char *line, list_t *listDB, directory_list_t **di
 		return listDB;
 	}
 	
-	ptr = get_list_head (listDB);
-	
 	if (strcmp (partOneSt, "song_begin") == 0) {
-		ptr->fsName = strdup (partTwoSt);
+		listDB->fsName = strdup (partTwoSt);
 		if (dirs == NULL) {
-			ptr->directory = strdup ("\0");
+			listDB->directory = strdup ("\0");
 		}
 		else {
-			ptr->directory = strdup (dirs->name);
+			listDB->directory = strdup (dirs->name);
 		}
-		return ptr;
+		return listDB;
 	}
 	if (strcmp (partOneSt, "end") == 0) {
 		dirs = pop_directory (dirs);
 		dirsRef[0] = dirs;
-		return ptr;
+		return listDB;
 	}
-	if (strcmp (stringa, "song_end\n") == 0) {
-		ptr = insert_tail (ptr);
-		return ptr;
+	if (strcmp (line, "song_end\n") == 0) {
+		listDB = insert_tail (listDB);
+		return listDB;
 	}
 	if (strcmp (partOneSt, "Artist") == 0) {
-		ptr->artist = strdup (partTwoSt);
-		return ptr;
+		listDB->artist = strdup (partTwoSt);
+		return listDB;
 	}
 	if (strcmp (partOneSt, "Album") == 0) {
-		ptr->album = strdup (partTwoSt);
-		return ptr;
+		listDB->album = strdup (partTwoSt);
+		return listDB;
 	}
 	if (strcmp (partOneSt, "Title") == 0) {
-		ptr->title = strdup (partTwoSt);
-		return ptr;
+		listDB->title = strdup (partTwoSt);
+		return listDB;
 	}
 
-	/*printf ("ritorno %s\n", ptr->fsName);*/
-	return ptr;
+	return listDB;
 }
 
 char *lower (char *st)
 {
 	int i;
-	char *tmp;
 	if (st == NULL) {
 		return "A";
 	}
 
-	tmp = (char *) malloc (strlen (st) * sizeof (char));
-
 	for (i = 0; st[i]; ++i) {
-		tmp[i] = tolower (st[i]);
+		st[i] = tolower (st[i]);
 	}
-	return tmp;
+	return st;
 }
 
 int is_contained (char *st, list_t *listDB)
@@ -171,41 +160,88 @@ int is_contained (char *st, list_t *listDB)
 
 	for (i = 0; i < 4; ++i) {
 		if (strstr (array[i], key) != NULL) {
+			for (i = 0; i < 4; ++i) free (array[i]);
+			free (array);
 			return 1;
 		}
 		/*printf ("confront %s vs %s\n", key, array[i]);*/
 	}
+	for (i = 0; i < 4; ++i) free (array[i]);
+	free (array);
 	return 0;
+}
+
+char *get_complete_name (list_t *ptr)
+{
+	char *st = malloc ( (1 + strlen (ptr->directory) + strlen (ptr->fsName)) * sizeof (char));
+
+	strcpy (st, ptr->directory);
+	st[strlen (st) - 1] = '/';
+	strcat (st, ptr->fsName);
+	st[strlen (st) - 1] = '\0';
+	return (st);
 }
 
 void search (char *st, list_t *listDB)
 {
-	printf ("%s\n", st);
+	char *res;
+
 	while (listDB != NULL) {
 		if (is_contained (st, listDB)) {
-			printf ("%s\n", listDB->fsName);
+			res = (get_complete_name (listDB));
+			printf ("%s\n", res);
 		}
 		listDB = listDB->next;
 	}
 }
 
+void destroy_list (list_t *ptr)
+{
+	list_t *tmp;
+
+	if (ptr == NULL) {
+		return;
+	}
+	if (ptr != NULL) {
+		tmp = ptr->next;
+		if (ptr->album != NULL) {
+			free (ptr->album);
+		}
+		if (ptr->directory != NULL) {
+			free (ptr->directory);
+		}
+		if (ptr->fsName != NULL) {
+			free (ptr->fsName);
+		}
+		if (ptr->artist != NULL) {
+			free (ptr->artist);
+		}
+		if (ptr->title != NULL) {
+			free (ptr->title);
+		}
+		free (ptr);
+		destroy_list (tmp);
+	}
+}
+
+
 	
 int main (int argc, char *argv[])
 {
 	FILE *fp = fopen ("/home/user/.mpd/db_unzip", "r");
-	list_t *listDB = NULL;
+	list_t *listDB = initialize_list ();
 	directory_list_t *dirs = NULL;
 	char buf[5000];
 	
 	while (fgets (buf, 5000, fp) != NULL) {
 		listDB = insert_line_in_memory (buf, listDB, &dirs);
-		if (dirs != NULL) {
-		}
 	}
 	fclose (fp);
 
 	listDB = return_to_head (listDB);
 	search (argv[1], listDB);
+
+	destroy_list (listDB);
 
 	return 0;
 }
