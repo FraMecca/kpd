@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "tpl.h"
+
+
 
 typedef struct list_t {
 	char* directory;
@@ -12,6 +15,10 @@ typedef struct list_t {
 	struct list_t *next;
 	struct list_t *prev;
 } list_t;
+
+list_t *link (list_t *a, list_t *b);
+void serialize (list_t *listDB);
+list_t *deserialize ();
 
 typedef struct directory_list_t {
 	char *name;
@@ -190,6 +197,7 @@ void search (char *st, list_t *listDB)
 		if (is_contained (st, listDB)) {
 			res = (get_complete_name (listDB));
 			printf ("%s\n", res);
+			free (res);
 		}
 		listDB = listDB->next;
 	}
@@ -225,11 +233,10 @@ void destroy_list (list_t *ptr)
 }
 
 
-	
 int main (int argc, char *argv[])
 {
 	FILE *fp = fopen ("/home/user/.mpd/db_unzip", "r");
-	list_t *listDB = initialize_list ();
+	list_t *listDB = initialize_list (), *ptr;
 	directory_list_t *dirs = NULL;
 	char buf[5000];
 	
@@ -238,10 +245,51 @@ int main (int argc, char *argv[])
 	}
 	fclose (fp);
 
-	listDB = return_to_head (listDB);
-	search (argv[1], listDB);
-
+	/*listDB = return_to_head (listDB);*/
+	serialize (listDB);
 	destroy_list (listDB);
+	ptr = deserialize ();
+	ptr = return_to_head (ptr);
+	search (argv[1], ptr);
+
+
 
 	return 0;
+}
+
+void serialize (list_t *listDB)
+{
+	tpl_node *tn;
+	int i = 0;
+	list_t TMP;
+	
+	tn = tpl_map ("A(S(ssss))", &TMP);
+	/*tpl_pack (tn, 0);*/
+	while (listDB != NULL) {
+		TMP = *listDB;
+		tpl_pack (tn, 1);
+		listDB = listDB->next;
+	}
+	tpl_dump (tn, TPL_FILE, "list.serial");
+	tpl_free (tn);
+}
+
+list_t *deserialize ()
+{
+	tpl_node *tn;
+	list_t TMP, *ptr = initialize_list ();
+	int i = 0, c;
+
+	tn = tpl_map ("A(S(ssss))", &TMP);
+	tpl_load (tn, TPL_FILE, "list.serial.old");
+	while (( c = tpl_unpack (tn, 1)) > 2) {
+		*ptr = TMP;
+		/*printf ("%s  %d-%d\n", new->fsName, i, c);*/
+		ptr = insert_tail (ptr);
+		/*++i;*/
+	}
+	tpl_free (tn);
+
+	return ptr;
+
 }
