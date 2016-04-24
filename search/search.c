@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "tpl.h"
+#include <zlib.h>
 
 typedef struct list_t {
 	char* directory;
@@ -165,24 +166,25 @@ void destroy_list (list_t *ptr)
 }
 
 
-int main (int argc, char *argv[])
-{
-	FILE *fp = fopen ("/home/user/.mpd/db_unzip", "r");
-	list_t *listDB = initialize_list (), *ptr;
-	directory_list_t *dirs = NULL;
-	char buf[5000];
+/*int main (int argc, char *argv[])*/
+/*{*/
+	/*gzFile fp = gzopen ("./db.zip", "r");*/
+	/*list_t *listDB = initialize_list (), *ptr;*/
+	/*directory_list_t *dirs = NULL;*/
+	/*char buf[5000];*/
 	
-	while (fgets (buf, 5000, fp) != NULL) {
-		listDB = insert_line_in_memory (buf, listDB, &dirs);
-	}
-	fclose (fp);
+	/*while (gzgets (fp, buf, 5000) != NULL) {*/
+		/*listDB = insert_line_in_memory (buf, listDB, &dirs);*/
+		/*printf ("%s\n", buf);*/
+	/*}*/
+	/*gzclose (fp);*/
 
-	listDB = return_to_head (listDB);
-	serialize (listDB);
-	destroy_list (listDB);
+	/*listDB = return_to_head (listDB);*/
+	/*serialize (listDB);*/
+	/*destroy_list (listDB);*/
 
-	return 0;
-}
+	/*return 0;*/
+/*}*/
 
 void serialize (list_t *listDB)
 {
@@ -199,4 +201,28 @@ void serialize (list_t *listDB)
 	}
 	tpl_dump (tn, TPL_FILE, "list.serial");
 	tpl_free (tn);
+}
+
+
+
+
+
+int main (int argc, char *argv[])
+{
+	FILE *fp = fopen ("/home/user/.mpd/db_2", "r");
+	list_t *listDB = initialize_list (), *ptr;
+	directory_list_t *dirs = NULL;
+	char buf[5000];
+	
+	while (fgets (buf, 5000, fp) != NULL) {
+		listDB = insert_line_in_memory (buf, listDB, &dirs);
+		printf ("%s\n", buf);
+	}
+	fclose (fp);
+
+	listDB = return_to_head (listDB);
+	serialize (listDB);
+	destroy_list (listDB);
+
+	return 0;
 }
