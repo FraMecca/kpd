@@ -105,4 +105,4 @@ if __name__ == '__main__':
 
     #print in a different format
     if args.format != False: ### E` BRUTTO!, dovrebbe influenzare tutti i print_status (!, evidenzia la bruttura)
-        formatter.print_status (client, args.format[0])
+        formatter.print_status (client.client, args.format[0])

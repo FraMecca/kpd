@@ -217,6 +217,9 @@ def search (client, searchItem, null):
     for entry in res:
         print(entry)
     return res
+    # This is search using C code
+    # from _deserialize import search_c_main
+    # search_c_main (searchItem)
 
 def shuffle (client, args, null):
     client.client.shuffle ()
