@@ -1,4 +1,4 @@
-import musicpd, MPDdatabase
+import musicpd
 from sys import argv
 import sys
 
@@ -208,6 +208,7 @@ def filter (client, args, res):
     else:
         pass
 def search (client, searchItem, null):
+    import MPDdatabase
     argFilter = client.needToFilter
     DBlocation = client.DBlocation
     retlist = MPDdatabase.searchDB(searchItem, DBlocation, client.searchMode, client.pickleDB)
