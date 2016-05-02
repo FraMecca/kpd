@@ -1,6 +1,13 @@
 cdef extern from "C_search.h":
-    void search_c_main (char *key)
-    
-def search (key):
+    char **search_c_main (char *key, int *size, char *DBlocation)
+    void destroy_results (char **results, int size)
+    void print_results (char **results, int size)
+
+
+def search (key, DBlocation):
     '''search library module.'''
-    search_c_main (key)
+    cdef int size = 0, i = 0
+    cdef char** results
+    results = search_c_main (key, &size, DBlocation)
+    print_results (results, size)
+    destroy_results (results, size)

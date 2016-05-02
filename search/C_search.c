@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <zlib.h>
 #include <string.h>
+#include "C_search.h"
 
 list_t* insert_line_in_memory (char *line, list_t *listDB, directory_list_t **dirsRef);
 
@@ -40,18 +41,27 @@ char *get_complete_name (list_t *ptr)
 	return (st);
 }
 
-void search (char *st, list_t *listDB)
+char **search (char *st, list_t *listDB, int *cnt)
 {
-	char *res;
+	char *res, **results;
+	int size = 0;
+
+	results = malloc (0 * sizeof (char*));
+
 
 	while (listDB != NULL) {
 		if (is_contained (st, listDB)) {
 			res = (get_complete_name (listDB));
-			printf ("%s\n", res);
+			size++;
+			results = (char **) realloc (results, size * sizeof (char *));
+			results[size - 1] = strdup (res);
 			free (res);
 		}
 		listDB = listDB->next;
 	}
+	
+	*cnt = size;
+	return results;
 }
 
 list_t* insert_line_in_memory (char *line, list_t *listDB, directory_list_t **dirsRef)
@@ -111,30 +121,36 @@ list_t* insert_line_in_memory (char *line, list_t *listDB, directory_list_t **di
 
 int main (int argc, char *argv[])
 {
-	gzFile fp = gzopen ("/home/user/.mpd/database", "r");
-	list_t *listDB = initialize_list ();
-	directory_list_t *dirs = NULL;
-	char buf[5000];
+	/*gzFile fp = gzopen ("/home/user/.mpd/database", "r");*/
+	/*list_t *listDB = initialize_list ();*/
+	/*directory_list_t *dirs = NULL;*/
+	/*char buf[5000];*/
+	int i = 0;
 	
-	while (gzgets (fp, buf, 5000) != NULL) {
-		listDB = insert_line_in_memory (buf, listDB, &dirs);
-	}
-	gzclose (fp);
+	/*while (gzgets (fp, buf, 5000) != NULL) {*/
+		/*listDB = insert_line_in_memory (buf, listDB, &dirs);*/
+	/*}*/
+	/*gzclose (fp);*/
 
-	/*listDB = deserialize ();*/
-	listDB = return_to_head (listDB);
-	search (argv[1], listDB);
+	/*[>listDB = deserialize ();<]*/
+	/*listDB = return_to_head (listDB);*/
+	/*search (argv[1], listDB, &i);*/
 
-	destroy_list (listDB);
+	/*destroy_list (listDB);*/
+
+	search_c_main (argv[1], &i, "/home/user/.mpd/database");
+
 	return 0;
 }
 
-void search_c_main (char *key)
+char **search_c_main (char *key, int *size, char *DBlocation)
 {
-	gzFile fp = gzopen ("/home/user/.mpd/database", "r");
+	gzFile fp = gzopen (DBlocation, "r");
 	list_t *listDB = initialize_list ();
 	directory_list_t *dirs = NULL;
-	char buf[5000];
+	char buf[5000], **results;
+	int i;
+
 	
 	while (gzgets (fp, buf, 5000) != NULL) {
 		listDB = insert_line_in_memory (buf, listDB, &dirs);
@@ -142,10 +158,28 @@ void search_c_main (char *key)
 	gzclose (fp);
 
 	listDB = return_to_head (listDB);
-	search (key, listDB);
+	results = search (key, listDB, size);
+	/*for (i = 0; i < *size ; ++i) {*/
+		/*printf ("%s\n", results[i]);*/
+	/*}*/
 
 	destroy_list (listDB);
+	return results;
 }
 
+void destroy_results (char **results, int size)
+{
+	int i;
+	for (i = 0; i < size; ++i) {
+		free (results[i]);
+	}
+	free (results);
+}
 
-
+void print_results (char **results, int size)
+{
+	int i;
+	for (i = 0; i < size; ++i) {
+		printf ("%s\n", results[i]);
+	}
+}
