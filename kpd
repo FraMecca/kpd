@@ -1,6 +1,10 @@
 #!/usr/bin/python3
 
-import musicpd, sys, argparse, MPDdatabase, util, config_file, formatter
+import sys
+import musicpd 
+import argparse
+import util
+import config_file
 
 def parse_args ():
     parser = argparse.ArgumentParser ()
@@ -66,13 +70,12 @@ def order_args (argv):
             argsOrder.append (argsDict2[el])
     return argsOrder
 
-
 if __name__ == '__main__':
 
-    DBlocation, searchMode, host, port, pickleDB = config_file.parse_file ()
+    DBlocation, host, port = config_file.parse_file ()
     argsOrder = order_args (sys.argv)
     args, dictArgs = parse_args ()
-    client = util.mpdclient (DBlocation, searchMode, host, port,pickleDB, args.filter)
+    client = util.mpdclient (DBlocation, host, port, args.filter)
 
 ## no args
     if not len (sys.argv) > 1:
@@ -105,4 +108,5 @@ if __name__ == '__main__':
 
     #print in a different format
     if args.format != False: ### E` BRUTTO!, dovrebbe influenzare tutti i print_status (!, evidenzia la bruttura)
+        import formatter
         formatter.print_status (client.client, args.format[0])

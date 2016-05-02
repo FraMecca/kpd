@@ -3,13 +3,11 @@ from sys import argv
 import sys
 
 class mpdclient:
-    def __init__ (self, DBlocation, searchMode, host, port, pickleDB, argFilter):
+    def __init__ (self, DBlocation, host, port, argFilter):
         self.DBlocation = DBlocation
         self.client = musicpd.MPDClient ()
         self.client.connect (host, port)
         self.status = self.client.status ()
-        self.searchMode = searchMode
-        self.pickleDB = pickleDB
         if argFilter:
             self.needToFilter = argFilter
         else:
@@ -208,19 +206,19 @@ def filter (client, args, res):
     else:
         pass
 def search (client, searchItem, null):
-    import MPDdatabase
-    argFilter = client.needToFilter
-    DBlocation = client.DBlocation
-    retlist = MPDdatabase.searchDB(searchItem, DBlocation, client.searchMode, client.pickleDB)
-    if argFilter:
-        retlist = MPDdatabase.filterDB(argv, retlist)
-    res = polish_return (retlist)
-    for entry in res:
-        print(entry)
-    return res
+    # import MPDdatabase
+    # argFilter = client.needToFilter
+    # DBlocation = client.DBlocation
+    # retlist = MPDdatabase.searchDB(searchItem, DBlocation, client.searchMode, client.pickleDB)
+    # if argFilter:
+        # retlist = MPDdatabase.filterDB(argv, retlist)
+    # res = polish_return (retlist)
+    # for entry in res:
+        # print(entry)
+    # return res
     # This is search using C code
-    # from _deserialize import search_c_main
-    # search_c_main (searchItem)
+    from search import cython_search
+    cython_search.search (str.encode(searchItem), str.encode(client.DBlocation))
 
 def shuffle (client, args, null):
     client.client.shuffle ()

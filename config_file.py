@@ -1,6 +1,6 @@
 import os
 
-values = {'db': '', 'host':'', 'port':'', 'searchmode':'', 'pickle_DB_location':''}
+values = {'db': '', 'host':'', 'port':''}
 # @profile
 def parse_file ():
     confFile = os.path.expanduser ("~") + '/.kpd.conf'
@@ -29,18 +29,11 @@ def parse_file ():
         host = input ()
         print ('\ninput port')
         port = input ()
-        print ('\ninput search mode (mpd, pickle)')
-        searchMode = input ()
-        print ('\ninput pickle_DB_location, if any')
-        pickle_DB_location = input ()
         with open (confFile, 'w') as fp:
             fp.write ('db = ' + dbLocation + '\n')
             fp.write ('host = ' + host + '\n')
             fp.write ('port = ' + port + '\n')
-            fp.write ('searchmode = ' + searchMode + '\n')
-            if pickle_DB_location:
-                fp.write ('pickle_DB_location = ' + pickle_DB_location + '\n')
         exit (2)
 
     # print ( values['db'], values['searchmode'], values['host'], values['port'], values['pickle_DB_location'])
-    return values['db'], values['searchmode'], values['host'], values['port'], values['pickle_DB_location']
+    return values['db'], values['host'], values['port']
