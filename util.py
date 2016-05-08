@@ -8,6 +8,7 @@ class mpdclient:
         self.client = musicpd.MPDClient ()
         self.client.connect (host, port)
         self.status = self.client.status ()
+        self.formatSt = '[[%artist% - ][%title%]]\\n[%album%]\\n(%status%)  #%track%/%tracks%  %time%:%total%'
         if argFilter:
             self.needToFilter = argFilter
         else:
@@ -105,34 +106,36 @@ def get_generic_info (status):
     return genericInfo
 
 def current_status (client):
-    status = client.client.status ()
-    song = client.client.currentsong ()
-    try:
-        artist = song['artist']
-    except:
-        artist = ''
-    try:
-        album = song['album']
-    except:
-        album = ''
-    try:
-        title = song['title']
-    except:
-        title = ''
-    if artist or title:
-        print (artist, '-', title)
-    else:
-        print (song['file'])
-    if album:
-        print (album)
-    time = status['time']
-    time = time.split (':')
-    elapsedTime = convert_time (time[0])
-    totalTime = convert_time (time[1])
-    genericInfo = get_generic_info (status) #get random, repeat, consume, single
-    print ('(' + status['state'] + ')', ' #' + str (int (status['song']) + 1) + '/' + status['playlistlength'], ' ', elapsedTime + '/' + totalTime, genericInfo)
-    if 'updating_db' in status:
-        print ('Database Update #' + status['updating_db'])
+    import formatter
+    formatter.print_status (client.client, client.formatSt)
+    # status = client.client.status ()
+    # song = client.client.currentsong ()
+    # try:
+        # artist = song['artist']
+    # except:
+        # artist = ''
+    # try:
+        # album = song['album']
+    # except:
+        # album = ''
+    # try:
+        # title = song['title']
+    # except:
+        # title = ''
+    # if artist or title:
+        # print (artist, '-', title)
+    # else:
+        # print (song['file'])
+    # if album:
+        # print (album)
+    # time = status['time']
+    # time = time.split (':')
+    # elapsedTime = convert_time (time[0])
+    # totalTime = convert_time (time[1])
+    # genericInfo = get_generic_info (status) #get random, repeat, consume, single
+    # print ('(' + status['state'] + ')', ' #' + str (int (status['song']) + 1) + '/' + status['playlistlength'], ' ', elapsedTime + '/' + totalTime, genericInfo)
+    # if 'updating_db' in status:
+        # print ('Database Update #' + status['updating_db'])
 
 #clean the string for a correct return in stdout
 def polish_return (retlist):
@@ -243,6 +246,11 @@ def consume (client, state, null):
         client.client.consume (0)
     else:
         print ('Toggle on or off')
+
+def format (client, arg, null):
+    client.formatSt = arg[0]
+    if (len (argv) == 3):
+        current_status (client)
 
 def single (client, state, null):
     if state == 'on':

@@ -61,7 +61,8 @@ def order_args (argv):
     argsDict1 = {'-h':'help', '-p':'play', '-n':'next', '-u':'update', '-s':'search', '-f':'filter', '-pl':'playlist', '-a':'add'}
     argsDict2 = {'--help':'help', '--play':'play', '--next':'next', '--update':'update', '--search':'search', '--filter':'filter', '--playlist':'playlist', \
                  '--stop':'stop', '--random':'random', '--clear':'clear', '--seek':'seek', '--shuffle':'shuffle', '--consume':'consume', '--single':'single','--swap':'swap',\
-                 '--prev':'previous', '--previous':'previous', '--add':'add', '--output':'output', '--no-output':'no_output', '--search-mode':'search_mode', '--pause':'pause'}
+                 '--prev':'previous', '--previous':'previous', '--add':'add', '--output':'output', '--no-output':'no_output', '--search-mode':'search_mode', '--pause':'pause',\
+                 '--format':'format'}
     argsOrder = list ()
     for el in argv:
         if el in argsDict1:
@@ -105,8 +106,3 @@ if __name__ == '__main__':
 
             if retUtil != None: #the only alternative is a return null in every funct
                 searchRes = retUtil
-
-    #print in a different format
-    if args.format != False: ### E` BRUTTO!, dovrebbe influenzare tutti i print_status (!, evidenzia la bruttura)
-        import formatter
-        formatter.print_status (client.client, args.format[0])
