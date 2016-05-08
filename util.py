@@ -8,7 +8,8 @@ class mpdclient:
         self.client = musicpd.MPDClient ()
         self.client.connect (host, port)
         self.status = self.client.status ()
-        self.formatSt = '[[%artist% - ][%title%]]\\n[%album%]\\n(%status%)  #%track%/%tracks%  %time%:%total%'
+        # self.formatSt = '[%artist%] - [%title%]\\n[%album%]\\n(%status%)  #%track%/%tracks%  %time%:%total%'
+        self.formatSt = 'default'
         if argFilter:
             self.needToFilter = argFilter
         else:
@@ -106,36 +107,38 @@ def get_generic_info (status):
     return genericInfo
 
 def current_status (client):
-    import formatter
-    formatter.print_status (client.client, client.formatSt)
-    # status = client.client.status ()
-    # song = client.client.currentsong ()
-    # try:
-        # artist = song['artist']
-    # except:
-        # artist = ''
-    # try:
-        # album = song['album']
-    # except:
-        # album = ''
-    # try:
-        # title = song['title']
-    # except:
-        # title = ''
-    # if artist or title:
-        # print (artist, '-', title)
-    # else:
-        # print (song['file'])
-    # if album:
-        # print (album)
-    # time = status['time']
-    # time = time.split (':')
-    # elapsedTime = convert_time (time[0])
-    # totalTime = convert_time (time[1])
-    # genericInfo = get_generic_info (status) #get random, repeat, consume, single
-    # print ('(' + status['state'] + ')', ' #' + str (int (status['song']) + 1) + '/' + status['playlistlength'], ' ', elapsedTime + '/' + totalTime, genericInfo)
-    # if 'updating_db' in status:
-        # print ('Database Update #' + status['updating_db'])
+    if client.formatSt != 'default':
+        import formatter
+        formatter.print_status (client.client, client.formatSt)
+    else:
+        status = client.client.status ()
+        song = client.client.currentsong ()
+        try:
+            artist = song['artist']
+        except:
+            artist = ''
+        try:
+            album = song['album']
+        except:
+            album = ''
+        try:
+            title = song['title']
+        except:
+            title = ''
+        if artist or title:
+            print (artist, '-', title)
+        else:
+            print (song['file'])
+        if album:
+            print (album)
+        time = status['time']
+        time = time.split (':')
+        elapsedTime = convert_time (time[0])
+        totalTime = convert_time (time[1])
+        genericInfo = get_generic_info (status) #get random, repeat, consume, single
+        print ('(' + status['state'] + ')', ' #' + str (int (status['song']) + 1) + '/' + status['playlistlength'], ' ', elapsedTime + '/' + totalTime, genericInfo)
+        if 'updating_db' in status:
+            print ('Database Update #' + status['updating_db'])
 
 #clean the string for a correct return in stdout
 def polish_return (retlist):
@@ -209,19 +212,19 @@ def filter (client, args, res):
     else:
         pass
 def search (client, searchItem, null):
-    # import MPDdatabase
-    # argFilter = client.needToFilter
-    # DBlocation = client.DBlocation
-    # retlist = MPDdatabase.searchDB(searchItem, DBlocation, client.searchMode, client.pickleDB)
-    # if argFilter:
-        # retlist = MPDdatabase.filterDB(argv, retlist)
-    # res = polish_return (retlist)
-    # for entry in res:
-        # print(entry)
-    # return res
-    # This is search using C code
+    # # import MPDdatabase
+    # # argFilter = client.needToFilter
+    # # DBlocation = client.DBlocation
+    # # retlist = MPDdatabase.searchDB(searchItem, DBlocation, client.searchMode, client.pickleDB)
+    # # if argFilter:
+        # # retlist = MPDdatabase.filterDB(argv, retlist)
+    # # res = polish_return (retlist)
+    # # for entry in res:
+        # # print(entry)
+    # # return res
+    # # This is search using C code
     from search import cython_search
-    cython_search.search (str.encode(searchItem), str.encode(client.DBlocation))
+    return (cython_search.search (str.encode(searchItem), str.encode(client.DBlocation)))
 
 def shuffle (client, args, null):
     client.client.shuffle ()
