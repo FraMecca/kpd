@@ -223,7 +223,7 @@ def search (client, searchItem, null):
         # # print(entry)
     # # return res
     # # This is search using C code
-    from search import cython_search
+    import cython_search
     # return (cython_search.search (str.encode(searchItem), str.encode(client.DBlocation)))
     if client.needToFilter:
         res = cython_search.search (str.encode (searchItem), str.encode (client.DBlocation), str.encode (' '.join (client.needToFilter)))

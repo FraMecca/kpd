@@ -3,9 +3,9 @@ import subprocess
 import os
 
 os.chdir ("./search")
-subprocess.call (["python3", "setup.py", "build_ext", "--inplace"])
+subprocess.call (["python3", "setup.py", "install"])
 os.chdir ('..')
-# setup (name='kpd',
-        # scripts=['kpd'],
-        # py_modules=['shell', 'util', 'config_file', 'MPDdatabase', 'formatter'],
-        # packages=find_packages())
+setup (name='kpd',
+        scripts=['kpd'],
+        py_modules=['shell', 'util', 'config_file', 'MPDdatabase', 'formatter', 'cython_search'],
+        packages=find_packages())
