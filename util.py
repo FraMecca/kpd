@@ -224,7 +224,15 @@ def search (client, searchItem, null):
     # # return res
     # # This is search using C code
     from search import cython_search
-    return (cython_search.search (str.encode(searchItem), str.encode(client.DBlocation)))
+    # return (cython_search.search (str.encode(searchItem), str.encode(client.DBlocation)))
+    if client.needToFilter:
+        res = cython_search.search (str.encode (searchItem), str.encode (client.DBlocation), str.encode (' '.join (client.needToFilter)))
+    else:
+        res = cython_search.search (str.encode (searchItem), str.encode (client.DBlocation), False)
+
+    for item in res:
+        print (item)
+    return res
 
 def shuffle (client, args, null):
     client.client.shuffle ()
