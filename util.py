@@ -3,7 +3,7 @@ from sys import argv
 import sys
 
 class mpdclient:
-    def __init__ (self, DBlocation, host, port, argFilter):
+    def __init__ (self, DBlocation, host, port, argFilter, revArgFilter):
         self.DBlocation = DBlocation
         self.client = musicpd.MPDClient ()
         self.client.connect (host, port)
@@ -11,9 +11,13 @@ class mpdclient:
         # self.formatSt = '[%artist%] - [%title%]\\n[%album%]\\n(%status%)  #%track%/%tracks%  %time%:%total%'
         self.formatSt = 'default'
         if argFilter:
-            self.needToFilter = argFilter
+            self.needToFilter = str.encode (' '.join (argFilter))
         else:
             self.needToFilter = False
+        if revArgFilter:
+            self.revToFilter = str.encode (' '.join (revArgFilter))
+        else:
+            self.revToFilter = False
     def update_status (self):
         self.status = self.client.status ()
 
@@ -211,6 +215,14 @@ def filter (client, args, res):
         exit(2)
     else:
         pass
+
+def nofilter (client, args, res):
+    if not '-s' in argv and not '--search' in argv:
+        print('filter option can only be used concatenated to a search')
+        exit(2)
+    else:
+        pass
+
 def search (client, searchItem, null):
     # # import MPDdatabase
     # # argFilter = client.needToFilter
@@ -226,9 +238,7 @@ def search (client, searchItem, null):
     import cython_search
     # return (cython_search.search (str.encode(searchItem), str.encode(client.DBlocation)))
     if client.needToFilter:
-        res = cython_search.search (str.encode (searchItem), str.encode (client.DBlocation), str.encode (' '.join (client.needToFilter)))
-    else:
-        res = cython_search.search (str.encode (searchItem), str.encode (client.DBlocation), False)
+        res = cython_search.search (str.encode (searchItem), str.encode (client.DBlocation), client.needToFilter, client.revToFilter)
 
     for item in res:
         print (item)
@@ -279,8 +289,5 @@ def output (client, args, null):
 
 def no_output (client, args, null):
     sys.stdout = nostdout (sys.stdout)
-
-def search_mode (client, args, null):
-    client.searchMode = args
 
 #end util.py

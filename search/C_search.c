@@ -6,14 +6,10 @@
 #include <zlib.h>
 #include <string.h>
 #include "C_search.h"
+#include "filter.h"
 
 list_t* insert_line_in_memory (char *line, list_t *listDB, directory_list_t **dirsRef);
 
-typedef struct Filter_struct {
-	char **type;
-	char **key;
-	int size;
-} Filter_struct;
 
 int is_contained (char *st, list_t *ptr)
 {
@@ -51,63 +47,8 @@ char *get_complete_name (list_t *ptr)
 	return (st);
 }
 
-int filter_items (Filter_struct f, list_t *ptr, int i)
-{
 
-		if (strcasecmp (f.type[i], "any") == 0) {
-			return is_contained (f.key[i], ptr);
-		} else {
-			if (strcasecmp ("artist", f.type[i]) == 0 && 
-					ptr->artist != NULL && strcasestr (ptr->artist, f.key[i]) != NULL) {
-				return 1;
-			} else {
-				if (strcasecmp ("album", f.type[i]) == 0 && 
-						ptr->album != NULL && strcasestr (ptr->album, f.key[i]) != NULL) {
-					return 1;
-				} else {
-					if (strcasecmp ("title", f.type[i]) == 0 && 
-							ptr->title != NULL && strcasestr (ptr->title, f.key[i]) != NULL) {
-						return 1;
-					} else {
-						if (strcasecmp ("directory", f.type[i]) == 0 &&
-								ptr->directory != NULL && strcasestr (ptr->directory, f.key[i]) != NULL) {
-								return 1;
-						}
-					}
-				}
-			}
-		}
-	
-	return 0;
-}
-
-int filter_check (int flag, Filter_struct filter, list_t *listDB)
-{
-	int i;
-	if (flag) {
-		for (i = 0; i < filter.size; ++i) {
-			if (!filter_items (filter, listDB, i)) {
-				return 0;
-			}
-		}
-		return 1;
-	} else {
-		return 1;
-	}
-}
-
-void destroy_filter_struct (Filter_struct filter)
-{
-	int i;
-	for (i = 0; i < filter.size; ++i) {
-		free (filter.type[i]);
-		free (filter.key[i]);
-	}
-	free (filter.type);
-	free (filter.key);
-}
-
-char **search (char *st, list_t *listDB, int *cnt, Filter_struct filter, int filterFlag)
+char **search (char *st, list_t *listDB, int *cnt, Filter_struct filter, int filterFlag, Filter_struct revFilter, int revFilterFlag)
 {
 	char *res, **results;
 	int size = 0;
@@ -116,7 +57,9 @@ char **search (char *st, list_t *listDB, int *cnt, Filter_struct filter, int fil
 
 
 	while (listDB != NULL) {
-		if (is_contained (st, listDB) && filter_check (filterFlag, filter, listDB)) {
+		if (is_contained (st, listDB) && 
+				filter_check (filterFlag, filter, listDB) && 
+				rev_filter_check (revFilterFlag, revFilter, listDB)) {
 			
 			res = (get_complete_name (listDB));
 			size++;
@@ -205,7 +148,7 @@ int main (int argc, char *argv[])
 
 	/*destroy_list (listDB);*/
 
-	search_c_main (argv[1], &i, "/home/user/.mpd/database", argv[2]);
+	search_c_main (argv[1], &i, "/home/user/.mpd/database", argv[2], argv[3]);
 
 	return 0;
 }
@@ -242,14 +185,14 @@ Filter_struct parse_filter_struct (char *filterSt)
 	return filter;
 }
 
-char **search_c_main (char *key, int *size, char *DBlocation, char *filterSt)
+char **search_c_main (char *key, int *size, char *DBlocation, char *filterSt, char *revFilterSt)
 {
 	gzFile fp = gzopen (DBlocation, "r");
 	list_t *listDB = initialize_list ();
 	directory_list_t *dirs = NULL;
 	char buf[5000], **results;
-	int i, filterFlag;
-	Filter_struct filter;
+	int i, filterFlag, revFilterFlag;
+	Filter_struct filter, revFilter;
 
 	while (gzgets (fp, buf, 5000) != NULL) {
 		listDB = insert_line_in_memory (buf, listDB, &dirs);
@@ -262,13 +205,18 @@ char **search_c_main (char *key, int *size, char *DBlocation, char *filterSt)
 	} else {
 		filterFlag = 0;
 	}
+	if (revFilterSt != NULL) {
+		revFilterFlag = 1;
+		revFilter = parse_filter_struct (revFilterSt);
+	} else {
+		revFilterFlag = 0;
+	}
 	listDB = return_to_head (listDB);
-	results = search (key, listDB, size, filter, filterFlag);
+	results = search (key, listDB, size, filter, filterFlag, revFilter, revFilterFlag);
 	destroy_list (listDB);
 	if (filterSt != NULL) {
 		destroy_filter_struct (filter);
 	}
-	/*print_results (results, *size);*/
 	return results;
 }
 
