@@ -21,17 +21,16 @@ Here is an example:
 db = /home/user/.mpd/database
 host = localhost
 port = 6600
-searchmode = pickle
-pickle_DB_location = /home/user/.mpd/kpd_db
 ```
 
 The client has a set of commands that can be explored using `kpd --help`:
 
 ```
-usage: kpd [-h] [-p [PLAY]] [-n] [-ps] [--stop] [--random [RANDOM]] [-u] [-a]
-           [-s [SEARCH]] [-f FILTER [FILTER ...]] [--clear] [-pl]
-           [--seek [SEEK]] [--shuffle] [--consume [CONSUME]]
-           [--single [SINGLE]] [--swap SWAP SWAP] [--shell]
+usage: kpd [-h] [-p [PLAY]] [--pause [PAUSE]] [-n] [-ps] [--stop]
+           [--random [RANDOM]] [-u] [-a] [-s [SEARCH]]
+           [-f FILTER [FILTER ...]] [-nf NO_FILTER [NO_FILTER ...]] [--clear]
+           [-pl] [--seek [SEEK]] [--shuffle] [--consume [CONSUME]]
+           [--single [SINGLE]] [--swap SWAP SWAP]
            [--format FORMAT [FORMAT ...]] [--output] [--no-output]
            [--search-mode [SEARCH_MODE]]
 
@@ -39,6 +38,7 @@ optional arguments:
   -h, --help            show this help message and exit
   -p [PLAY], --play [PLAY]
                         toggle play, input number to play song in playlist
+  --pause [PAUSE]       toggle pause
   -n, --next            play next track
   -ps, --previous, --prev
                         play previous track
@@ -52,6 +52,9 @@ optional arguments:
   -f FILTER [FILTER ...], --filter FILTER [FILTER ...]
                         filter search result, can use 'artist', 'album',
                         'title', grep like functionality
+  -nf NO_FILTER [NO_FILTER ...], --no-filter NO_FILTER [NO_FILTER ...]
+                        filter search result excluding matching, can use
+                        'artist', 'album', 'title', grep -n like functionality
   --clear               clear playlist
   -pl, --playlist       show playlist
   --seek [SEEK]         seek current track: works by seconds or by percentage
@@ -96,7 +99,7 @@ Kyuss Discography/Albums/(1995) ...and the Circus Leaves Town/09 Size Queen.flac
 ```
 
 ```
-$ kpd --search valley -f artist kyuss
+$ kpd --search valley -f artist kyuss -nf conan water
 Kyuss Discography/Albums/(1994) Welcome to Sky Valley/01 Gardenia.flac
 Kyuss Discography/Albums/(1994) Welcome to Sky Valley/02 Asteroid.flac
 Kyuss Discography/Albums/(1994) Welcome to Sky Valley/03 Supa Scoopa and Mighty Scoop.flac
@@ -104,25 +107,16 @@ Kyuss Discography/Albums/(1994) Welcome to Sky Valley/04 100°.flac
 Kyuss Discography/Albums/(1994) Welcome to Sky Valley/05 Space Cadet.flac
 Kyuss Discography/Albums/(1994) Welcome to Sky Valley/06 Demon Cleaner.flac
 Kyuss Discography/Albums/(1994) Welcome to Sky Valley/07 Odyssey.flac
-Kyuss Discography/Albums/(1994) Welcome to Sky Valley/08 Conan Troutman.flac
 Kyuss Discography/Albums/(1994) Welcome to Sky Valley/09 N.O..flac
-Kyuss Discography/Albums/(1994) Welcome to Sky Valley/10 Whitewater.flac
 ```
 
-The filter flag is case insensitive and accepts _artist, album, title_ option parameters.
+The filter nd no-filterflag is case insensitive and accepts _artist, album, title_ option parameters.
 Actually the filter flag has grep like functionality so it can filter the search on any parameters, symbols or file extensions included.
 
 ### Search Methods
-In the configuration file the are some parameters that specifies the search method that the client will use.
-
-```
-searchmode = pickle
-pickle_DB_location = /home/user/.mpd/kpd_db
-```
-
-With these parameters the client will use the [pickle](https://docs.python.org/3.4/library/pickle.html) python library to store the database in serial format.
-If `searchmode = mpd` is specified in the config file kpd will search using the zipped mpd database that is stored in the mpd directory.
-The pickle method is way faster and strongly suggested, however a secondary database will be written to disk.
+Originally the client allowed the user to use a pickle serial db.
+Now the search method has been rewritten in C (with cython bindings) in a simplier way: it just looks inside the gzipped default mpd database.
+The search is way faster in C rather than in pickle.
 
 ### Add result
 The result of the search can be added to the playlist with `--add` or `-a` arguments. kpd can also be used in a pipe like this:
