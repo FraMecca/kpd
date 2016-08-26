@@ -89,7 +89,8 @@ def playlist (client, args, null):
             l += ' - ' + item['title']
         if not l:
             l = item['file']
-        print (str (i) + '.', l)
+        l = ''.join ([str (i), '. ', l, '\n'])
+        sys.stdout.buffer.write(l.encode ('utf-8'))
         i += 1
         l = ''
 
