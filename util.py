@@ -238,9 +238,9 @@ def search (client, searchItem, null):
     import cython_search
     # return (cython_search.search (str.encode(searchItem), str.encode(client.DBlocation)))
     res = cython_search.search (str.encode (searchItem), str.encode (client.DBlocation), client.needToFilter, client.revToFilter)
-
+    
     for item in res:
-        print (item)
+        print (item.encode ('utf-8'))
     return res
 
 def shuffle (client, args, null):
