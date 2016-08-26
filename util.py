@@ -240,7 +240,8 @@ def search (client, searchItem, null):
     res = cython_search.search (str.encode (searchItem), str.encode (client.DBlocation), client.needToFilter, client.revToFilter)
     
     for item in res:
-        print (item.encode ('utf-8'))
+#        print (item.encode ('utf-8'))
+        sys.stdout.buffer.write(b''.join ([item.encode ('utf-8'), b'\n']))
     return res
 
 def shuffle (client, args, null):
