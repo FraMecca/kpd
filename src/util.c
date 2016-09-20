@@ -16,6 +16,7 @@ play (struct mpd_connection *mpdServer, char **args, int n)
 
 	for(i=0; i<n; i++){
 		puts(args[i]);
+		printf ("%d\n", n);
 		
 		
 	}
