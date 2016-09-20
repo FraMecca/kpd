@@ -1,3 +1,7 @@
+# old branch
+# being rewritten in C
+
+
 # kpd-client
 This is a mpd client written entirely in python.
 It is very similar to mpc in functionality but the with a more efficent and less strict search.
