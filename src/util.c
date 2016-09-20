@@ -12,7 +12,22 @@
  * prototype is standard because it is called from parse_args
  */
 bool
-play (struct *mpd_connection, char **args, int n);
+play (struct *mpd_connection, char **args, int n)
+{
+	int i;
+
+	for(i=0; i<n; i++){
+		puts(args[i]);
+		
+		
+	}
+	
+
+	
+	
+	
+	return bool;
+}
 
 struct mpd_connection*
 open_connection (const char *host, unsigned port, unsigned timeout_ms)
