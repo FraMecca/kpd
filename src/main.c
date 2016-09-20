@@ -1,8 +1,9 @@
 #include <stdio.h> // printf
-#include <gc.h> // boehm GC
 #include <getopt.h> // long_option struct
 #include"parse_args.h" // function table struct
 #include "util.h" // handle for libmpdclient
+#include "gc_util.h" // gc handler
+#include <gc.h> // gc_init
 /*#include <stdlib.h> // free*/
 
 bool funct ()
@@ -57,6 +58,7 @@ static functionTable functions[] = {
 
 int main (int argc, char **argv)
 {
+	GC_INIT ();
 	struct mpd_connection *mpd = NULL;
 	process_cli (argc, argv, long_options, functions, NOPTIONS, mpd, 1);
 	return 0;
