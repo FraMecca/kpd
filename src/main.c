@@ -2,6 +2,7 @@
 #include <gc.h> // boehm GC
 #include <getopt.h> // long_option struct
 #include"parse_args.h" // function table struct
+#include "util.h" // handle for libmpdclient
 /*#include <stdlib.h> // free*/
 
 bool funct ()
@@ -32,7 +33,7 @@ static struct option long_options[] = {    // args neeed:
 };
 
 static functionTable functions[] = {
-	{"play", 		'p', 	(void *) &funct},
+	{"play", 		'p', 	(void *) &play},
 	{"pause",  		'P', 	(void *) &funct},
 	{"next",	 	'n',	(void *) &funct},
 	{"previous", 	'b', 	(void *) &funct},

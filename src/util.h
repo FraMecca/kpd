@@ -1,9 +1,9 @@
 #ifndef KPD_UTIL_H
-#define KPD_ULTIL_H
+#define KPD_UTIL_H
 #include <stdbool.h>
-#include <libmpdclient/client.h>
+#include <mpd/client.h>
 
-bool play (struct *mpd_connection, char **args, int n);
+bool play (struct mpd_connection *, char **args, int n);
 
 
 #endif
