@@ -5,6 +5,7 @@
 #include "gc_util.h" // gc handler
 #include <gc.h> // gc_init
 /*#include <stdlib.h> // free*/
+#include "util2.h" // include hell
 
 bool funct ()
 {
@@ -35,7 +36,7 @@ static struct option long_options[] = {    // args neeed:
 
 static functionTable functions[] = {
 	{"play", 		'p', 	(void *) &play},
-	{"pause",  		'P', 	(void *) &funct},
+	{"pause",  		'P', 	(void *) &pause},
 	{"next",	 	'n',	(void *) &funct},
 	{"previous", 	'b', 	(void *) &funct},
 	{"stop",     	's', 	(void *) &funct},
@@ -59,7 +60,16 @@ static functionTable functions[] = {
 int main (int argc, char **argv)
 {
 	GC_INIT ();
-	struct mpd_connection *mpd = NULL;
-	process_cli (argc, argv, long_options, functions, NOPTIONS, mpd, 1);
+	struct mpd_connection *mpdSession = NULL;
+
+	// attach client to mpd server
+	// should specify the host as config or as command line argument
+	mpdSession = open_connection ("localhost", 6600); 
+	if (mpdSession == NULL) {
+		// didn't get a connection successfully
+		return 2;
+	}
+
+	process_cli (argc, argv, long_options, functions, NOPTIONS, mpdSession, 0);
 	return 0;
 }

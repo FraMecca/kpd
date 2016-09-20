@@ -1,4 +1,6 @@
 #include "util2.h"
+#include <mpd/connection.h>
+#include <mpd/client.h>
 
 #define TIMEOUT 5000
 
@@ -14,7 +16,7 @@ open_connection(const char *host, unsigned port)
 	enum mpd_error connErr;
 	
 	newConn = mpd_connection_new(host, port, TIMEOUT);
-	connErr = mpd_connection_get_error(newConn)
+	connErr = mpd_connection_get_error(newConn);
 	
 	/*if error occours*/
 	if(connErr != MPD_ERROR_SUCCESS){

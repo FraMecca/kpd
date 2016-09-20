@@ -3,6 +3,11 @@
 #include <gc.h> // garbage collector
 #include <stdbool.h> // true false
 
+/* SHOULD 
+ * IMPLEMENT
+ * TOOMANYEL ST ERROR
+ */
+
 /* start play song
  * can accept zero or one arguments
  * if zero args, play current song or song zero
@@ -13,19 +18,22 @@ bool
 play (struct mpd_connection *mpdServer, char **args, int n)
 {
 	bool check;	
-	unsigned pos='0'-args[0][0];
+	unsigned pos;
+	if (n != 0) {
+		pos=args[0][0] - '0';
+	}
 
 	//check args elements, must be at max 1
 	if(n>=2)
 	{
-		fprintf(stdrin,"Too many elements!\n");
+		fprintf(stdout,"Too many elements!\n");
 		return false;
 	}
 	
 	//zero elements, reproduce current song
 	if(n==0)
 	{
-		check = mpd_send_current_song(mpdServer);
+		check = mpd_send_play (mpdServer);
 		return check;
 	}
 	
@@ -39,6 +47,13 @@ play (struct mpd_connection *mpdServer, char **args, int n)
 	return true;
 }
 
-
-
-
+bool 
+pause (struct mpd_connection *mpdServer, char **args, int n)
+{
+	if (n != 0) {
+		fprintf(stdout,"Too many elements!\n");
+		return false;
+	} else {
+		return mpd_send_toggle_pause (mpdServer);
+	}
+}
