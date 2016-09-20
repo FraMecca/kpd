@@ -1,2 +1,0 @@
-gcc -c -fpic C_search_wrap.c C_search.c list_kpd.c  -I/usr/include/python3.4m/ -O2
-gcc -shared C_search.o C_search_wrap.o list_kpd.o  -lz -o _C_search.so -O2
