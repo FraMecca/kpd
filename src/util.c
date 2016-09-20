@@ -12,19 +12,30 @@
 bool
 play (struct mpd_connection *mpdServer, char **args, int n)
 {
-	int i;
+	bool check;	
+	unsigned pos='0'-args[0][0];
 
-	for(i=0; i<n; i++){
-		puts(args[i]);
-		printf ("%d\n", n);
-		
-		
+	//check args elements, must be at max 1
+	if(n>=2)
+	{
+		fprintf(stdrin,"Too many elements!\n");
+		return false;
 	}
 	
+	//zero elements, reproduce current song
+	if(n==0)
+	{
+		check = mpd_send_current_song(mpdServer);
+		return check;
+	}
+	
+	//reproduce the specified song
+	if(n==1)
+	{
+		check = mpd_send_play_pos(mpdServer, pos-1);
+		return check;
+	}	
 
-	
-	
-	
 	return true;
 }
 
