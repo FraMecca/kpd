@@ -4,8 +4,10 @@
 #include"parse_args.h" // function table struct
 /*#include <stdlib.h> // free*/
 
-void funct ()
-{}
+bool funct ()
+{
+	return true;
+}
 
 static struct option long_options[] = {    // args neeed:
 	{"play", 		optional_argument, 0, 'p'}, // 0+
@@ -54,5 +56,7 @@ static functionTable functions[] = {
 
 int main (int argc, char **argv)
 {
+	struct mpd_connection *mpd = NULL;
+	process_cli (argc, argv, long_options, functions, NOPTIONS, mpd, 1);
 	return 0;
 }

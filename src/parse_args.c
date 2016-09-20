@@ -30,8 +30,8 @@ static int count_n_args (int argc, char **argv);
 static void insert_argument (int argc, char **argv, int pos, struct ArgumentsStruct *argSt);
 static bool parse_args (int argc, char **argv, struct ArgumentsStruct *argSt, struct option *long_options);
 static argumentsArray initialize_argsarray (int argc, char **argv);
-static bool push_to_table_ordered (argumentsArray args, functionTable *functions, int n);
-static bool push_to_table_sequentially (argumentsArray args, functionTable *functions, int n);
+/*static bool push_to_table_ordered (argumentsArray args, functionTable *functions, int n);*/
+/*static bool push_to_table_sequentially (argumentsArray args, functionTable *functions, int n);*/
 static void destroy_struct (argumentsArray args);
 /* end prototypes */
 
@@ -112,11 +112,11 @@ static argumentsArray initialize_argsarray (int argc, char **argv)
 	return args;
 }
 
-static bool push_to_table_sequentially (argumentsArray args, functionTable *functions, int n)
+static bool push_to_table_sequentially (argumentsArray args, functionTable *functions, int n, void *structused)
 {
 	// functions are evaluated in the order they apeear in the command line
 	int i, j;
-	bool flag = false;
+	bool flag = false, ret;
 
 	for (i = 0; i < args.size; ++i) {
 		for (j = 0; j < n; ++j) {
@@ -124,7 +124,9 @@ static bool push_to_table_sequentially (argumentsArray args, functionTable *func
 					(strlen (args.arguments[i].functionName) == 1 &&
  					 args.arguments[i].functionName[0] == functions[j].shortOption)) {
 				// execute function on functionTable
-				functions[j].functionPtr (args.arguments[i].values, args.arguments[i].nValues);
+				ret = functions[j].functionPtr (structused, args.arguments[i].values, args.arguments[i].nValues);
+				if (ret == false) return false;
+				// halt process_cli if one of the functions return false
 				flag = true;
 			}
 		}
@@ -132,11 +134,11 @@ static bool push_to_table_sequentially (argumentsArray args, functionTable *func
 	return flag;
 }
 
-static bool push_to_table_ordered (argumentsArray args, functionTable *functions, int n)
+static bool push_to_table_ordered (argumentsArray args, functionTable *functions, int n, void *structused)
 {
 	// same as push_to_table_sequentially, but the functions are evaluated in the order they appear in the struct
 	int i, j;
-	bool flag = false; // this flag is set to true if a function is executed
+	bool flag = false, ret; // this flag is set to true if a function is executed
 
 	for (j = 0; j < n; ++j) {
 		for (i = 0; i < args.size; ++i) {
@@ -144,7 +146,10 @@ static bool push_to_table_ordered (argumentsArray args, functionTable *functions
 					(strlen (args.arguments[i].functionName) == 1 &&
  					 args.arguments[i].functionName[0] == functions[j].shortOption)) {
 				// execute function on functionTable
-				functions[j].functionPtr (args.arguments[i].values, args.arguments[i].nValues);
+				ret = functions[j].functionPtr (structused, args.arguments[i].values, args.arguments[i].nValues);
+				if (ret == false) return false;
+				// halt process_cli if one of the functions return false
+
 				flag = true;
 			}
 		}
@@ -166,8 +171,7 @@ static void destroy_struct (argumentsArray args)
 	free (args.arguments);
 }
 
-
-bool process_cli (int argc, char **argv, struct option * long_options, functionTable * functions, int nFunctions, bool orderFlag)
+bool process_cli (int argc, char **argv, struct option * long_options, functionTable * functions, int nFunctions, void *structused, bool orderFlag)
 {
 	 /* process command line arguments, sequantialyl or ordered
 	  * returns a flag if an argument is found and a function is executed
@@ -181,9 +185,9 @@ bool process_cli (int argc, char **argv, struct option * long_options, functionT
 	}
 
 	if (orderFlag == false) {
-		flag = push_to_table_ordered (args, functions, nFunctions);
+		flag = push_to_table_ordered (args, functions, nFunctions, structused);
 	} else {
-		flag = push_to_table_sequentially (args, functions, nFunctions);
+		flag = push_to_table_sequentially (args, functions, nFunctions, structused);
 	}
 	/* execute every function linked to the commandline option */
 	destroy_struct (args);	

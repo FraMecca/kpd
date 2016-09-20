@@ -39,17 +39,17 @@ static functionTable functions[] = {
  * {"argument in cli", 'short dash option', (void  *) pointer to function}
  * every prototype of the function should be:
  * (type) funct (char **, int)
- * because parse_args.c will pass a char** and the dimension to the function pointer.
+ * because parse_args.c will pass a generic struct, char** and the dimension to the function pointer.
  *
- * process_cli is the main interface.
+ * process_cli is the main interface, it halts in case one of the functions returns false.
  */
 
 typedef struct functionTable {
 	char *name;
 	char shortOption;
-	void* (*functionPtr) (char **, int);
+	void* (*functionPtr) (void *usedstruct, char **, int);
 } functionTable;	
 
-bool process_cli (int argc, char **argv, struct option * long_options, functionTable * functions, int nFunctions, bool orderFlag);
+bool process_cli (int argc, char **argv, struct option * long_options, functionTable * functions, int nFunctions, void *structused, bool orderFlag);
 
 #endif
