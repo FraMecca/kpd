@@ -61,7 +61,11 @@ pause (struct mpd_connection *mpdServer, char **args, int n)
 bool
 next(struct mpd_connection *mpdServer)
 {
-
+	return (mpd_send_next(mpdServer));
 }
 
-
+bool
+previous(struct mpd_connection *mpdServer)
+{
+	return(mpd_send_previous(mpdServer));
+}
