@@ -37,8 +37,8 @@ static struct option long_options[] = {    // args neeed:
 static functionTable functions[] = {
 	{"play", 		'p', 	(void *) &play},
 	{"pause",  		'P', 	(void *) &pause},
-	{"next",	 	'n',	(void *) &funct},
-	{"previous", 	'b', 	(void *) &funct},
+	{"next",	 	'n',	(void *) &next},
+	{"previous", 	'b', 	(void *) &previous},
 	{"stop",     	's', 	(void *) &funct},
 	{"random",	 	'r', 	(void *) &funct},
 	{"update",	 	'u', 	(void *) &funct},

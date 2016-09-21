@@ -5,6 +5,8 @@
 
 bool play (struct mpd_connection *, char **args, int n);
 bool pause (struct mpd_connection *, char **args, int n);
+bool next (struct mpd_connection *mpdServer);
+bool previous (struct mpd_connection *mpdServer);
 
 
 
