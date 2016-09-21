@@ -10,9 +10,9 @@
 #define MAXFEAT 4
 
 typedef struct so {
-	char *title;
-	char *artist;
-	char *album;
+	const char *title;
+	const char *artist;
+	const char *album;
 	float duration;
 	unsigned int position;
 } SONG;
