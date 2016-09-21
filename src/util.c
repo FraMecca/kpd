@@ -60,3 +60,11 @@ pause (struct mpd_connection *mpdServer, char **args, int n)
 		return mpd_send_toggle_pause (mpdServer);
 	}
 }
+
+bool
+next(struct mpd_connection *mpdServer)
+{
+
+}
+
+
