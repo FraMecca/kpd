@@ -57,14 +57,26 @@ static functionTable functions[] = {
 };    
 #define NOPTIONS 19
 
-int main (int argc, char **argv)
+int main (int argc, char *argv[])
 {
 	GC_INIT ();
 	struct mpd_connection *mpdSession = NULL;
-
+	STATUS* currentStatus = NULL;
+	
 	// attach client to mpd server
 	// should specify the host as config or as command line argument
-	mpdSession = open_connection ("localhost", 6600); 
+	// with the "while" loop it forces connection regardless of timeouts (useful for slow networks)
+	while(!mpdSession){
+		mpdSession = open_connection ("localhost", 6600); 
+	}
+	
+	/*check if no arguments -> display current status and exit*/
+	if(argc == 1){
+		currentStatus = get_current_status(mpdSession);
+		print_current_status(currentStatus);
+		exit(EXIT_SUCCESS);
+	}
+
 	if (mpdSession == NULL) {
 		// didn't get a connection successfully
 		return 2;
