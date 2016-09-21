@@ -66,9 +66,10 @@ int main (int argc, char *argv[])
 	// attach client to mpd server
 	// should specify the host as config or as command line argument
 	// with the "while" loop it forces connection regardless of timeouts (useful for slow networks)
-	while(!mpdSession){
+	/*while(!mpdSession){*/
 		mpdSession = open_connection ("localhost", 6600); 
-	}
+	/*}*/
+	// no while because if mpd is not running the program hangs
 	
 	/*check if no arguments -> display current status and exit*/
 	if(argc == 1){
@@ -83,5 +84,6 @@ int main (int argc, char *argv[])
 	}
 
 	process_cli (argc, argv, long_options, functions, NOPTIONS, mpdSession, 0);
+
 	return 0;
 }
