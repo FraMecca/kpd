@@ -208,7 +208,7 @@ print_current_status(STATUS* status)
 			fprintf(stdout, "(%s)\t", status->state);
 		}
 		fprintf(stdout, "#%d/%d\t", song->position, status->queueLenght);
-		fprintf(stdout, "%d:%d/%d:%d\n", status->elapsedTime_min, status->elapsedTime_sec, song->duration_min, song->duration_sec);
+		fprintf(stdout, "%d:%.2d/%d:%.2d\n", status->elapsedTime_min, status->elapsedTime_sec, song->duration_min, song->duration_sec);
 	}
 	if(status->random){
 		fprintf(stdout, "random: on ");
