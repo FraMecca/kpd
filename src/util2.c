@@ -88,7 +88,7 @@ get_current_song(struct mpd_connection *mpdConnection)
 {
 	struct mpd_song* mpdSong = NULL;
 	SONG* song = NULL;
-	unsigned int duration;
+	int duration;
 
 	mpdSong = mpd_run_current_song(mpdConnection);
 	if(mpdSong == NULL){
@@ -105,7 +105,8 @@ get_current_song(struct mpd_connection *mpdConnection)
 	song->artist = mpd_song_get_tag(mpdSong, MPD_TAG_ARTIST, 0);
 	song->album = mpd_song_get_tag(mpdSong, MPD_TAG_ALBUM, 0);
 	duration = mpd_song_get_duration(mpdSong);;
-	song->duration = (float)(duration/60);
+	song->duration_min = duration/60;
+	song->duration_sec = duration%60;
 	song->position = 1+mpd_song_get_pos(mpdSong);
 	return song;
 }
@@ -156,7 +157,7 @@ get_current_status(struct mpd_connection *mpdConnection)
 {
 	struct mpd_status* mpdStatus = NULL;
 	STATUS *status = NULL;
-	float eltime;
+	int eltime;
 
 	mpdStatus = mpd_run_status(mpdConnection);
 	if(mpdStatus == NULL){
@@ -175,7 +176,8 @@ get_current_status(struct mpd_connection *mpdConnection)
 	status->song = get_current_song(mpdConnection);
 	status->state = get_current_state(mpdStatus);			
 	eltime = (float)mpd_status_get_elapsed_time(mpdStatus);
-	status->elapsedTime = (float)(eltime/60);
+	status->elapsedTime_min = eltime/60;
+	status->elapsedTime_sec = eltime%60;	
 	status->queueLenght = mpd_status_get_queue_length(mpdStatus);
 	
 	return status;	
@@ -203,10 +205,10 @@ print_current_status(STATUS* status)
 			fprintf(stdout, "%s\n", song->album);
 		}
 		if(status->state != NULL){
-			fprintf(stdout, "(%s) ", status->state);
+			fprintf(stdout, "(%s)\t", status->state);
 		}
-		fprintf(stdout, "#%d/%d ", song->position, status->queueLenght);
-		fprintf(stdout, "%.2f/%.2f\n", status->elapsedTime, song->duration);
+		fprintf(stdout, "#%d/%d\t", song->position, status->queueLenght);
+		fprintf(stdout, "%d:%.2d/%d:%.2d\n", status->elapsedTime_min, status->elapsedTime_sec, song->duration_min, song->duration_sec);
 	}
 	if(status->random){
 		fprintf(stdout, "random: on ");

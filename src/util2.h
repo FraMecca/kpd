@@ -13,7 +13,8 @@ typedef struct so {
 	const char *title;
 	const char *artist;
 	const char *album;
-	float duration;
+	int duration_min;
+	int duration_sec;
 	unsigned int position;
 } SONG;
 
@@ -23,7 +24,8 @@ typedef struct st {
 	bool repeat;
 	bool single;
 	bool crossfade;
-	float elapsedTime;
+	int elapsedTime_min;
+	int elapsedTime_sec;
 	int queueLenght;
 	SONG* song;
 } STATUS;
