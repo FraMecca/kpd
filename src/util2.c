@@ -58,6 +58,8 @@ open_connection(const char *host, unsigned port)
 			case MPD_ERROR_SERVER:
 				fprintf(stderr, "Server error\n");
 				break;
+			default:
+				break;
 		}
 
 		return NULL;
@@ -119,7 +121,7 @@ get_current_state(struct mpd_status* mpdStatus)
 	int mpdState;
 	char *state;
 	mpdState = mpd_status_get_state(mpdStatus);
-	if(mpdState == NULL){
+	if(!mpdState){
 		return NULL;
 	}
 
