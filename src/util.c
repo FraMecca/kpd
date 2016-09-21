@@ -3,6 +3,9 @@
 #include <gc.h> // garbage collector
 #include <stdbool.h> // true false
 
+//PORCO DIOOOOOO
+
+
 /* SHOULD 
  * IMPLEMENT
  * TOOMANYEL ST ERROR
