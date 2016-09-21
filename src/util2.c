@@ -156,7 +156,7 @@ get_current_status(struct mpd_connection *mpdConnection)
 {
 	struct mpd_status* mpdStatus = NULL;
 	STATUS *status = NULL;
-	unsigned int eltime;
+	float eltime;
 
 	mpdStatus = mpd_run_status(mpdConnection);
 	if(mpdStatus == NULL){
@@ -174,7 +174,7 @@ get_current_status(struct mpd_connection *mpdConnection)
 	status->crossfade = mpd_status_get_crossfade(mpdStatus);
 	status->song = get_current_song(mpdConnection);
 	status->state = get_current_state(mpdStatus);			
-	eltime = mpd_status_get_elapsed_time(mpdStatus);
+	eltime = (float)mpd_status_get_elapsed_time(mpdStatus);
 	status->elapsedTime = (float)(eltime/60);
 	status->queueLenght = mpd_status_get_queue_length(mpdStatus);
 	
