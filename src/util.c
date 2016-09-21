@@ -2,9 +2,8 @@
 #include <stdio.h> // fprintf
 #include <gc.h> // garbage collector
 #include <stdbool.h> // true false
-
-//PORCO DIOOOOOO
-
+#include "util2.h" // structure STATUS
+#include <string.h> // strcmp
 
 /* SHOULD 
  * IMPLEMENT
@@ -22,6 +21,8 @@ play (struct mpd_connection *mpdServer, char **args, int n)
 {
 	bool check;	
 	unsigned pos;
+	STATUS *status = NULL;
+
 	if (n != 0) {
 		pos=args[0][0] - '0';
 	}
@@ -33,10 +34,19 @@ play (struct mpd_connection *mpdServer, char **args, int n)
 		return false;
 	}
 	
-	//zero elements, reproduce current song
+	//zero elements, reproduce current song or the first
 	if(n==0)
 	{
-		check = mpd_send_play (mpdServer);
+		status = get_current_status(mpdServer);
+		//if state == stop reproduce the first song
+		if(strcmp(status->state,"stop")==0)
+		{
+			check = mpd_send_play_pos(mpdServer, 0);
+		}
+		else
+		{	
+			check = mpd_send_play (mpdServer);
+		}
 		return check;
 	}
 	
