@@ -79,7 +79,7 @@ int main (int argc, char *argv[])
 //		exit(EXIT_SUCCESS);
 	}
 	playlist = get_current_playlist(mpdSession);
-	print_current_playlist(playlist);
+	print_current_playlist(playlist, mpdSession);
 	
 	process_cli (argc, argv, long_options, functions, NOPTIONS, mpdSession, 1);
 
