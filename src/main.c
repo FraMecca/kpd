@@ -17,6 +17,7 @@ static struct option long_options[] = {    // args neeed:
 	{"pause",  		no_argument,	   0, 'P'}, // 2+
 	{"next",		no_argument,       0, 'n'}, // 1+
 	{"previous",	no_argument,       0, 'b'}, // 0
+	{"prev",	    no_argument,       0, '0'}, // 0
     {"stop",   		no_argument,       0, 's'}, // 1+	
 	{"random",	    required_argument, 0, 'r'}, // 1+
 	{"update",	    no_argument,       0, 'u'}, // 1+
@@ -39,6 +40,7 @@ static functionTable functions[] = {
 	{"pause",  		'P', 	(void *) &pause},
 	{"next",	 	'n',	(void *) &next},
 	{"previous", 	'b', 	(void *) &previous},
+	{"prev",    	'b', 	(void *) &previous},
 	{"stop",     	's', 	(void *) &funct},
 	{"random",	 	'r', 	(void *) &funct},
 	{"update",	 	'u', 	(void *) &funct},
@@ -55,7 +57,7 @@ static functionTable functions[] = {
 	{"output",	 	'0', 	(void *) &funct},
 	{"no-output", 	'0', 	(void *) &funct},
 };    
-#define NOPTIONS 19
+#define NOPTIONS 20 
 
 int main (int argc, char *argv[])
 {
