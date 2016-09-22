@@ -82,3 +82,20 @@ previous(struct mpd_connection *mpdServer)
 {
 	return(mpd_send_previous(mpdServer));
 }
+
+
+bool
+stop(struct mpd_connection *mpdServer)
+{	
+	return(mpd_send_stop(mpdServer));
+}
+
+/*
+bool
+random(struct mpd_connection *mpdServer)
+{	
+	return(mpd_send_random(mpdServer));
+}
+*/
+
+
