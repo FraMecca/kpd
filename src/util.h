@@ -8,6 +8,6 @@ bool pause (struct mpd_connection *, char **args, int n);
 bool next (struct mpd_connection *mpdServer);
 bool previous (struct mpd_connection *mpdServer);
 bool stop(struct mpd_connection *mpdServer);
-bool random(struct mpd_connection *mpdServer, char **args, int n);
+bool random_kpd(struct mpd_connection *mpdServer, char **args, int n);
 
 #endif

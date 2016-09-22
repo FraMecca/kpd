@@ -99,7 +99,7 @@ stop(struct mpd_connection *mpdServer)
 
 
 bool
-random(struct mpd_connection *mpdServer, char **args, int n)
+random_kpd(struct mpd_connection *mpdServer, char **args, int n)
 {	
 	STATUS *state; 	
 	
@@ -116,7 +116,7 @@ random(struct mpd_connection *mpdServer, char **args, int n)
 		return(mpd_send_random(mpdServer,status->random));
 	}
 
-	//if there is an attivation char random switch on
+	//if there is an attivation char random_kpd switch on
 	if(strcasecmp(args[0],"on") || strcasecmp(args[0],"True") || (args[0][0]-'0')==1)
 	{
 		return(mpd_send_random(mpdServer,1);
