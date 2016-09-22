@@ -1,5 +1,7 @@
 #include "util2.h"
+#include "util.h"
 
+#define STANDARD_USAGE_ERROR(commandname) fprintf (stderr,"kpd: incorrect usage of %s\nTry 'kpd --help' for more information.\n", commandname); 
 #define TIMEOUT 5000
 
 /* opens a new connection to the mpd server
@@ -78,23 +80,17 @@ close_connection(struct mpd_connection *mpdConnection)
 	mpd_connection_free(mpdConnection);
 }
 
-/* queries the server for the current song, inserts it into a structure
- * arguments: Connection
- * returns a NULL structure if no current song / error,
- * returns a pointer to a SONG structure if successful
+/* converts a (struct mpd_song*) defined in libmpdclient
+ * into a SONG* structure defined in util2.h
+ * returns NULL if error
+ * returns a SONG* element if successful
  */
 SONG*
-get_current_song(struct mpd_connection *mpdConnection)
+parse_mpd_song(struct mpd_song* mpdSong)
 {
-	struct mpd_song* mpdSong = NULL;
-	SONG* song = NULL;
+	SONG *song = NULL;
 	int duration;
 
-	mpdSong = mpd_run_current_song(mpdConnection);
-	if(mpdSong == NULL){
-		return NULL;
-	}
-	
 	song = (SONG*)malloc(sizeof(SONG));
 	if(song == NULL){
 		fprintf(stderr, "Memory allocation error.\n");
@@ -109,6 +105,23 @@ get_current_song(struct mpd_connection *mpdConnection)
 	song->duration_sec = duration%60;
 	song->position = 1+mpd_song_get_pos(mpdSong);
 	return song;
+}
+
+/* queries the server for the current song, inserts it into a structure
+ * arguments: Connection
+ * returns a NULL structure if no current song / error,
+ * returns a pointer to a SONG structure if successful
+ */
+SONG*
+get_current_song(struct mpd_connection *mpdConnection)
+{
+	struct mpd_song* mpdSong = NULL;
+
+	mpdSong = mpd_run_current_song(mpdConnection);
+	if(mpdSong == NULL){
+		return NULL;
+	}
+	return parse_mpd_song(mpdSong);	
 }
 
 /* queries the server for the current state (play, pause, stop, unknown)
@@ -226,7 +239,115 @@ print_current_status(STATUS* status)
 	return;
 }
 
+/* add a new element to the playlist queue
+ * returns 1 if error
+ * returns 0 if successful
+ * */
+int
+enqueue(QUEUE *q, SONG *s)
+{
+	QUEUE *t;
+	if((t = (QUEUE*)malloc(sizeof(QUEUE))) == NULL){
+		STANDARD_USAGE_ERROR("calloc");
+		return 1;
+	}
+	t->song = s;
+	if(q->next == NULL){
+		q->next = t;
+		q->next->next = t;
+	} else {
+		t->next = q->next->next;
+		q->next->next = t;
+		q->next = t;
+	}
+	return 0;
+}
 
+/* receives the songs in the playlist, one by one
+ * after the get_current_playlist function
+ * returns NULL if error or empty playlist
+ * returns a queue of songs if successful
+ */
+QUEUE* 
+retrieve_songs(struct mpd_connection *mpdConnection, QUEUE *q)
+{
+	SONG* song = NULL;
+	struct mpd_song* mpdSong = NULL;
+
+	if((mpdSong = mpd_recv_song(mpdConnection)) == NULL){		
+		return q;
+	}	
+		
+	song = parse_mpd_song(mpdSong);
+	if(enqueue(q, song) == 1){
+		STANDARD_USAGE_ERROR("enqueue");
+		return NULL;
+	}
+	
+	retrieve_songs(mpdConnection, q);
+	return q;
+}
+
+/* sends to the server the request for a playlist queue,
+ * calls retrieve_songs and builds q
+ * returns NULL if error
+ * returns a playlist queue if successful
+ */
+QUEUE* 
+get_current_playlist(struct mpd_connection* mpdConnection)
+{
+	QUEUE *q = NULL;	
+	
+	mpd_send_list_queue_meta(mpdConnection);
+	
+	if((q = (QUEUE*)malloc(sizeof(QUEUE))) == NULL){
+		STANDARD_USAGE_ERROR("calloc");		
+		return NULL;
+	}
+	q->next = NULL;
+	retrieve_songs(mpdConnection, q);
+	return q;
+}
+
+/* delete an element from the queue and save the linked song 
+ * returns NULL if q empty 
+ * returns SONG* element if successful
+ */
+SONG* 
+dequeue(QUEUE* q)
+{
+	QUEUE *t;
+	SONG* song = NULL;
+	if(q->next == NULL){
+		return NULL;
+	}
+	if(q->next != q->next->next){
+		t = q->next->next;
+		q->next->next = t->next;
+		song = t->song;
+		free(t);
+	} else {
+		song = q->next->song;
+		free(q->next);
+		q->next = NULL;
+	}
+	return song;
+}
+
+/* prints the playlist queue on stdout */
+void 
+print_current_playlist(QUEUE* q)
+{
+	int i = 0;	
+	SONG* song = dequeue(q);
+
+	while(song != NULL){
+		i++;
+		fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
+		song = dequeue(q);
+	}
+	return;
+}
 
 
 

@@ -5,16 +5,13 @@
 #include "util2.h" // structure STATUS
 #include <string.h> // strcmp
 
-/* SHOULD 
- * IMPLEMENT
- * TOOMANYEL ST ERROR
- */
+#define STANDARD_USAGE_ERROR(commandname) fprintf (stderr,"kpd: incorrect usage of %s\nTry 'kpd --help' for more information.\n", commandname); 
 
 bool 
 pause (struct mpd_connection *mpdServer, char **args, int n)
 {
 	if (n != 0) {
-		fprintf(stdout,"Too many elements!\n");
+		STANDARD_USAGE_ERROR("pause");
 		return false;
 	} else {
 		return mpd_send_toggle_pause (mpdServer);
@@ -41,7 +38,7 @@ play (struct mpd_connection *mpdServer, char **args, int n)
 	//check args elements, must be at max 1
 	if(n>=2)
 	{
-		fprintf(stdout,"Too many elements!\n");
+		STANDARD_USAGE_ERROR ("play");
 		return false;
 	}
 	
@@ -62,7 +59,9 @@ play (struct mpd_connection *mpdServer, char **args, int n)
 			} 
 			else
 			{
-			check = mpd_send_play (mpdServer);
+				check = mpd_send_play (mpdServer);
+				status = get_current_status(mpdServer);
+				print_current_status (status);
 			}
 		}
 		return check;
@@ -79,14 +78,21 @@ play (struct mpd_connection *mpdServer, char **args, int n)
 }
 
 bool
-next(struct mpd_connection *mpdServer)
+next(struct mpd_connection *mpdServer, char **args, int n)
 {
+	if(n != 0){
+		STANDARD_USAGE_ERROR("next");
+	}
 	return (mpd_send_next(mpdServer));
 }
 
 bool
-previous(struct mpd_connection *mpdServer)
+previous(struct mpd_connection *mpdServer, char **args, int n)
 {
+	if(n != 0){
+		STANDARD_USAGE_ERROR("previous");
+	}
+	
 	return(mpd_send_previous(mpdServer));
 }
 
@@ -106,10 +112,11 @@ random_kpd(struct mpd_connection *mpdServer, char **args, int n)
 	//check the number of argument
 	if(n>1)
 	{
-		fprintf(stdout,"Too many arguments!\n");
+		STANDARD_USAGE_ERROR ("random");
+		return false;
 	}
 
-	//zero argument =  switch
+	//zero argument =  toggle
 	if(n==0)
 	{
 		status = get_current_status(mpdServer);
@@ -203,8 +210,25 @@ seek(struct mpd_connection *mpdServer, char **args, int n)
 	
 }
 
-
-
-
-
-
+bool
+output_enable (struct mpd_connection *m, char **args, int n)
+{
+	if (n != 1) {
+		STANDARD_USAGE_ERROR ("output-enable");
+		return false;
+	} else {
+		if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1) {
+			freopen ("/dev/stdout/", "w", stdout);
+			return true;
+		} else {
+			if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0) {
+				freopen ("/dev/null/", "w", stdout);
+				return true;
+			} else {
+				// at this point, the user didn't input on or off or true or false or 0 or 1 and standard usage error should be issued
+				STANDARD_USAGE_ERROR ("output-enable");
+				return false;
+			}
+		}
+	}
+}

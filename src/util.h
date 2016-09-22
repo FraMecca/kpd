@@ -10,5 +10,6 @@ bool previous (struct mpd_connection *mpdServer);
 bool stop(struct mpd_connection *mpdServer);
 bool random_kpd(struct mpd_connection *mpdServer, char **args, int n);
 bool seek(struct mpd_connection *mpdServer, char **args, int n);
+bool output_enable(struct mpd_connection *mpdServer, char **args, int n);
 
 #endif
