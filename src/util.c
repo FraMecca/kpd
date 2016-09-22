@@ -133,12 +133,116 @@ random_kpd(struct mpd_connection *mpdServer, char **args, int n)
    	{
 		return(mpd_send_random(mpdServer,0));
 	}	
-	
-	fprintf(stdout,"The command is not valid\n");
+
+	STANDARD_USAGE_ERROR ("random");
 
 	return false;
 }
 
+bool
+consume(struct mpd_connection *mpdServer, char **args, int n)
+{	
+	STATUS *status = NULL; 	
+	
+	//check the number of argument
+	if(n>1)
+	{
+		STANDARD_USAGE_ERROR ("consume");
+		return false;
+	}
+
+	//zero argument =  toggle
+	if(n==0)
+	{
+		status = get_current_status(mpdServer);
+		return(mpd_send_consume(mpdServer,!status->consume));
+	}
+
+	//if there is an attivation char consume_kpd switch on
+	if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1)
+	{
+		return(mpd_send_consume(mpdServer,1));
+	}
+	
+	if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0)
+   	{
+		return(mpd_send_consume(mpdServer,0));
+	}	
+
+	STANDARD_USAGE_ERROR ("consume");
+
+	return false;
+}
+
+bool
+repeat(struct mpd_connection *mpdServer, char **args, int n)
+{	
+	STATUS *status = NULL; 	
+	
+	//check the number of argument
+	if(n>1)
+	{
+		STANDARD_USAGE_ERROR ("repeat");
+		return false;
+	}
+
+	//zero argument =  toggle
+	if(n==0)
+	{
+		status = get_current_status(mpdServer);
+		return(mpd_send_repeat(mpdServer,!status->repeat));
+	}
+
+	//if there is an attivation char repeat_kpd switch on
+	if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1)
+	{
+		return(mpd_send_repeat(mpdServer,1));
+	}
+	
+	if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0)
+   	{
+		return(mpd_send_repeat(mpdServer,0));
+	}	
+
+	STANDARD_USAGE_ERROR ("repeat");
+
+	return false;
+}
+
+bool
+single(struct mpd_connection *mpdServer, char **args, int n)
+{	
+	STATUS *status = NULL; 	
+	
+	//check the number of argument
+	if(n>1)
+	{
+		STANDARD_USAGE_ERROR ("single");
+		return false;
+	}
+
+	//zero argument =  toggle
+	if(n==0)
+	{
+		status = get_current_status(mpdServer);
+		return(mpd_send_single(mpdServer,!status->single));
+	}
+
+	//if there is an attivation char single_kpd switch on
+	if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1)
+	{
+		return(mpd_send_single(mpdServer,1));
+	}
+	
+	if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0)
+   	{
+		return(mpd_send_single(mpdServer,0));
+	}	
+
+	STANDARD_USAGE_ERROR ("single");
+
+	return false;
+}
 
 bool
 seek(struct mpd_connection *mpdServer, char **args, int n)

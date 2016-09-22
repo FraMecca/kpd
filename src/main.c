@@ -13,6 +13,7 @@ bool funct ()
 }
 
 static struct option long_options[] = {    // args neeed:
+	{"help",			no_argument,       0, 'h'}, // 0
 	{"play",			optional_argument, 0, 'p'}, // 0+
 	{"pause",			no_argument,	   0, 'P'}, // 2+
 	{"next",			no_argument,       0, 'n'}, // 1+
@@ -20,6 +21,7 @@ static struct option long_options[] = {    // args neeed:
 	{"prev",			no_argument,       0, '0'}, // 0
     {"stop",			no_argument,       0, 's'}, // 1+	
 	{"random",			optional_argument, 0, 'r'}, // 1+
+	{"shuffle", 	    no_argument,       0, 'S'},
 	{"update",			no_argument,       0, 'u'}, // 1+
 	{"add",				required_argument, 0, 'a'}, // 1+
 	{"search",			required_argument, 0, 's'}, // 1+
@@ -27,14 +29,16 @@ static struct option long_options[] = {    // args neeed:
 	{"v-filter",		required_argument, 0, 'v'}, // 1+
 	{"list",			no_argument, 	   0, 'l'}, // 1+
 	{"seek",			required_argument, 0, '0'}, // 1+
-	{"consume",			required_argument, 0, '0'}, // 1+
-	{"single",			required_argument, 0, '0'}, // 1+
+	{"consume",			no_argument,	   0, '0'}, // 0+
+	{"repeat",			no_argument,	   0, '0'}, // 0+
+	{"single",			no_argument,	   0, '0'}, // 1+
 	{"swap",			required_argument, 0, 'w'}, // 2+
 	{"format",			required_argument, 0, 'f'}, // 1+
-	{"output-enable",	required_argument,       0, '0'}, // 1+
+	{"output-enable",	required_argument, 0, '0'}, // 1+
 };
 
 static functionTable functions[] = {
+	{"help",			'h',	(void *) &funct},
 	{"play",			'p', 	(void *) &play},
 	{"pause",			'P', 	(void *) &pause},
 	{"next",			'n',	(void *) &next},
@@ -42,6 +46,7 @@ static functionTable functions[] = {
 	{"prev",			'b', 	(void *) &previous},
 	{"stop",			's', 	(void *) &stop},
 	{"random",			'r', 	(void *) &random_kpd},
+	{"shuffle",			'S',	(void *) &funct},
 	{"update",			'u', 	(void *) &funct},
 	{"add",				'a', 	(void *) &funct},
 	{"search",			's', 	(void *) &funct},
@@ -49,13 +54,14 @@ static functionTable functions[] = {
 	{"v-filter",		'v', 	(void *) &funct},
 	{"list",			'l', 	(void *) &list},
 	{"seek",			'0', 	(void *) &seek},
-	{"consume",			'0', 	(void *) &funct},
-	{"single",			'0', 	(void *) &funct},
+	{"consume",			'0', 	(void *) &consume},
+	{"repeat",			'0', 	(void *) &repeat},
+	{"single",			'0', 	(void *) &single},
 	{"swap",			'w', 	(void *) &funct},
 	{"format",			'f', 	(void *) &funct},
 	{"output-enable",   '0', 	(void *) &output_enable},
 };    
-#define NOPTIONS 19 
+#define NOPTIONS 22 
 
 int main (int argc, char *argv[])
 {

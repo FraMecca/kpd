@@ -9,6 +9,9 @@ bool next (struct mpd_connection *mpdServer);
 bool previous (struct mpd_connection *mpdServer);
 bool stop(struct mpd_connection *mpdServer);
 bool random_kpd(struct mpd_connection *mpdServer, char **args, int n);
+bool consume(struct mpd_connection *mpdServer, char **args, int n);
+bool single(struct mpd_connection *mpdServer, char **args, int n);
+bool repeat(struct mpd_connection *mpdServer, char **args, int n);
 bool seek(struct mpd_connection *mpdServer, char **args, int n);
 bool output_enable(struct mpd_connection *mpdServer, char **args, int n);
 
