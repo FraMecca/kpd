@@ -101,7 +101,7 @@ stop(struct mpd_connection *mpdServer)
 bool
 random_kpd(struct mpd_connection *mpdServer, char **args, int n)
 {	
-	STATUS *state; 	
+	STATUS *status = NULL; 	
 	
 	//check the number of argument
 	if(n>1)
@@ -112,19 +112,19 @@ random_kpd(struct mpd_connection *mpdServer, char **args, int n)
 	//zero argument =  switch
 	if(n==0)
 	{
-		status = get_current_status(status);
+		status = get_current_status(mpdServer);
 		return(mpd_send_random(mpdServer,status->random));
 	}
 
 	//if there is an attivation char random_kpd switch on
 	if(strcasecmp(args[0],"on") || strcasecmp(args[0],"True") || (args[0][0]-'0')==1)
 	{
-		return(mpd_send_random(mpdServer,1);
+		return(mpd_send_random(mpdServer,1));
 	}
 	
 	if(strcasecmp(args[0],"off") || strcasecmp(args[0],"False") || (args[0][0]-'0')==0)
    	{
-		return(mpd_send_random(mpdServer,0);
+		return(mpd_send_random(mpdServer,0));
 	}	
 	
 	fprintf(stdout,"The command is not valid\n");
