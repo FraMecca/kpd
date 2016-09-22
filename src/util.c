@@ -117,12 +117,12 @@ random_kpd(struct mpd_connection *mpdServer, char **args, int n)
 	}
 
 	//if there is an attivation char random_kpd switch on
-	if(strcasecmp(args[0],"on") || strcasecmp(args[0],"True") || (args[0][0]-'0')==1)
+	if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1)
 	{
 		return(mpd_send_random(mpdServer,1));
 	}
 	
-	if(strcasecmp(args[0],"off") || strcasecmp(args[0],"False") || (args[0][0]-'0')==0)
+	if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0)
    	{
 		return(mpd_send_random(mpdServer,0));
 	}	
