@@ -10,11 +10,13 @@
  * TOOMANYEL ST ERROR
  */
 
+#define STANDARD_USAGE_ERROR(commandname) fprintf (stderr,"kpd: incorrect usage of %s\nTry 'kpd --help' for more information.", commandname); 
+
 bool 
 pause (struct mpd_connection *mpdServer, char **args, int n)
 {
 	if (n != 0) {
-		fprintf(stdout,"Too many elements!\n");
+		STANDARD_USAGE_ERROR(pause);
 		return false;
 	} else {
 		return mpd_send_toggle_pause (mpdServer);
@@ -79,14 +81,21 @@ play (struct mpd_connection *mpdServer, char **args, int n)
 }
 
 bool
-next(struct mpd_connection *mpdServer)
+next(struct mpd_connection *mpdServer, char **args, int n)
 {
+	if(n != 0){
+		STANDARD_USAGE_ERROR("next");
+	}
 	return (mpd_send_next(mpdServer));
 }
 
 bool
-previous(struct mpd_connection *mpdServer)
+previous(struct mpd_connection *mpdServer, char **args, int n)
 {
+	if(n != 0){
+		STANDARD_USAGE_ERROR("previous");
+	}
+	
 	return(mpd_send_previous(mpdServer));
 }
 
