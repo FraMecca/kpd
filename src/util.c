@@ -109,7 +109,7 @@ random_kpd(struct mpd_connection *mpdServer, char **args, int n)
 		fprintf(stdout,"Too many arguments!\n");
 	}
 
-	//zero argument =  switch
+	//zero argument =  toggle
 	if(n==0)
 	{
 		status = get_current_status(mpdServer);
@@ -132,5 +132,27 @@ random_kpd(struct mpd_connection *mpdServer, char **args, int n)
 	return false;
 }
 
-
-
+bool
+output_enable (struct mpd_connection *m, char **args, int n)
+{
+	if (n != 1) {
+		// standard usage error
+		printf ("DAI");
+		return false;
+	} else {
+		if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1) {
+			freopen ("/dev/stdout/", "w", stdout);
+			return true;
+		} else {
+			if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0) {
+				freopen ("/dev/null/", "w", stdout);
+				return true;
+			} else {
+				// at this point, the user didn't input on or off or true or false or 0 or 1 and standard usage error should be issued
+				// standard usage error
+				printf ("DAI");
+				return false;
+			}
+		}
+	}
+}
