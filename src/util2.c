@@ -222,7 +222,7 @@ print_current_status(STATUS* status)
 	if(status->crossfade){
 		fprintf(stdout, "crossfade: on ");
 	}
-	fprintf(stdout, "\n");
+	/*fprintf(stdout, "\n");*/
 	return;
 }
 
