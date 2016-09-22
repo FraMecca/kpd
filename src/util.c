@@ -113,7 +113,7 @@ random_kpd(struct mpd_connection *mpdServer, char **args, int n)
 	if(n==0)
 	{
 		status = get_current_status(mpdServer);
-		return(mpd_send_random(mpdServer,status->random));
+		return(mpd_send_random(mpdServer,!status->random));
 	}
 
 	//if there is an attivation char random_kpd switch on
