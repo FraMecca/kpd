@@ -80,6 +80,11 @@ close_connection(struct mpd_connection *mpdConnection)
 	mpd_connection_free(mpdConnection);
 }
 
+/* converts a (struct mpd_song*) defined in libmpdclient
+ * into a SONG* structure defined in util2.h
+ * returns NULL if error
+ * returns a SONG* element if successful
+ */
 SONG*
 parse_mpd_song(struct mpd_song* mpdSong)
 {
@@ -234,6 +239,10 @@ print_current_status(STATUS* status)
 	return;
 }
 
+/* add a new element to the playlist queue
+ * returns 1 if error
+ * returns 0 if successful
+ * */
 int
 enqueue(QUEUE *q, SONG *s)
 {
@@ -254,6 +263,11 @@ enqueue(QUEUE *q, SONG *s)
 	return 0;
 }
 
+/* receives the songs in the playlist, one by one
+ * after the get_current_playlist function
+ * returns NULL if error or empty playlist
+ * returns a queue of songs if successful
+ */
 QUEUE* 
 retrieve_songs(struct mpd_connection *mpdConnection, QUEUE *q)
 {
@@ -263,7 +277,7 @@ retrieve_songs(struct mpd_connection *mpdConnection, QUEUE *q)
 	if((mpdSong = mpd_recv_song(mpdConnection)) == NULL){		
 		return q;
 	}	
-	
+		
 	song = parse_mpd_song(mpdSong);
 	if(enqueue(q, song) == 1){
 		STANDARD_USAGE_ERROR("enqueue");
@@ -274,6 +288,11 @@ retrieve_songs(struct mpd_connection *mpdConnection, QUEUE *q)
 	return q;
 }
 
+/* sends to the server the request for a playlist queue,
+ * calls retrieve_songs and builds q
+ * returns NULL if error
+ * returns a playlist queue if successful
+ */
 QUEUE* 
 get_current_playlist(struct mpd_connection* mpdConnection)
 {
@@ -290,6 +309,10 @@ get_current_playlist(struct mpd_connection* mpdConnection)
 	return q;
 }
 
+/* delete an element from the queue and save the linked song 
+ * returns NULL if q empty 
+ * returns SONG* element if successful
+ */
 SONG* 
 dequeue(QUEUE* q)
 {
@@ -311,6 +334,7 @@ dequeue(QUEUE* q)
 	return song;
 }
 
+/* prints the playlist queue on stdout */
 void 
 print_current_playlist(QUEUE* q)
 {
