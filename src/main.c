@@ -35,35 +35,34 @@ static struct option long_options[] = {    // args neeed:
 };
 
 static functionTable functions[] = {
-	{"play", 		'p', 	(void *) &play},
-	{"pause",  		'P', 	(void *) &pause},
-	{"next",	 	'n',	(void *) &next},
-	{"previous", 	'b', 	(void *) &previous},
-	{"prev",    	'b', 	(void *) &previous},
-	{"stop",     	's', 	(void *) &stop},
-	{"random",	 	'r', 	(void *) &random_kpd},
-	{"update",	 	'u', 	(void *) &seek},
-	{"add",	    	'a', 	(void *) &funct},
-	{"search",	 	's', 	(void *) &funct},
-	{"filter",	 	'f', 	(void *) &funct},
-	{"v-filter", 	'v', 	(void *) &funct},
-	{"playlist", 	'l', 	(void *) &funct},
-	{"seek",	 	'0', 	(void *) &funct},
-	{"consume", 	'0', 	(void *) &funct},
-	{"single",	 	'0', 	(void *) &funct},
-	{"swap",	 	'w', 	(void *) &funct},
-	{"format",	 	'f', 	(void *) &funct},
-	{"output",	 	'0', 	(void *) &funct},
+	{"play",			'p', 	(void *) &play},
+	{"pause",			'P', 	(void *) &pause},
+	{"next",			'n',	(void *) &next},
+	{"previous",		'b', 	(void *) &previous},
+	{"prev",			'b', 	(void *) &previous},
+	{"stop",			's', 	(void *) &stop},
+	{"random",			'r', 	(void *) &random_kpd},
+	{"update",			'u', 	(void *) &funct},
+	{"add",				'a', 	(void *) &funct},
+	{"search",			's', 	(void *) &funct},
+	{"filter",			'f', 	(void *) &funct},
+	{"v-filter",		'v', 	(void *) &funct},
+	{"list",			'l', 	(void *) &list},
+	{"seek",			'0', 	(void *) &seek},
+	{"consume",			'0', 	(void *) &funct},
+	{"single",			'0', 	(void *) &funct},
+	{"swap",			'w', 	(void *) &funct},
+	{"format",			'f', 	(void *) &funct},
 	{"output-enable",   '0', 	(void *) &output_enable},
 };    
 #define NOPTIONS 19 
 
 int main (int argc, char *argv[])
 {
-	GC_INIT ();
-	struct mpd_connection *mpdSession = NULL;
 	STATUS* currentStatus = NULL;
-	QUEUE* playlist = NULL;
+	struct mpd_connection *mpdSession = NULL;
+
+	GC_INIT ();
 	
 	// attach client to mpd server
 	// should specify the host as config or as command line argument
@@ -79,10 +78,9 @@ int main (int argc, char *argv[])
 		print_current_status(currentStatus);
 //		exit(EXIT_SUCCESS);
 	}
-	playlist = get_current_playlist(mpdSession);
-	print_current_playlist(playlist, mpdSession);
 	
 	process_cli (argc, argv, long_options, functions, NOPTIONS, mpdSession, 1);
 
 	return 0;
 }
+

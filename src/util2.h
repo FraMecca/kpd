@@ -21,6 +21,7 @@ typedef struct so {
 typedef struct st {
 	char *state;
 	bool random;
+	bool consume;
 	bool repeat;
 	bool single;
 	bool crossfade;
@@ -45,5 +46,6 @@ int enqueue(QUEUE* q, SONG* s);
 SONG* dequeue(QUEUE* q);
 QUEUE* retrieve_songs(struct mpd_connection* mpdConnection, QUEUE* q);
 QUEUE* get_current_playlist(struct mpd_connection* mpdConnection);
-void print_current_playlist(QUEUE *q);
+void print_current_playlist(QUEUE *q, struct mpd_connection *mpdSession);
+bool list (struct mpd_connection *mpdSession, char **argv, int n);
 #endif

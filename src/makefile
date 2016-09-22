@@ -10,3 +10,6 @@ debug:
 		gcc $(ALL) -Wall -g -o ../build/main -lgc  -lmpdclient
 asan:
 		gcc $(ALL) -fsanitize=address -Wall -g -o ../build/main -lgc -lmpdclient
+gprof:
+		gcc $(ALL) -Wall  -o ../build/main -lgc -lmpdclient -pg
+		../build/main
