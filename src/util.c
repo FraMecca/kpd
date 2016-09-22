@@ -10,6 +10,17 @@
  * TOOMANYEL ST ERROR
  */
 
+bool 
+pause (struct mpd_connection *mpdServer, char **args, int n)
+{
+	if (n != 0) {
+		fprintf(stdout,"Too many elements!\n");
+		return false;
+	} else {
+		return mpd_send_toggle_pause (mpdServer);
+	}
+}
+
 /* start play song
  * can accept zero or one arguments
  * if zero args, play current song or song zero
@@ -45,7 +56,14 @@ play (struct mpd_connection *mpdServer, char **args, int n)
 		}
 		else
 		{	
+			if (strcmp (status->state, "play")==0)
+			{
+				check = pause (mpdServer, NULL, 0);
+			} 
+			else
+			{
 			check = mpd_send_play (mpdServer);
+			}
 		}
 		return check;
 	}
@@ -58,17 +76,6 @@ play (struct mpd_connection *mpdServer, char **args, int n)
 	}	
 
 	return true;
-}
-
-bool 
-pause (struct mpd_connection *mpdServer, char **args, int n)
-{
-	if (n != 0) {
-		fprintf(stdout,"Too many elements!\n");
-		return false;
-	} else {
-		return mpd_send_toggle_pause (mpdServer);
-	}
 }
 
 bool
