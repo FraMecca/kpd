@@ -43,7 +43,7 @@ static functionTable functions[] = {
 	{"prev",    	'b', 	(void *) &previous},
 	{"stop",     	's', 	(void *) &stop},
 	{"random",	 	'r', 	(void *) &random_kpd},
-	{"update",	 	'u', 	(void *) &funct},
+	{"update",	 	'u', 	(void *) &seek},
 	{"add",	    	'a', 	(void *) &funct},
 	{"search",	 	's', 	(void *) &funct},
 	{"filter",	 	'f', 	(void *) &funct},
