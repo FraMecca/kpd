@@ -98,3 +98,48 @@ previous(struct mpd_connection *mpdServer, char **args, int n)
 	
 	return(mpd_send_previous(mpdServer));
 }
+
+
+bool
+stop(struct mpd_connection *mpdServer)
+{	
+	return(mpd_send_stop(mpdServer));
+}
+
+
+bool
+random_kpd(struct mpd_connection *mpdServer, char **args, int n)
+{	
+	STATUS *status = NULL; 	
+	
+	//check the number of argument
+	if(n>1)
+	{
+		fprintf(stdout,"Too many arguments!\n");
+	}
+
+	//zero argument =  switch
+	if(n==0)
+	{
+		status = get_current_status(mpdServer);
+		return(mpd_send_random(mpdServer,!status->random));
+	}
+
+	//if there is an attivation char random_kpd switch on
+	if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1)
+	{
+		return(mpd_send_random(mpdServer,1));
+	}
+	
+	if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0)
+   	{
+		return(mpd_send_random(mpdServer,0));
+	}	
+	
+	fprintf(stdout,"The command is not valid\n");
+
+	return false;
+}
+
+
+
