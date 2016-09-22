@@ -139,6 +139,77 @@ random_kpd(struct mpd_connection *mpdServer, char **args, int n)
 	return false;
 }
 
+
+bool
+seek(struct mpd_connection *mpdServer, char **args, int n)
+{
+	int num = 0, l = 0;
+	char time_val;	
+	unsigned final_value = 0;
+	STATUS *status = NULL;
+	
+	status = get_current_status(mpdServer);
+
+	//check number of arguments
+	if(n>1)
+	{
+		fprintf(stdout,"Too many arguments!\n");
+	}
+	
+	l = strlen(args[0]);
+		
+	//check if the number is of the type num%s/m/h
+	if(args[0][l-2]=='%')
+	{
+		fprintf(stdout,"Command not valid\n");
+		return false;
+	}
+
+	//check if the argument is %
+	if(args[0][l-1]=='%')
+	{
+		sscanf(args[0],"%d%*c", &num);
+		
+		//check the case -num%
+		if(num<0)
+		{
+			num *= (-1);
+		}
+		
+		final_value = (unsigned) (status->song->duration_sec / 100 ) * num;
+
+		return(mpd_send_seek_pos(mpdServer, status->song->position, final_value));
+	}
+	else
+	{
+		sscanf(args[0],"%d%c", &num, &time_val);
+		switch(time_val)
+		{	
+			case 's':
+				final_value = (unsigned)  status->song->duration_sec + num;
+				return(mpd_send_seek_pos(mpdServer, status->song->position, final_value));
+				break;
+			
+			case 'm':
+				num *= 60;
+				final_value = (unsigned)  status->song->duration_sec + num;
+				return(mpd_send_seek_pos(mpdServer, status->song->position, final_value));
+				break;
+			
+			case 'h':
+				num *= (60*60);
+				final_value = (unsigned)  status->song->duration_sec + num;
+				return(mpd_send_seek_pos(mpdServer, status->song->position, final_value));
+				break;
+
+			default:
+				fprintf(stdout,"Command not valid\n");
+				return false;
+		}
+	}	
+	
+}
+
 bool
 output_enable (struct mpd_connection *m, char **args, int n)
 {
