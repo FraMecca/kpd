@@ -1,5 +1,7 @@
 #include "util2.h"
+#include "util.h"
 
+#define STANDARD_USAGE_ERROR(commandname) fprintf (stderr,"kpd: incorrect usage of %s\nTry 'kpd --help' for more information.\n", commandname); 
 #define TIMEOUT 5000
 
 /* opens a new connection to the mpd server
@@ -78,23 +80,12 @@ close_connection(struct mpd_connection *mpdConnection)
 	mpd_connection_free(mpdConnection);
 }
 
-/* queries the server for the current song, inserts it into a structure
- * arguments: Connection
- * returns a NULL structure if no current song / error,
- * returns a pointer to a SONG structure if successful
- */
 SONG*
-get_current_song(struct mpd_connection *mpdConnection)
+parse_mpd_song(struct mpd_song* mpdSong)
 {
-	struct mpd_song* mpdSong = NULL;
-	SONG* song = NULL;
+	SONG *song = NULL;
 	int duration;
 
-	mpdSong = mpd_run_current_song(mpdConnection);
-	if(mpdSong == NULL){
-		return NULL;
-	}
-	
 	song = (SONG*)malloc(sizeof(SONG));
 	if(song == NULL){
 		fprintf(stderr, "Memory allocation error.\n");
@@ -109,6 +100,23 @@ get_current_song(struct mpd_connection *mpdConnection)
 	song->duration_sec = duration%60;
 	song->position = 1+mpd_song_get_pos(mpdSong);
 	return song;
+}
+
+/* queries the server for the current song, inserts it into a structure
+ * arguments: Connection
+ * returns a NULL structure if no current song / error,
+ * returns a pointer to a SONG structure if successful
+ */
+SONG*
+get_current_song(struct mpd_connection *mpdConnection)
+{
+	struct mpd_song* mpdSong = NULL;
+
+	mpdSong = mpd_run_current_song(mpdConnection);
+	if(mpdSong == NULL){
+		return NULL;
+	}
+	return parse_mpd_song(mpdSong);	
 }
 
 /* queries the server for the current state (play, pause, stop, unknown)
@@ -222,11 +230,100 @@ print_current_status(STATUS* status)
 	if(status->crossfade){
 		fprintf(stdout, "crossfade: on ");
 	}
-	/*fprintf(stdout, "\n");*/
+	fprintf(stdout, "\n");
 	return;
 }
 
+int
+enqueue(QUEUE *q, SONG *s)
+{
+	QUEUE *t;
+	if((t = (QUEUE*)malloc(sizeof(QUEUE))) == NULL){
+		STANDARD_USAGE_ERROR("calloc");
+		return 1;
+	}
+	t->song = s;
+	if(q->next == NULL){
+		q->next = t;
+		q->next->next = t;
+	} else {
+		t->next = q->next->next;
+		q->next->next = t;
+		q->next = t;
+	}
+	return 0;
+}
 
+QUEUE* 
+retrieve_songs(struct mpd_connection *mpdConnection, QUEUE *q)
+{
+	SONG* song = NULL;
+	struct mpd_song* mpdSong = NULL;
+
+	if((mpdSong = mpd_recv_song(mpdConnection)) == NULL){		
+		return q;
+	}	
+	
+	song = parse_mpd_song(mpdSong);
+	if(enqueue(q, song) == 1){
+		STANDARD_USAGE_ERROR("enqueue");
+		return NULL;
+	}
+	
+	retrieve_songs(mpdConnection, q);
+	return q;
+}
+
+QUEUE* 
+get_current_playlist(struct mpd_connection* mpdConnection)
+{
+	QUEUE *q = NULL;	
+	
+	mpd_send_list_queue_meta(mpdConnection);
+	
+	if((q = (QUEUE*)malloc(sizeof(QUEUE))) == NULL){
+		STANDARD_USAGE_ERROR("calloc");		
+		return NULL;
+	}
+	q->next = NULL;
+	retrieve_songs(mpdConnection, q);
+	return q;
+}
+
+SONG* 
+dequeue(QUEUE* q)
+{
+	QUEUE *t;
+	SONG* song = NULL;
+	if(q->next == NULL){
+		return NULL;
+	}
+	if(q->next != q->next->next){
+		t = q->next->next;
+		q->next->next = t->next;
+		song = t->song;
+		free(t);
+	} else {
+		song = q->next->song;
+		free(q->next);
+		q->next = NULL;
+	}
+	return song;
+}
+
+void 
+print_current_playlist(QUEUE* q)
+{
+	int i = 0;	
+	SONG* song = dequeue(q);
+
+	while(song != NULL){
+		i++;
+		fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
+		song = dequeue(q);
+	}
+	return;
+}
 
 
 

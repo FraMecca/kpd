@@ -62,27 +62,25 @@ int main (int argc, char *argv[])
 	GC_INIT ();
 	struct mpd_connection *mpdSession = NULL;
 	STATUS* currentStatus = NULL;
+	QUEUE* playlist = NULL;
 	
 	// attach client to mpd server
 	// should specify the host as config or as command line argument
-	// with the "while" loop it forces connection regardless of timeouts (useful for slow networks)
-	/*while(!mpdSession){*/
-		mpdSession = open_connection ("localhost", 6600); 
-	/*}*/
-	// no while because if mpd is not running the program hangs
+	mpdSession = open_connection ("localhost", 6600); 
+	if (mpdSession == NULL) {
+		// didn't get a connection successfully
+		return 2;
+	}
 	
 	/*check if no arguments -> display current status and exit*/
 	if(argc == 1){
 		currentStatus = get_current_status(mpdSession);
 		print_current_status(currentStatus);
-		exit(EXIT_SUCCESS);
+//		exit(EXIT_SUCCESS);
 	}
-
-	if (mpdSession == NULL) {
-		// didn't get a connection successfully
-		return 2;
-	}
-
+	playlist = get_current_playlist(mpdSession);
+	print_current_playlist(playlist);
+	
 	process_cli (argc, argv, long_options, functions, NOPTIONS, mpdSession, 1);
 
 	return 0;
