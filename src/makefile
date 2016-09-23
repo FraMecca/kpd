@@ -1,4 +1,4 @@
-ALL = parse_args.c main.c util.c util2.c
+ALL = parse_args.c main.c util_mpd_handler.c util_datastructs.c 
 
 all:
 		gcc $(ALL) -Wall  -o ../build/main -lgc -lmpdclient

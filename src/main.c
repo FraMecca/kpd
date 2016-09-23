@@ -5,7 +5,6 @@
 #include "gc_util.h" // gc handler
 #include <gc.h> // gc_init
 /*#include <stdlib.h> // free*/
-#include "util2.h" // include hell
 
 bool funct ()
 {
@@ -44,9 +43,9 @@ static functionTable functions[] = {
 	{"next",			'n',	(void *) &next},
 	{"previous",		'b', 	(void *) &previous},
 	{"prev",			'b', 	(void *) &previous},
-	{"stop",			's', 	(void *) &stop},
+	{"stop",			'S', 	(void *) &stop},
 	{"random",			'r', 	(void *) &random_kpd},
-	{"shuffle",			'S',	(void *) &funct},
+	{"shuffle",			's',	(void *) &funct},
 	{"update",			'u', 	(void *) &funct},
 	{"add",				'a', 	(void *) &funct},
 	{"search",			's', 	(void *) &funct},

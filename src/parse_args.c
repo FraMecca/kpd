@@ -237,11 +237,12 @@ char *create_getopts_short_options_string (const functionTable *functions, const
 	int i;
 	char *getoptShortOptStr = (char *) malloc (3*nFunctions * sizeof (char));
 	memset (getoptShortOptStr, 0, 3 * nFunctions);  
-	for (i = 0; i < 2*nFunctions; i += 3) {
-		getoptShortOptStr[i] = functions[i / 2].shortOption;
+	for (i = 0; i < 3*nFunctions; i += 3) {
+		getoptShortOptStr[i] = functions[i / 3].shortOption;
 		getoptShortOptStr[i + 1] = ':';
 		getoptShortOptStr[i + 2] = ':';
 	}
+	/*printf ("%s\n", getoptShortOptStr);*/
 	return getoptShortOptStr;
 }
 

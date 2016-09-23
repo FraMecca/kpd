@@ -1,9 +1,10 @@
-#include "util2.h"
-#include "util.h"
-#include "gc_util.h"
-
-#define STANDARD_USAGE_ERROR(commandname) fprintf (stderr,"kpd: incorrect usage of %s\nTry 'kpd --help' for more information.\n", commandname); 
-#define TIMEOUT 5000
+#include "util.h" 
+#include "gc_util.h" // malloc, free def
+#include <mpd/client.h> // libmpdclient
+#include <stdio.h> // fprintf
+#include <gc.h> // garbage collector
+#include <stdbool.h> // true false
+#include <string.h> // strcmp
 
 /* opens a new connection to the mpd server
  * arguments: host, port (timeout defined)
@@ -198,71 +199,17 @@ get_current_status(struct mpd_connection *mpdConnection)
 	return status;	
 }
 
-/* prints a STATUS structure to stdout */
-void 
-print_current_status(STATUS* status)
-{
-	SONG* song = NULL;
-	int CRflag = false;
-
-	if(status == NULL){
-		return;
-	}
-	song = status->song;
-	
-	if(song != NULL){
-		if(song->title != NULL){
-			fprintf(stdout, "%s - ", song->title);
-		}
-		if(song->artist != NULL){
-			fprintf(stdout, "%s\n", song->artist);
-		}
-		if(song->album != NULL){
-			fprintf(stdout, "%s\n", song->album);
-		}
-		if(status->state != NULL){
-			fprintf(stdout, "(%s)\t", status->state);
-		}
-		fprintf(stdout, "#%d/%d\t", 1+song->position, status->queueLenght);
-		fprintf(stdout, "%d:%.2d/%d:%.2d\n", status->elapsedTime_min, status->elapsedTime_sec, song->duration_min, song->duration_sec);
-	}
-	if(status->random){
-		fprintf(stdout, "random: on ");
-		CRflag = true;
-	}
-	if(status->repeat){
-		fprintf(stdout, "repeat: on ");
-		CRflag = true;
-	}
-	if (status->consume) {
-		fprintf (stdout, "consume: on");
-		CRflag = true;
-	}
-	if(status->single){
-		fprintf(stdout, "single: on ");
-		CRflag = true;
-	}
-	if(status->crossfade){
-		fprintf(stdout, "crossfade: on ");
-		CRflag = true;
-	}
-	if (CRflag == true) {
-		fprintf(stdout, "\n");
-	}
-	return;
-}
-
 /* add a new element to the playlist queue
  * returns 1 if error
  * returns 0 if successful
  * */
-int
+bool
 enqueue(QUEUE *q, SONG *s)
 {
 	QUEUE *t;
 	if((t = (QUEUE*)malloc(sizeof(QUEUE))) == NULL){
 		STANDARD_USAGE_ERROR("calloc");
-		return 1;
+		return false;
 	}
 	t->song = s;
 	if(q->next == NULL){
@@ -273,7 +220,32 @@ enqueue(QUEUE *q, SONG *s)
 		q->next->next = t;
 		q->next = t;
 	}
-	return 0;
+	return true;
+}
+
+/* delete an element from the queue and save the linked song 
+ * returns NULL if q empty 
+ * returns SONG* element if successful
+ */
+SONG* 
+dequeue(QUEUE* q)
+{
+	QUEUE *t;
+	SONG* song = NULL;
+	if(q->next == NULL){
+		return NULL;
+	}
+	if(q->next != q->next->next){
+		t = q->next->next;
+		q->next->next = t->next;
+		song = t->song;
+		free(t);
+	} else {
+		song = q->next->song;
+		free(q->next);
+		q->next = NULL;
+	}
+	return song;
 }
 
 /* receives the songs in the playlist, one by one
@@ -281,7 +253,7 @@ enqueue(QUEUE *q, SONG *s)
  * returns NULL if error or empty playlist
  * returns a queue of songs if successful
  */
-QUEUE* 
+static QUEUE* 
 retrieve_songs(struct mpd_connection *mpdConnection, QUEUE *q)
 {
 	SONG* song = NULL;
@@ -292,8 +264,7 @@ retrieve_songs(struct mpd_connection *mpdConnection, QUEUE *q)
 	}	
 		
 	song = parse_mpd_song(mpdSong);
-	if(enqueue(q, song) == 1){
-		STANDARD_USAGE_ERROR("enqueue");
+	if(enqueue(q, song) == 0){
 		return NULL;
 	}
 	
@@ -322,74 +293,3 @@ get_current_playlist(struct mpd_connection* mpdConnection)
 	return q;
 }
 
-/* delete an element from the queue and save the linked song 
- * returns NULL if q empty 
- * returns SONG* element if successful
- */
-SONG* 
-dequeue(QUEUE* q)
-{
-	QUEUE *t;
-	SONG* song = NULL;
-	if(q->next == NULL){
-		return NULL;
-	}
-	if(q->next != q->next->next){
-		t = q->next->next;
-		q->next->next = t->next;
-		song = t->song;
-		free(t);
-	} else {
-		song = q->next->song;
-		free(q->next);
-		q->next = NULL;
-	}
-	return song;
-}
-
-/* prints the playlist queue on stdout */
-void 
-print_current_playlist(QUEUE* q, struct mpd_connection *mpdConnection)
-{
-	int i = 0;	
-	SONG* song = dequeue(q);
-
-	SONG *cur = get_current_song (mpdConnection);
-
-	{
-		while(i < cur->position){
-			i++;
-			fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
-			song = dequeue(q);
-		}
-		// now we got the current playing song,
-		// will be printed bold
-		{
-			fprintf (stdout, "\033[31m");
-			i++;
-			fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
-			song = dequeue(q);
-			fprintf (stdout, "\033[0m");
-		}	
-		while(song != NULL){
-			i++;
-			fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
-			song = dequeue(q);
-		}
-	}
-
-	return;
-}
-
-bool list (struct mpd_connection *mpdSession, char **argv, int n)
-{
-	QUEUE* playlist = NULL;
-
-	if (n != 0) {
-		STANDARD_USAGE_ERROR ("output-enable");
-		return false;
-	}
-	playlist = get_current_playlist(mpdSession);
-	print_current_playlist(playlist, mpdSession);
-	return true;
-}
