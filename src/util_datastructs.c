@@ -78,7 +78,6 @@ open_connection(const char *host, unsigned port)
 void
 close_connection(struct mpd_connection *mpdConnection)
 {
-	fprintf(stdout, "Closing connection...\n");
 	mpd_connection_free(mpdConnection);
 }
 
@@ -204,6 +203,7 @@ get_current_status(struct mpd_connection *mpdConnection)
 	status->repeat = mpd_status_get_repeat(mpdStatus);
 	status->single = mpd_status_get_single(mpdStatus);
 	status->consume = mpd_status_get_consume(mpdStatus);
+	status->update = mpd_status_get_update_id (mpdStatus); 
 	status->crossfade = mpd_status_get_crossfade(mpdStatus);
 	status->song = get_current_song(mpdConnection);
 	status->state = get_current_state(mpdStatus);			
