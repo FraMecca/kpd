@@ -11,7 +11,7 @@ void
 print_current_status(STATUS* status)
 {
 	SONG* song = NULL;
-	int CRflag = false;
+	bool CRflag = false, nullFlag = false;
 
 	if(status == NULL){
 		return;
@@ -21,12 +21,22 @@ print_current_status(STATUS* status)
 	if(song != NULL){
 		if(song->title != NULL){
 			fprintf(stdout, "%s - ", song->title);
+			nullFlag = true;
 		}
 		if(song->artist != NULL){
 			fprintf(stdout, "%s\n", song->artist);
+			nullFlag = true;
 		}
 		if(song->album != NULL){
 			fprintf(stdout, "%s\n", song->album);
+			nullFlag = true;
+		} else {
+			nullFlag = false;
+			// even if only album field is missing, the filesystem name will be printed
+		}
+		if (nullFlag == false) {
+			// title, artist, album fields are missing, will print filesystem name
+			fprintf (stdout, "%s\n", song->uri);
 		}
 		if(status->state != NULL){
 			fprintf(stdout, "(%s)\t", status->state);
@@ -72,21 +82,44 @@ print_current_playlist(QUEUE* q, struct mpd_connection *mpdConnection)
 	{
 		while(i < cur->position){
 			i++;
-			fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
+			if (song->artist != NULL && song->title != NULL) {
+				// some songs have null title or/and artist field, so the filesystem name will be used
+				fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
+			} else {
+				fprintf (stdout, "%d. %s\n", i, song->uri);
+			}
 			song = dequeue(q);
 		}
 		// now we got the current playing song,
 		// will be printed bold
 		{
-			fprintf (stdout, "\033[31m");
+			char color[5] = "[0m";
+			STATUS *status = get_current_status (mpdConnection);
+			if (strcmp (status->state, "play") == 0) {
+				strncpy (color, "[31m", 4);
+			} else {
+				if (strcmp (status->state, "pause") == 0) {
+					strncpy (color, "[33m", 4);
+				}
+			}
+
+			fprintf (stdout, "\x1b[31m");
 			i++;
-			fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
+			if (song->artist != NULL && song->title != NULL) {
+				fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
+			} else {
+				fprintf (stdout, "%d. %s\n", i, song->uri);
+			}
 			song = dequeue(q);
-			fprintf (stdout, "\033[0m");
+			fprintf (stdout, "\x1b[0m"); // reset ansi_escape_code
 		}	
 		while(song != NULL){
 			i++;
-			fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
+			if (song->artist != NULL && song->title != NULL) {
+				fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
+			} else {
+				fprintf (stdout, "%d. %s\n", i, song->uri);
+			}
 			song = dequeue(q);
 		}
 	}

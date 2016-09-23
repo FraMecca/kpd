@@ -14,6 +14,7 @@ typedef struct so {
 	const char *title;
 	const char *artist;
 	const char *album;
+	const char *uri; // name on the filesystem
 	int duration_min;
 	int duration_sec;
 	unsigned int position;

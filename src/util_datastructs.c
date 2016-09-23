@@ -106,6 +106,8 @@ parse_mpd_song(struct mpd_song* mpdSong)
 	song->duration_min = duration/60;
 	song->duration_sec = duration%60;
 	song->position = mpd_song_get_pos(mpdSong);
+	song->uri = mpd_song_get_uri (mpdSong);
+
 	return song;
 }
 
@@ -121,6 +123,7 @@ get_current_song(struct mpd_connection *mpdConnection)
 
 	mpdSong = mpd_run_current_song(mpdConnection);
 	if(mpdSong == NULL){
+		fprintf (stderr, "can't get running song\n");
 		return NULL;
 	}
 	return parse_mpd_song(mpdSong);	
@@ -175,6 +178,9 @@ get_current_status(struct mpd_connection *mpdConnection)
 	int eltime;
 
 	mpdStatus = mpd_run_status(mpdConnection);
+	if(mpdStatus == NULL){
+		mpdStatus = mpd_recv_status (mpdConnection);
+	}
 	if(mpdStatus == NULL){
 		fprintf(stderr, "Unable to retrieve status. Connection error.\n");
 		return NULL;
