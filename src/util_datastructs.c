@@ -116,16 +116,28 @@ parse_mpd_song(struct mpd_song* mpdSong)
  * returns a NULL structure if no current song / error,
  * returns a pointer to a SONG structure if successful
  */
+
+
+#define TRY(x, delX, newX, y, f) do {\
+		if ((y = f (x)) == NULL) {\
+		delX (x);\
+		if ((x = newX ("127.0.0.1", 6600)) != NULL){\
+			fprintf (stderr, "RICORSIONE");\
+		}\
+	}\
+} while (y == NULL)
+
 SONG*
 get_current_song(struct mpd_connection *mpdConnection)
 {
 	struct mpd_song* mpdSong = NULL;
-
-	mpdSong = mpd_run_current_song(mpdConnection);
-	if(mpdSong == NULL){
-		fprintf (stderr, "can't get running song\n");
-		return NULL;
-	}
+	
+		/*mpdSong = mpd_run_current_song(mpdConnection);*/
+	TRY (mpdConnection, close_connection, open_connection, mpdSong, mpd_run_current_song);
+		if(mpdSong == NULL){
+			fprintf (stderr, "can't get running song\n");
+			return NULL;
+		}
 	return parse_mpd_song(mpdSong);	
 }
 
@@ -177,10 +189,8 @@ get_current_status(struct mpd_connection *mpdConnection)
 	STATUS *status = NULL;
 	int eltime;
 
-	mpdStatus = mpd_run_status(mpdConnection);
-	if(mpdStatus == NULL){
-		mpdStatus = mpd_recv_status (mpdConnection);
-	}
+	/*mpdStatus = mpd_run_status(mpdConnection);*/
+	TRY (mpdConnection, close_connection, open_connection, mpdStatus, mpd_run_status);
 	if(mpdStatus == NULL){
 		fprintf(stderr, "Unable to retrieve status. Connection error.\n");
 		return NULL;
