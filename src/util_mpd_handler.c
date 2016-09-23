@@ -1,7 +1,7 @@
 #include "util.h" 
 #include "gc_util.h" // malloc, free def
 #include <mpd/client.h> // libmpdclient
-#include <stdio.h> // fprintf
+#include <stdio.h> // frintf
 #include <gc.h> // garbage collector
 #include <stdbool.h> // true false
 #include <string.h> // strcmp
@@ -67,6 +67,9 @@ print_current_status(STATUS* status)
 	}
 	if (CRflag == true) {
 		fprintf(stdout, "\n");
+	}
+	if (status->update) {
+		fprintf (stdout, "Updating database...\n");
 	}
 	return;
 }
@@ -673,4 +676,13 @@ output_enable (struct mpd_connection *m, char **args, int n)
 			}
 		}
 	}
+}
+
+bool
+update (struct mpd_connection *mpdSession, char **args, int n)
+{
+	if(n != 0){
+		STANDARD_USAGE_ERROR("next");
+	}
+	return ((mpd_run_update (mpdSession, NULL) > 0));
 }

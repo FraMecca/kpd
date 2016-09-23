@@ -78,7 +78,6 @@ open_connection(const char *host, unsigned port)
 void
 close_connection(struct mpd_connection *mpdConnection)
 {
-	fprintf(stdout, "Closing connection...\n");
 	mpd_connection_free(mpdConnection);
 }
 
@@ -116,16 +115,28 @@ parse_mpd_song(struct mpd_song* mpdSong)
  * returns a NULL structure if no current song / error,
  * returns a pointer to a SONG structure if successful
  */
+
+
+#define TRY(x, delX, newX, y, f) do {\
+		if ((y = f (x)) == NULL) {\
+		delX (x);\
+		if ((x = newX ("127.0.0.1", 6600)) != NULL){\
+			fprintf (stderr, "RICORSIONE");\
+		}\
+	}\
+} while (y == NULL)
+
 SONG*
 get_current_song(struct mpd_connection *mpdConnection)
 {
 	struct mpd_song* mpdSong = NULL;
-
-	mpdSong = mpd_run_current_song(mpdConnection);
-	if(mpdSong == NULL){
-		fprintf (stderr, "can't get running song\n");
-		return NULL;
-	}
+	
+		/*mpdSong = mpd_run_current_song(mpdConnection);*/
+	TRY (mpdConnection, close_connection, open_connection, mpdSong, mpd_run_current_song);
+		if(mpdSong == NULL){
+			fprintf (stderr, "can't get running song\n");
+			return NULL;
+		}
 	return parse_mpd_song(mpdSong);	
 }
 
@@ -177,10 +188,8 @@ get_current_status(struct mpd_connection *mpdConnection)
 	STATUS *status = NULL;
 	int eltime;
 
-	mpdStatus = mpd_run_status(mpdConnection);
-	if(mpdStatus == NULL){
-		mpdStatus = mpd_recv_status (mpdConnection);
-	}
+	/*mpdStatus = mpd_run_status(mpdConnection);*/
+	TRY (mpdConnection, close_connection, open_connection, mpdStatus, mpd_run_status);
 	if(mpdStatus == NULL){
 		fprintf(stderr, "Unable to retrieve status. Connection error.\n");
 		return NULL;
@@ -194,6 +203,7 @@ get_current_status(struct mpd_connection *mpdConnection)
 	status->repeat = mpd_status_get_repeat(mpdStatus);
 	status->single = mpd_status_get_single(mpdStatus);
 	status->consume = mpd_status_get_consume(mpdStatus);
+	status->update = mpd_status_get_update_id (mpdStatus); 
 	status->crossfade = mpd_status_get_crossfade(mpdStatus);
 	status->song = get_current_song(mpdConnection);
 	status->state = get_current_state(mpdStatus);			

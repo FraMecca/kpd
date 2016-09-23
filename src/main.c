@@ -19,7 +19,7 @@ static struct option long_options[] = {    // args neeed:
 	{"previous",		no_argument,       0, 'b'}, // 0
 	{"prev",			no_argument,       0, '0'}, // 0
     {"stop",			no_argument,       0, 's'}, // 1+	
-    {"clear",			no_argument,	   0, 'c'}, // 0
+	{"clear", 			optional_argument, 0, 'c'}, // 0+
 	{"random",			optional_argument, 0, 'r'}, // 1+
 	{"shuffle", 	    no_argument,       0, 'S'},
 	{"update",			no_argument,       0, 'u'}, // 1+
@@ -35,9 +35,8 @@ static struct option long_options[] = {    // args neeed:
 	{"swap",			required_argument, 0, 'w'}, // 2+
 	{"format",			required_argument, 0, 'f'}, // 1+
 	{"output-enable",	required_argument, 0, '0'}, // 1+
-	{"clear", 			optional_argument, 0, 'c'}, // 0+
 	{"delete", 			required_argument, 0, 'd'}, // 1+
-	{"delete_range", 	required_argument, 0, 'D'},// 2+
+	{"delete-range", 	required_argument, 0, 'D'},// 2+
 };
 
 static functionTable functions[] = {
@@ -48,10 +47,10 @@ static functionTable functions[] = {
 	{"previous",		'b', 	(void *) &previous},
 	{"prev",			'b', 	(void *) &previous},
 	{"stop",			'S', 	(void *) &stop},
-	{"clear",			'c',	(void *) &funct},
+	{"clear",			'c',	(void *) &clear},
 	{"random",			'r', 	(void *) &random_kpd},
 	{"shuffle",			's',	(void *) &funct},
-	{"update",			'u', 	(void *) &funct},
+	{"update",			'u', 	(void *) &update},
 	{"add",				'a', 	(void *) &funct},
 	{"search",			's', 	(void *) &funct},
 	{"filter",			'f', 	(void *) &funct},
@@ -64,7 +63,6 @@ static functionTable functions[] = {
 	{"swap",			'w', 	(void *) &funct},
 	{"format",			'f', 	(void *) &funct},
 	{"output-enable",   '0', 	(void *) &output_enable},
-	{"clear", 			'c', 	(void *) &clear},
 	{"delete", 			'd', 	(void *) &delete},
 	{"delete_range", 	'D', 	(void *) &delete_range},
 };    
