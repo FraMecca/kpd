@@ -523,6 +523,22 @@ single(struct mpd_connection *mpdServer, char **args, int n)
 	return false;
 }
 
+//verify if the seek function goes over the edges
+bool
+check_limit(STATUS status, int final_val)
+{
+	if(final_val<0 && (status->elapsedTime_sec + final_val<0))
+	{
+		return false;
+	}
+	if(final_val>0 && (status->elapseTime_sec + final_val > status->song->duration_sec))
+	{
+		return false;
+	}
+
+	return true;
+}
+
 bool
 seek(struct mpd_connection *mpdServer, char **args, int n)
 {
@@ -539,6 +555,13 @@ seek(struct mpd_connection *mpdServer, char **args, int n)
 		fprintf(stdout,"Too many arguments!\n");
 	}
 	
+	//check if the song is in play o in pause
+	if(strcmp(status->state,"pause")!=0 || strcmp(status->state,"play"!=0))
+	{
+		STANDARD_USAGE_ERROR("No song is in play or pause\n");
+ 	   	return false;
+	}
+
 	l = strlen(args[0]);
 		
 	//check if the number is of the type num%s/m/h
@@ -559,6 +582,12 @@ seek(struct mpd_connection *mpdServer, char **args, int n)
 			num *= (-1);
 		}
 		
+		if(num>100)
+		{
+			STANDARD_USAGE_ERROR("Percentage is more than 100%\n");
+			return false;
+		}
+
 		final_value = (unsigned) (status->song->duration_sec / 100 ) * num;
 
 		return(mpd_send_seek_pos(mpdServer, status->song->position, final_value));
@@ -567,27 +596,52 @@ seek(struct mpd_connection *mpdServer, char **args, int n)
 	{
 		sscanf(args[0],"%d%c", &num, &time_val);
 		switch(time_val)
-		{	
+		{
+			case '\0':	
 			case 's':
-				final_value = (unsigned)  status->song->duration_sec + num;
+				final_value = (unsigned)  status->elapsedTime_sec + num;
+			
+				if(!check_limit(status, status->elapsedTime_sec + num))
+				{
+					STANDARD_USAGE_ERROR("Edge not respected\n");
+					return false;
+				}	
+
+				fprintf(stdout,"%d", final_value);
 				return(mpd_send_seek_pos(mpdServer, status->song->position, final_value));
 				break;
 			
 			case 'm':
 				num *= 60;
-				final_value = (unsigned)  status->song->duration_sec + num;
+				final_value = (unsigned)  status->elapsedTime_sec + num;
+
+				if(!check_limit(status, status->elapsedTime_sec + num))
+				{
+					STANDARD_USAGE_ERROR("Edge not respected\n");
+					return false;
+				}	
+
+				fprintf(stdout,"%d", final_value);
 				return(mpd_send_seek_pos(mpdServer, status->song->position, final_value));
 				break;
 			
 			case 'h':
 				num *= (60*60);
-				final_value = (unsigned)  status->song->duration_sec + num;
+				final_value = (unsigned)  status->elapsedTime_sec + num;
+
+				if(!check_limit(status, status->elapsedTime_sec + num))
+				{
+					STANDARD_USAGE_ERROR("Edge not respected\n");
+					return false;
+				}	
+
+				fprintf(stdout,"%d", final_value);
 				return(mpd_send_seek_pos(mpdServer, status->song->position, final_value));
 				break;
 
 			default:
-				fprintf(stdout,"Command not valid\n");
-				return false;
+				STANDARD_USAGE_ERROR("Command is not valid\n");
+				break;
 		}
 	}	
 	
