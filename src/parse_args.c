@@ -76,6 +76,11 @@ bool check_sanity (int argc, char **argv, const functionTable *functions, const 
 	while (--argc > 0) {
 		// check if argv[argc] is in functionTable
 		if (argv[argc][0] == '-') {
+			if (strlen (argv[argc]) == 1) {
+				OPTION_NOT_FOUND (argv[argc]);
+				// why do you put '-'
+				return false;
+			}
 			if (argv[argc][1] != '-') {
 				// it is a single dash option
 				// given that -ap is two corrent single dash options, it should be considered as such

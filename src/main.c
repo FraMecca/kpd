@@ -19,6 +19,7 @@ static struct option long_options[] = {    // args neeed:
 	{"previous",		no_argument,       0, 'b'}, // 0
 	{"prev",			no_argument,       0, '0'}, // 0
     {"stop",			no_argument,       0, 's'}, // 1+	
+    {"clear",			no_argument,	   0, 'c'}, // 0
 	{"random",			optional_argument, 0, 'r'}, // 1+
 	{"shuffle", 	    no_argument,       0, 'S'},
 	{"update",			no_argument,       0, 'u'}, // 1+
@@ -44,6 +45,7 @@ static functionTable functions[] = {
 	{"previous",		'b', 	(void *) &previous},
 	{"prev",			'b', 	(void *) &previous},
 	{"stop",			'S', 	(void *) &stop},
+	{"clear",			'c',	(void *) &funct},
 	{"random",			'r', 	(void *) &random_kpd},
 	{"shuffle",			's',	(void *) &funct},
 	{"update",			'u', 	(void *) &funct},

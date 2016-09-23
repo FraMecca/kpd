@@ -103,7 +103,7 @@ print_current_playlist(QUEUE* q, struct mpd_connection *mpdConnection)
 				}
 			}
 
-			fprintf (stdout, "\x1b[31m");
+			fprintf (stdout, "\x1b%s", color);
 			i++;
 			if (song->artist != NULL && song->title != NULL) {
 				fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
