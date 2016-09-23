@@ -5,6 +5,7 @@
 #include <gc.h> // garbage collector
 #include <stdbool.h> // true false
 #include <string.h> // strcmp
+#include <math.h>
 
 /* prints a STATUS structure to stdout */
 void 
@@ -78,8 +79,9 @@ print_current_playlist(QUEUE* q, struct mpd_connection *mpdConnection)
 	SONG* song = dequeue(q);
 
 	SONG *cur = get_current_song (mpdConnection);
-
-	{
+	if(cur == NULL){
+		return;		
+	}
 		while(i < cur->position){
 			i++;
 			if (song->artist != NULL && song->title != NULL) {
@@ -122,7 +124,6 @@ print_current_playlist(QUEUE* q, struct mpd_connection *mpdConnection)
 			}
 			song = dequeue(q);
 		}
-	}
 
 	return;
 }
@@ -135,8 +136,11 @@ bool list (struct mpd_connection *mpdSession, char **argv, int n)
 		STANDARD_USAGE_ERROR ("output-enable");
 		return false;
 	}
-	playlist = get_current_playlist(mpdSession);
-	print_current_playlist(playlist, mpdSession);
+	if((playlist = get_current_playlist(mpdSession)) != NULL){
+		print_current_playlist(playlist, mpdSession);
+	} else {
+		fprintf(stdout, "Empty playlist.\n");
+	}
 	return true;
 }
 
@@ -189,6 +193,7 @@ play (struct mpd_connection *mpdServer, char **args, int n)
 			if (strcmp (status->state, "play")==0)
 			{
 				check = pause (mpdServer, NULL, 0);
+
 			} 
 			else
 			{
@@ -204,6 +209,8 @@ play (struct mpd_connection *mpdServer, char **args, int n)
 	if(n==1)
 	{
 		check = mpd_send_play_pos(mpdServer, pos-1);
+		status = get_current_status(mpdServer);
+		print_current_status (status);
 		return check;
 	}	
 
@@ -236,6 +243,132 @@ stop(struct mpd_connection *mpdServer)
 	return(mpd_send_stop(mpdServer));
 }
 
+/* a wrapper to mpd_run_delete */
+bool 
+delete_song(struct mpd_connection *mpdServer, int pos)
+{	
+	return mpd_run_delete(mpdServer, pos);
+}
+
+/* the function used by qsort to compare integers */
+int 
+compare_pos(const void *pos1, const void *pos2)
+{
+	return (pos1 - pos2);
+}
+
+/* deletes a range of songs from the playlist
+ * usage: kpd -D 11 12 21 22 ...
+ * where the first range is 11-12 and the second 21-22 (and so on)
+ * returns false if error
+ * returns true if successful
+ */
+bool 
+delete_range(struct mpd_connection *mpdServer, char **args, int n)
+{
+	int **ranges = NULL;
+	int i;
+	int cnt = 0;
+	int n_ranges = n/2;
+
+	ranges = (int**)malloc(n_ranges*sizeof(int*));
+	if(!ranges){
+		fprintf(stderr, "Memory allocation error.\n");
+		return false;	
+	}
+
+	for(i=0; i<n_ranges; i++){
+		ranges[i] = (int*)malloc(2*sizeof(int));
+		if(!ranges[i]){
+			fprintf(stderr, "Memory allocation error.\n");
+			return false;	
+		}
+		ranges[i][0] = convert_to_int(args[cnt]) - 1;
+		ranges[i][1] = convert_to_int(args[cnt+1]);
+		cnt = cnt+2;
+	}
+	
+	for(i=0; i<n_ranges; i++){
+		if(!mpd_run_delete_range(mpdServer, ranges[i][0], ranges[i][1])){
+			return false;
+		}
+	}
+	return true;
+	
+}
+
+/* converts a string of char to an integer
+ * returns it when done
+ */
+int 
+convert_to_int(char *arg)
+{
+	int len = strlen(arg);
+	int i;
+	int result = 0;
+	int arg_int;
+
+	for(i=0; i<len; i++){
+		arg_int = arg[i] - '0';
+		result+=((pow(10, (len-i-1)))*(arg_int));
+	}
+	return result;
+}
+
+/* deletes one or more track(s) from the playlist
+ * arguments required: at least one position 
+ * returns false if error,
+ * returns true if done, and prints the playlist
+ */
+bool 
+delete(struct mpd_connection *mpdServer, char **args, int n)
+{
+	int i;
+	int pos;
+	int *positions = NULL;
+
+	if(n == 0){
+		STANDARD_USAGE_ERROR("delete");
+		return false;
+	}
+	
+	if(n == 1){
+		pos = convert_to_int(args[0]);
+		if(!delete_song(mpdServer, pos - 1)){
+			STANDARD_USAGE_ERROR("delete_song");
+			return false;
+		}
+		return true;
+	}
+	
+	/* n > 1 */
+	positions = (int*)malloc(n*sizeof(int));
+	if(!positions){
+		fprintf(stderr, "Memory allocation error.\n");
+		return false;
+	}		
+
+	for(i=0; i<n; i++){
+		positions[i] = convert_to_int(args[i]);
+	}
+	qsort(positions, n, sizeof(int), compare_pos);
+	
+	for(i=0; i<n; i++){
+		pos = positions[i] - i - 1;	
+		if(!delete_song(mpdServer, pos)){
+			STANDARD_USAGE_ERROR("delete_song");
+			return false;
+		}
+	}
+	list(mpdServer, args, n);
+	return true;
+}
+
+bool
+clear(struct mpd_connection *mpdServer)
+{	
+	return mpd_send_clear(mpdServer);
+} 
 
 bool
 random_kpd(struct mpd_connection *mpdServer, char **args, int n)
