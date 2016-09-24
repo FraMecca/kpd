@@ -547,7 +547,7 @@ bool
 seek(struct mpd_connection *mpdServer, char **args, int n)
 {
 	int num = 0, l = 0;
-	char time_val;	
+	char time_val='\0', sign='\0';	
 	unsigned final_value = 0;
 	STATUS *status = NULL;
 	
@@ -601,7 +601,54 @@ seek(struct mpd_connection *mpdServer, char **args, int n)
 	}
 	else
 	{
-		sscanf(args[0],"%d%c", &num, &time_val);
+		sscanf(args[0],"%c%d%c", &sign, &num, &time_val);
+
+		if(sign>='0' || sign<='9')
+		{
+			if(time_val=='\0')
+			{
+				num += ((pow(10,l-1))*(sign-'0'));
+			}
+			else
+			{
+				num += ((pow(10,l-2))*(sign-'0'));
+			}
+
+			switch(time_val)
+			{
+				case '\0':
+				case 's':	
+					if(!check_limit(status, num))
+					{
+						STANDARD_USAGE_ERROR("Edge not respected\n");
+						return false;
+					}
+					return(mpd_send_seek_pos(mpdServer, status->song->position, (unsigned) num));
+
+				case 'm':
+					num *= 60;
+					if(!check_limit(status, num))
+					{
+						STANDARD_USAGE_ERROR("Edge not respected\n");
+						return false;
+					}	
+					return(mpd_send_seek_pos(mpdServer, status->song->position, (unsigned) num));
+
+				case 'h':
+					num *= (60*60);
+					if(!check_limit(status, status->elapsedTime_sec + num))
+					{
+						STANDARD_USAGE_ERROR("Edge not respected\n");
+						return false;
+					}
+					return(mpd_send_seek_pos(mpdServer, status->song->position, (unsigned) num));
+
+				default:
+					STANDARD_USAGE_ERROR("Command is not valid\n");
+					return false;
+			}
+		}
+
 		switch(time_val)
 		{
 			case '\0':	
@@ -655,7 +702,7 @@ seek(struct mpd_connection *mpdServer, char **args, int n)
 				break;
 		}
 	}	
-	
+	return false;	
 }
 
 /* this function redirects stdout to /dev/null or reset stdout to original state.
