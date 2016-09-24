@@ -1,4 +1,3 @@
-#include <getopt.h> // for getops_long
 #include <stdlib.h> // exit
 #include <stdio.h> // true false
 #include <stdbool.h> // printf
@@ -29,14 +28,47 @@ typedef struct argumentsArray {
 	int size;
 } argumentsArray;
 
-static int count_n_args (int argc, char **argv)
+static int
+is_long_option (const char *arg, const functionTable *functions, const int n)
+{
+	int i;
+	if (arg[0] == '-' && arg[1] == '-' && strlen (arg) > 2) {
+		// in this way if arg == --play tmp == play
+		for (i = 0; i < n; ++i) {
+			if (strncmp (functions[i].name, arg + 2, strlen (functions[i].name)) == 0) {
+				return 1;
+			}
+		}
+	}
+	// else
+	// arg doesn't start with '--' so it is not an argument
+	return 0;
+}
+
+static int
+is_short_option (const char *arg, const functionTable *functions, const int n)
+{
+	int i, j, cnt = 0;
+	if (arg[0] == '-' && arg[1] != '-' && strlen (arg) > 1) {
+		for (i = 0; i < n; ++i) {
+			for (j = 1; j < strlen (arg); ++j) {
+				// short options can be something like -pl where p is valid and l is valid
+				if (functions[i].shortOption != '0' && arg[j] == functions[i].shortOption) {
+					cnt++;
+				}
+			}
+		}
+	}
+	return cnt;
+}
+
+
+static int count_n_args (int argc, char **argv, functionTable *functions, int n)
 {
 	int i, cnt = 0;
 	for (i = 0; i < argc; ++i) {
-		// check if 
-		if (argv[i][0] == '-') {
-			cnt++;
-		}
+		cnt += is_short_option (argv[i], functions, n);
+		cnt += is_long_option (argv[i], functions, n);
 	}
 	return cnt;
 }
@@ -70,51 +102,33 @@ bool long_option_exist (const char *opt, const functionTable *functions, const i
 bool check_sanity (int argc, char **argv, const functionTable *functions, const int n)
 {
 	// check for argv sanity 
-	// for now funct is shit and only checks that there is no '--' or '----' and more dashes (sigsev)
-	// will improve with time
-	int i;
-	while (--argc > 0) {
-		// check if argv[argc] is in functionTable
-		if (argv[argc][0] == '-') {
-			if (strlen (argv[argc]) == 1) {
-				OPTION_NOT_FOUND (argv[argc]);
-				// why do you put '-'
-				return false;
-			}
-			if (argv[argc][1] != '-') {
-				// it is a single dash option
-				// given that -ap is two corrent single dash options, it should be considered as such
-				// now check if such option exist in functionTable.shortOption
-				for (i = 1; i < strlen (argv[argc]); ++i) {
-					if (short_option_exist (argv[argc][i], functions, n) == false) {
-						return false;
-					}
-				}
-			} else {
-				// it a doubledash option
-				if (long_option_exist (argv[argc] + 2, functions, n) == false) {
-					return false;
-				}
-			}
-		}
-	}
+	// will check if the args exist,
+	// if it doesn't it check if it can be a value for a precedent 
 	return true;
 }
 
-static void insert_argument (int argc, char **argv, int pos, struct ArgumentsStruct *argSt)
+static void insert_argument (int argc, char **argv, int pos, int shortPos, struct ArgumentsStruct *argSt, functionTable *functions, int n)
 {
 	int i;
 
+	// shortPos is used to consider short options in this form: -pla; it is ignored when long options
 	if (argv[pos][1] == '-') { // long option
+		// initialize the functionName with the argument that called it
 		argSt->functionName = strdup (argv[pos] + 2);
 	} else {
-		argSt->functionName = strdup (argv[pos] + 1);
+		// initialize the functionName with the argument that called it
+		argSt->functionName = strdup (argv[pos] + shortPos); //shortPos is at least one, so no need to add something for initial -
 	}
 
-	for (i = 1; i + pos < argc && argv[pos + i][0] != '-'; i++);
+	for (i = 1; i + pos < argc; i++) {
+		// iterate until next valid argument is found, increment i
+		if (is_long_option (argv[pos + i], functions, n) || is_short_option (argv[pos + i], functions, n)) {
+			break;
+		}
+	}
 		// now i = number of values for argument;
 	argSt->nValues = --i;
-	argSt->values = (char **) malloc (i * sizeof (char *));
+	argSt->values = (char **) calloc (i, sizeof (char *));
 	
 	// now assign every value to value array
 	for (i = 0; i < argSt->nValues; ++i) {
@@ -123,45 +137,29 @@ static void insert_argument (int argc, char **argv, int pos, struct ArgumentsStr
 	}
 }
 
-static bool parse_args (int argc, char **argv, struct ArgumentsStruct *argSt, struct option *long_options, char *getoptShortOptStr)
+static void parse_args (int argc, char **argv, argumentsArray argA, functionTable *functions, int n)
 {
-	int option_index = 0, pos;	
-	char ch;
-	
-	ch = getopt_long (argc, argv, getoptShortOptStr, long_options, &option_index);
-
-	if (ch == -1) {
-		return false;
-	} else {
-		/* '?' is managed internally by getopts */
-		/*if (ch == '?' ) {*/
-			/*printf ("Invald option, see --help\n");*/
-			/*exit (-1);*/
-			/*} else {*/
-		/* getopts returns the pos of the first arguments in case the 
-		 * long_option needs an argument, else
-		 * it return the pos of the option;
-		 * for this reason the switch is needed
-		 */
-
-				switch (argv[optind - 1][0]) {
-					case '-':
-						pos = optind - 1;
-						break;
-					default:
-						pos = optind - 2;
-						break;
-				}
-				insert_argument (argc, argv, pos, argSt); 
-				return pos; 
+	int i, j, pos = 0;
+	for (i = 0; i < argc; ++i) {
+		if (is_short_option (argv[i], functions, n)) {
+			for (j = 1; j < strlen (argv[i]); ++j) {
+				insert_argument (argc, argv, i, j, &argA.arguments[pos], functions, n); 
+				pos++;
 			}
+		} else {
+			if (is_long_option (argv[i], functions, n)) { 
+				insert_argument (argc, argv, i, 0, &argA.arguments[pos], functions, n);
+				pos++;
+			}
+		}
+	}
 }
 
-static argumentsArray initialize_argsarray (int argc, char **argv)
+static argumentsArray initialize_argsarray (int argc, char **argv, functionTable *functions, int n)
 {
 	argumentsArray args;
 
-	args.size = count_n_args (argc, argv);
+	args.size = count_n_args (argc, argv, functions, n);
 	args.arguments = (struct ArgumentsStruct *) malloc (args.size * sizeof (struct ArgumentsStruct));
 
 	return args;
@@ -231,35 +229,13 @@ static void destroy_struct (argumentsArray args)
 	free (args.arguments);
 }
 
-char *create_getopts_short_options_string (const functionTable *functions, const int nFunctions)
-{
-	/* getopts wants a string that specify the singledash short options
-	 * a:P::ln:
-	 * in such example -a requires an argument, -P rcan accept arguments, -l does not accept argument, -n requires an argument
-	 * this function generates a string with all the singledash options with a '::' appended;
-	 * this library does not validate user input, so no number of options check.
-	 */
-	int i;
-	char *getoptShortOptStr = (char *) malloc (3*nFunctions * sizeof (char));
-	memset (getoptShortOptStr, 0, 3 * nFunctions);  
-	for (i = 0; i < 3*nFunctions; i += 3) {
-		getoptShortOptStr[i] = functions[i / 3].shortOption;
-		getoptShortOptStr[i + 1] = ':';
-		getoptShortOptStr[i + 2] = ':';
-	}
-	/*printf ("%s\n", getoptShortOptStr);*/
-	return getoptShortOptStr;
-}
-
-bool process_cli (int argc, char **argv, struct option * long_options, functionTable * functions, int nFunctions, void *structused, bool orderFlag)
+bool process_cli (int argc, char **argv, functionTable * functions, int nFunctions, void *structused, bool orderFlag)
 {
 	 /* process command line arguments, sequantialyl or ordered
 	  * returns a flag if an argument is found and a function is executed
 	  */
-	char *getoptShortOptStr;
-	int idx, cnt = 0;
 	bool flag;
-	argumentsArray args = initialize_argsarray (argc, argv);
+	argumentsArray args = initialize_argsarray (argc, argv, functions, nFunctions);
 	// initialize without populate
 
 		// check for argv sanity 
@@ -269,11 +245,8 @@ bool process_cli (int argc, char **argv, struct option * long_options, functionT
 		return false;
 	}
 
-	getoptShortOptStr = create_getopts_short_options_string (functions, nFunctions); 
-	while ((idx = parse_args (argc, argv, &args.arguments[cnt++], long_options, getoptShortOptStr)) > 0) {
+	parse_args (argc, argv, args, functions, nFunctions);
 		/* parse the command line and populates args with arguments and values */
-	}
-	free (getoptShortOptStr);
 
 	if (orderFlag == false) {
 		flag = push_to_table_ordered (args, functions, nFunctions, structused);

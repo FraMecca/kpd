@@ -11,34 +11,6 @@ bool funct ()
 	return true;
 }
 
-static struct option long_options[] = {    // args neeed:
-	{"help",			no_argument,       0, 'h'}, // 0
-	{"play",			optional_argument, 0, 'p'}, // 0+
-	{"pause",			no_argument,	   0, 'P'}, // 2+
-	{"next",			no_argument,       0, 'n'}, // 1+
-	{"previous",		no_argument,       0, 'b'}, // 0
-	{"prev",			no_argument,       0, '0'}, // 0
-    {"stop",			no_argument,       0, 's'}, // 1+	
-	{"clear", 			optional_argument, 0, 'c'}, // 0+
-	{"random",			optional_argument, 0, 'r'}, // 1+
-	{"shuffle", 	    no_argument,       0, 'S'},
-	{"update",			no_argument,       0, 'u'}, // 1+
-	{"add",				required_argument, 0, 'a'}, // 1+
-	{"search",			required_argument, 0, 's'}, // 1+
-	{"filter",			required_argument, 0, 'f'}, // 1+
-	{"v-filter",		required_argument, 0, 'v'}, // 1+
-	{"list",			no_argument, 	   0, 'l'}, // 1+
-	{"seek",			required_argument, 0, '0'}, // 1+
-	{"consume",			no_argument,	   0, '0'}, // 0+
-	{"repeat",			no_argument,	   0, '0'}, // 0+
-	{"single",			no_argument,	   0, '0'}, // 1+
-	{"swap",			required_argument, 0, 'w'}, // 2+
-	{"format",			required_argument, 0, 'f'}, // 1+
-	{"output-enable",	required_argument, 0, '0'}, // 1+
-	{"delete", 			required_argument, 0, 'd'}, // 1+
-	{"delete-range", 	required_argument, 0, 'D'},// 2+
-};
-
 static functionTable functions[] = {
 	{"help",			'h',	(void *) &funct},
 	{"play",			'p', 	(void *) &play},
@@ -90,8 +62,7 @@ int main (int argc, char *argv[])
 //		exit(EXIT_SUCCESS);
 	}
 	
-	process_cli (argc, argv, long_options, functions, NOPTIONS, mpdSession, 1);
+	return (process_cli (argc, argv, functions, NOPTIONS, mpdSession, 1) == 0);
 
-	return 0;
 }
 

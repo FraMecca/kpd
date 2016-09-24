@@ -528,13 +528,14 @@ single(struct mpd_connection *mpdServer, char **args, int n)
 
 //verify if the seek function goes over the edges
 bool
-check_limit(STATUS status, int final_val)
+check_limit(STATUS *status, int final_val)
 {
 	if(final_val<0 && (status->elapsedTime_sec + final_val<0))
 	{
 		return false;
 	}
-	if(final_val>0 && (status->elapseTime_sec + final_val > status->song->duration_sec))
+	if(final_val>0 && (status->elapsedTime_sec + final_val > (status->song->duration_sec +
+					status->song->duration_min * 60)))
 	{
 		return false;
 	}
@@ -556,10 +557,11 @@ seek(struct mpd_connection *mpdServer, char **args, int n)
 	if(n>1)
 	{
 		fprintf(stdout,"Too many arguments!\n");
+		return false;
 	}
 	
 	//check if the song is in play o in pause
-	if(strcmp(status->state,"pause")!=0 || strcmp(status->state,"play"!=0))
+	if(strcmp(status->state,"stop")==0) 
 	{
 		STANDARD_USAGE_ERROR("No song is in play or pause\n");
  	   	return false;
@@ -590,8 +592,10 @@ seek(struct mpd_connection *mpdServer, char **args, int n)
 			STANDARD_USAGE_ERROR("Percentage is more than 100%\n");
 			return false;
 		}
-
-		final_value = (unsigned) (status->song->duration_sec / 100 ) * num;
+		
+		int totalTime = status->song->duration_sec + status->song->duration_min * 60;
+		final_value = (unsigned) (totalTime / 100 ) * num;
+		printf ("FIN = %d\n", final_value);
 
 		return(mpd_send_seek_pos(mpdServer, status->song->position, final_value));
 	}
@@ -603,6 +607,8 @@ seek(struct mpd_connection *mpdServer, char **args, int n)
 			case '\0':	
 			case 's':
 				final_value = (unsigned)  status->elapsedTime_sec + num;
+				printf ("%d + %d\n", status->elapsedTime_sec + status->elapsedTime_min * 60 + num);
+				printf ("%d + %d\n", status->elapsedTime_sec + num);
 			
 				if(!check_limit(status, status->elapsedTime_sec + num))
 				{
@@ -630,6 +636,8 @@ seek(struct mpd_connection *mpdServer, char **args, int n)
 			
 			case 'h':
 				num *= (60*60);
+				printf ("%d + %d\n", status->elapsedTime_sec + status->elapsedTime_min * 60 + num);
+				printf ("%d + %d\n", status->elapsedTime_sec + num);
 				final_value = (unsigned)  status->elapsedTime_sec + num;
 
 				if(!check_limit(status, status->elapsedTime_sec + num))

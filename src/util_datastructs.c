@@ -6,6 +6,18 @@
 #include <stdbool.h> // true false
 #include <string.h> // strcmp
 
+/* This macro is a first step towards a sort of try except macro system
+ * the objective of this macro is to have y = f(x) non NULL
+ * but if it fails it trashes x and generates a new X using newX
+ * and starts again
+ */
+
+#define TRY(x, delX, newX, y, f) do {\
+		if ((y = f (x)) == NULL) {\
+		delX (x);\
+		}\
+	} while (y == NULL && (x = newX ("127.0.0.1", 6600)) != NULL)
+
 /* opens a new connection to the mpd server
  * arguments: host, port (timeout defined)
  * returns a pointer to the connection structure if successful
@@ -115,16 +127,6 @@ parse_mpd_song(struct mpd_song* mpdSong)
  * returns a NULL structure if no current song / error,
  * returns a pointer to a SONG structure if successful
  */
-
-
-#define TRY(x, delX, newX, y, f) do {\
-		if ((y = f (x)) == NULL) {\
-		delX (x);\
-		if ((x = newX ("127.0.0.1", 6600)) != NULL){\
-			fprintf (stderr, "RICORSIONE");\
-		}\
-	}\
-} while (y == NULL)
 
 SONG*
 get_current_song(struct mpd_connection *mpdConnection)
