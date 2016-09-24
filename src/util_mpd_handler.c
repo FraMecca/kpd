@@ -644,7 +644,7 @@ seek(struct mpd_connection *mpdSession, char **args, int n)
 						STANDARD_USAGE_ERROR("Edge not respected\n");
 						return false;
 					}
-					return(mpd_send_seek_pos(mpdServer, status->song->position, (unsigned) num));
+					return(mpd_send_seek_pos(mpdSession, status->song->position, (unsigned) num));
 
 				case 'm':
 					num *= 60;
@@ -653,7 +653,7 @@ seek(struct mpd_connection *mpdSession, char **args, int n)
 						STANDARD_USAGE_ERROR("Edge not respected\n");
 						return false;
 					}	
-					return(mpd_send_seek_pos(mpdServer, status->song->position, (unsigned) num));
+					return(mpd_send_seek_pos(mpdSession, status->song->position, (unsigned) num));
 
 				case 'h':
 					num *= (60*60);
@@ -662,7 +662,7 @@ seek(struct mpd_connection *mpdSession, char **args, int n)
 						STANDARD_USAGE_ERROR("Edge not respected\n");
 						return false;
 					}
-					return(mpd_send_seek_pos(mpdServer, status->song->position, (unsigned) num));
+					return(mpd_send_seek_pos(mpdSession, status->song->position, (unsigned) num));
 
 				default:
 					STANDARD_USAGE_ERROR("Command is not valid\n");
