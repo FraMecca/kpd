@@ -4,7 +4,6 @@
 #include "util.h" // handle for libmpdclient
 #include "gc_util.h" // gc handler
 #include <gc.h> // gc_init
-/*#include <stdlib.h> // free*/
 
 bool funct ()
 {
@@ -36,7 +35,7 @@ static functionTable functions[] = {
 	{"format",			'f', 	(void *) &funct},
 	{"output-enable",   '0', 	(void *) &output_enable},
 	{"delete", 			'd', 	(void *) &delete},
-	{"delete_range", 	'D', 	(void *) &delete_range},
+	{"delete-range", 	'D', 	(void *) &delete_range},
 };    
 #define NOPTIONS 25 
 
@@ -44,8 +43,9 @@ int main (int argc, char *argv[])
 {
 	STATUS* currentStatus = NULL;
 	struct mpd_connection *mpdSession = NULL;
+	int ret;
 
-	GC_INIT ();
+	/*GC_INIT ();*/
 	
 	// attach client to mpd server
 	// should specify the host as config or as command line argument
@@ -59,10 +59,13 @@ int main (int argc, char *argv[])
 	if(argc == 1){
 		currentStatus = get_current_status(mpdSession);
 		print_current_status(currentStatus);
-//		exit(EXIT_SUCCESS);
+		exit(EXIT_SUCCESS);
+	} else {
+		ret = (process_cli (argc, argv, functions, NOPTIONS, mpdSession, 1) == 0);
 	}
-	
-	return (process_cli (argc, argv, functions, NOPTIONS, mpdSession, 1) == 0);
-
+	if (mpdSession != NULL && should_close (mpdSession)) {
+		close_connection (mpdSession);
+	}
+	return ret;
 }
 

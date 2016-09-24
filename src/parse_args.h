@@ -1,7 +1,6 @@
 #ifndef PARSE_ARGS_H
 #define PARSE_ARGS_H
 
-#include <getopt.h> // option datastructure
 #include <stdbool.h> // true false
 
 /* 

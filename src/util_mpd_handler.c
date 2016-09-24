@@ -54,7 +54,7 @@ print_current_status(STATUS* status)
 		CRflag = true;
 	}
 	if (status->consume) {
-		fprintf (stdout, "consume: on");
+		fprintf (stdout, "consume: on ");
 		CRflag = true;
 	}
 	if(status->single){
@@ -93,6 +93,7 @@ print_current_playlist(QUEUE* q, struct mpd_connection *mpdConnection)
 			} else {
 				fprintf (stdout, "%d. %s\n", i, song->uri);
 			}
+			free_song_st (song);
 			song = dequeue(q);
 		}
 		// now we got the current playing song,
@@ -107,6 +108,7 @@ print_current_playlist(QUEUE* q, struct mpd_connection *mpdConnection)
 					strncpy (color, "[33m", 4);
 				}
 			}
+			free_status_st (status);
 
 			fprintf (stdout, "\x1b%s", color);
 			i++;
@@ -115,6 +117,7 @@ print_current_playlist(QUEUE* q, struct mpd_connection *mpdConnection)
 			} else {
 				fprintf (stdout, "%d. %s\n", i, song->uri);
 			}
+			free_song_st (song);
 			song = dequeue(q);
 			fprintf (stdout, "\x1b[0m"); // reset ansi_escape_code
 		}	
@@ -125,8 +128,10 @@ print_current_playlist(QUEUE* q, struct mpd_connection *mpdConnection)
 			} else {
 				fprintf (stdout, "%d. %s\n", i, song->uri);
 			}
+			free_song_st (song);
 			song = dequeue(q);
 		}
+	free_song_st (cur);
 
 	return;
 }
@@ -144,17 +149,18 @@ bool list (struct mpd_connection *mpdSession, char **argv, int n)
 	} else {
 		fprintf(stdout, "Empty playlist.\n");
 	}
+	destroy_queue (playlist);
 	return true;
 }
 
 bool 
-pause (struct mpd_connection *mpdServer, char **args, int n)
+pause (struct mpd_connection *mpdSession, char **args, int n)
 {
 	if (n != 0) {
 		STANDARD_USAGE_ERROR("pause");
 		return false;
 	} else {
-		return mpd_send_toggle_pause (mpdServer);
+		return mpd_send_toggle_pause (mpdSession);
 	}
 }
 
@@ -165,7 +171,7 @@ pause (struct mpd_connection *mpdServer, char **args, int n)
  * prototype is standard because it is called from parse_args
  */
 bool
-play (struct mpd_connection *mpdServer, char **args, int n)
+play (struct mpd_connection *mpdSession, char **args, int n)
 {
 	bool check;	
 	unsigned pos;
@@ -185,72 +191,74 @@ play (struct mpd_connection *mpdServer, char **args, int n)
 	//zero elements, reproduce current song or the first
 	if(n==0)
 	{
-		status = get_current_status(mpdServer);
+		status = get_current_status(mpdSession);
 		//if state == stop reproduce the first song
 		if(strcmp(status->state,"stop")==0)
 		{
-			check = mpd_send_play_pos(mpdServer, 0);
+			check = mpd_send_play_pos(mpdSession, 0);
 		}
 		else
 		{	
 			if (strcmp (status->state, "play")==0)
 			{
-				check = pause (mpdServer, NULL, 0);
+				check = pause (mpdSession, NULL, 0);
 
 			} 
 			else
 			{
-				check = mpd_send_play (mpdServer);
-				status = get_current_status(mpdServer);
+				check = mpd_send_play (mpdSession);
+				free_status_st (status);
+				status = NULL;
+				status = get_current_status(mpdSession);
 				print_current_status (status);
 			}
 		}
+		free_status_st (status);
 		return check;
 	}
 	
 	//reproduce the specified song
 	if(n==1)
 	{
-		check = mpd_send_play_pos(mpdServer, pos-1);
-		status = get_current_status(mpdServer);
+		check = mpd_send_play_pos(mpdSession, pos-1);
+		status = get_current_status(mpdSession);
 		print_current_status (status);
+		free_status_st (status);
 		return check;
 	}	
-
-	return true;
 }
 
 bool
-next(struct mpd_connection *mpdServer, char **args, int n)
+next(struct mpd_connection *mpdSession, char **args, int n)
 {
 	if(n != 0){
 		STANDARD_USAGE_ERROR("next");
 	}
-	return (mpd_send_next(mpdServer));
+	return (mpd_send_next(mpdSession));
 }
 
 bool
-previous(struct mpd_connection *mpdServer, char **args, int n)
+previous(struct mpd_connection *mpdSession, char **args, int n)
 {
 	if(n != 0){
 		STANDARD_USAGE_ERROR("previous");
 	}
 	
-	return(mpd_send_previous(mpdServer));
+	return(mpd_send_previous(mpdSession));
 }
 
 
 bool
-stop(struct mpd_connection *mpdServer)
+stop(struct mpd_connection *mpdSession)
 {	
-	return(mpd_send_stop(mpdServer));
+	return(mpd_send_stop(mpdSession));
 }
 
 /* a wrapper to mpd_run_delete */
 bool 
-delete_song(struct mpd_connection *mpdServer, int pos)
+delete_song(struct mpd_connection *mpdSession, int pos)
 {	
-	return mpd_run_delete(mpdServer, pos);
+	return mpd_run_delete(mpdSession, pos);
 }
 
 /* the function used by qsort to compare integers */
@@ -267,7 +275,7 @@ compare_pos(const void *pos1, const void *pos2)
  * returns true if successful
  */
 bool 
-delete_range(struct mpd_connection *mpdServer, char **args, int n)
+delete_range(struct mpd_connection *mpdSession, char **args, int n)
 {
 	int **ranges = NULL;
 	int i;
@@ -292,7 +300,7 @@ delete_range(struct mpd_connection *mpdServer, char **args, int n)
 	}
 	
 	for(i=0; i<n_ranges; i++){
-		if(!mpd_run_delete_range(mpdServer, ranges[i][0], ranges[i][1])){
+		if(!mpd_run_delete_range(mpdSession, ranges[i][0], ranges[i][1])){
 			return false;
 		}
 	}
@@ -324,7 +332,7 @@ convert_to_int(char *arg)
  * returns true if done, and prints the playlist
  */
 bool 
-delete(struct mpd_connection *mpdServer, char **args, int n)
+delete(struct mpd_connection *mpdSession, char **args, int n)
 {
 	int i;
 	int pos;
@@ -337,7 +345,7 @@ delete(struct mpd_connection *mpdServer, char **args, int n)
 	
 	if(n == 1){
 		pos = convert_to_int(args[0]);
-		if(!delete_song(mpdServer, pos - 1)){
+		if(!delete_song(mpdSession, pos - 1)){
 			STANDARD_USAGE_ERROR("delete_song");
 			return false;
 		}
@@ -358,23 +366,23 @@ delete(struct mpd_connection *mpdServer, char **args, int n)
 	
 	for(i=0; i<n; i++){
 		pos = positions[i] - i - 1;	
-		if(!delete_song(mpdServer, pos)){
+		if(!delete_song(mpdSession, pos)){
 			STANDARD_USAGE_ERROR("delete_song");
 			return false;
 		}
 	}
-	list(mpdServer, args, n);
+	list(mpdSession, args, n);
 	return true;
 }
 
 bool
-clear(struct mpd_connection *mpdServer)
+clear(struct mpd_connection *mpdSession)
 {	
-	return mpd_send_clear(mpdServer);
+	return mpd_send_clear(mpdSession);
 } 
 
 bool
-random_kpd(struct mpd_connection *mpdServer, char **args, int n)
+random_kpd(struct mpd_connection *mpdSession, char **args, int n)
 {	
 	STATUS *status = NULL; 	
 	
@@ -388,19 +396,22 @@ random_kpd(struct mpd_connection *mpdServer, char **args, int n)
 	//zero argument =  toggle
 	if(n==0)
 	{
-		status = get_current_status(mpdServer);
-		return(mpd_send_random(mpdServer,!status->random));
+		bool value;
+		status = get_current_status(mpdSession);
+		value = !status->random;
+		free_status_st (status);
+		return(mpd_send_random(mpdSession, value));
 	}
 
 	//if there is an attivation char random_kpd switch on
 	if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1)
 	{
-		return(mpd_send_random(mpdServer,1));
+		return(mpd_send_random(mpdSession,1));
 	}
 	
 	if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0)
    	{
-		return(mpd_send_random(mpdServer,0));
+		return(mpd_send_random(mpdSession,0));
 	}	
 
 	STANDARD_USAGE_ERROR ("random");
@@ -413,7 +424,7 @@ random_kpd(struct mpd_connection *mpdServer, char **args, int n)
  * the user can pass as parameters: on, off, true, false, 0, 1 case insensitive
  */
 bool
-consume(struct mpd_connection *mpdServer, char **args, int n)
+consume(struct mpd_connection *mpdSession, char **args, int n)
 {	
 	STATUS *status = NULL; 	
 	
@@ -427,19 +438,23 @@ consume(struct mpd_connection *mpdServer, char **args, int n)
 	//zero argument =  toggle
 	if(n==0)
 	{
-		status = get_current_status(mpdServer);
-		return(mpd_send_consume(mpdServer,!status->consume));
+		bool value;
+		status = get_current_status(mpdSession);
+		status = get_current_status(mpdSession);
+		value = !status->consume;
+		free_status_st (status);
+		return(mpd_send_consume(mpdSession, value));
 	}
 
 	//if there is an attivation char consume_kpd switch on
 	if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1)
 	{
-		return(mpd_send_consume(mpdServer,1));
+		return(mpd_send_consume(mpdSession,1));
 	}
 	
 	if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0)
    	{
-		return(mpd_send_consume(mpdServer,0));
+		return(mpd_send_consume(mpdSession,0));
 	}	
 
 	STANDARD_USAGE_ERROR ("consume");
@@ -452,7 +467,7 @@ consume(struct mpd_connection *mpdServer, char **args, int n)
  * the user can pass as parameters: on, off, true, false, 0, 1 case insensitive
  */ 
 bool
-repeat(struct mpd_connection *mpdServer, char **args, int n)
+repeat(struct mpd_connection *mpdSession, char **args, int n)
 {	
 	STATUS *status = NULL; 	
 	
@@ -466,19 +481,22 @@ repeat(struct mpd_connection *mpdServer, char **args, int n)
 	//zero argument =  toggle
 	if(n==0)
 	{
-		status = get_current_status(mpdServer);
-		return(mpd_send_repeat(mpdServer,!status->repeat));
+		bool value;
+		status = get_current_status(mpdSession);
+		value = !status->repeat;
+		free_status_st (status);
+		return(mpd_send_repeat(mpdSession, value));
 	}
 
 	//if there is an attivation char repeat_kpd switch on
 	if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1)
 	{
-		return(mpd_send_repeat(mpdServer,1));
+		return(mpd_send_repeat(mpdSession,1));
 	}
 	
 	if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0)
    	{
-		return(mpd_send_repeat(mpdServer,0));
+		return(mpd_send_repeat(mpdSession,0));
 	}	
 
 	STANDARD_USAGE_ERROR ("repeat");
@@ -492,7 +510,7 @@ repeat(struct mpd_connection *mpdServer, char **args, int n)
  * the user can pass as parameters: on, off, true, false, 0, 1 case insensitive
  */
 bool
-single(struct mpd_connection *mpdServer, char **args, int n)
+single(struct mpd_connection *mpdSession, char **args, int n)
 {	
 	STATUS *status = NULL; 	
 	
@@ -506,19 +524,22 @@ single(struct mpd_connection *mpdServer, char **args, int n)
 	//zero argument =  toggle
 	if(n==0)
 	{
-		status = get_current_status(mpdServer);
-		return(mpd_send_single(mpdServer,!status->single));
+		bool value;
+		status = get_current_status(mpdSession);
+		value = !status->single;
+		free_status_st (status);
+		return(mpd_send_single(mpdSession, value));
 	}
 
 	//if there is an attivation char single_kpd switch on
 	if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1)
 	{
-		return(mpd_send_single(mpdServer,1));
+		return(mpd_send_single(mpdSession,1));
 	}
 	
 	if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0)
    	{
-		return(mpd_send_single(mpdServer,0));
+		return(mpd_send_single(mpdSession,0));
 	}	
 
 	STANDARD_USAGE_ERROR ("single");
@@ -544,14 +565,14 @@ check_limit(STATUS *status, int final_val)
 }
 
 bool
-seek(struct mpd_connection *mpdServer, char **args, int n)
+seek(struct mpd_connection *mpdSession, char **args, int n)
 {
 	int num = 0, l = 0;
 	char time_val;	
 	unsigned final_value = 0;
 	STATUS *status = NULL;
 	
-	status = get_current_status(mpdServer);
+	status = get_current_status(mpdSession);
 
 	//check number of arguments
 	if(n>1)
@@ -597,7 +618,7 @@ seek(struct mpd_connection *mpdServer, char **args, int n)
 		final_value = (unsigned) (totalTime / 100 ) * num;
 		printf ("FIN = %d\n", final_value);
 
-		return(mpd_send_seek_pos(mpdServer, status->song->position, final_value));
+		return(mpd_send_seek_pos(mpdSession, status->song->position, final_value));
 	}
 	else
 	{
@@ -617,7 +638,7 @@ seek(struct mpd_connection *mpdServer, char **args, int n)
 				}	
 
 				fprintf(stdout,"%d", final_value);
-				return(mpd_send_seek_pos(mpdServer, status->song->position, final_value));
+				return(mpd_send_seek_pos(mpdSession, status->song->position, final_value));
 				break;
 			
 			case 'm':
@@ -631,7 +652,7 @@ seek(struct mpd_connection *mpdServer, char **args, int n)
 				}	
 
 				fprintf(stdout,"%d", final_value);
-				return(mpd_send_seek_pos(mpdServer, status->song->position, final_value));
+				return(mpd_send_seek_pos(mpdSession, status->song->position, final_value));
 				break;
 			
 			case 'h':
@@ -647,7 +668,7 @@ seek(struct mpd_connection *mpdServer, char **args, int n)
 				}	
 
 				fprintf(stdout,"%d", final_value);
-				return(mpd_send_seek_pos(mpdServer, status->song->position, final_value));
+				return(mpd_send_seek_pos(mpdSession, status->song->position, final_value));
 				break;
 
 			default:

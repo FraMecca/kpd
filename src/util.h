@@ -11,10 +11,10 @@
 #define TIMEOUT 5000
 
 typedef struct so {
-	const char *title;
-	const char *artist;
-	const char *album;
-	const char *uri; // name on the filesystem
+	char *title;
+	char *artist;
+	char *album;
+	char *uri; // name on the filesystem
 	int duration_min;
 	int duration_sec;
 	unsigned int position;
@@ -34,6 +34,7 @@ typedef struct st {
 	SONG* song;
 } STATUS;
 
+
 typedef struct q {
 	SONG* song;
 	struct q *next;	
@@ -41,13 +42,17 @@ typedef struct q {
 
 struct mpd_connection *open_connection(const char *host, unsigned port);
 void close_connection(struct mpd_connection *mpdConnection);
+bool should_close (); // shame
 SONG* get_current_song(struct mpd_connection *mpdConnection);
-char* get_current_state(struct mpd_status* mpdStatus);
+void free_song_st (SONG *s);
+void free_status_st (STATUS *s);
+//char* get_current_state(struct mpd_status* mpdStatus); // IT IS NOW STATIC
 STATUS* get_current_status(struct mpd_connection *mpdConnection);
 void print_current_status(STATUS* status);
 QUEUE* get_current_playlist(struct mpd_connection* mpdConnection);
 bool enqueue(QUEUE* q, SONG* s);
 SONG* dequeue(QUEUE* q);
+void destroy_queue (QUEUE *q);
 void print_current_playlist(QUEUE *q, struct mpd_connection *mpdSession);
 bool list (struct mpd_connection *mpdSession, char **argv, int n);
 
