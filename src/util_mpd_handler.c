@@ -758,13 +758,15 @@ bool
 swap(struct mpd_connection *mpdConnection, char **args, int n){
 	int x, y, t, i=0;
 	QUEUE *q, *prevx, *nextx, *prevy, *nexty, *node, *nodex, *nodey;
-
+	
+	// control argument
 	if(n != 2){
 		STANDARD_USAGE_ERROR(swap);
 	}
 	
 	sscanf(args[0], "%d %d", &x, &y);
 	
+	// put the lower in x
 	if(x > y){
 		t = x;
 		x = y;
@@ -772,9 +774,16 @@ swap(struct mpd_connection *mpdConnection, char **args, int n){
 	}
 
 	q = get_current_playlist(mpdConnection);
-
+	
+	// take the nodes and the prevs and nexts
 	for(node=q; node != NULL; node=node->next, i++){
 		
+		if(x == 0){
+			prevx = NULL;
+			nodex = node;
+			nextx = node->next;
+		}
+
 		if(i == x-1 && x != 0){
 			prevx = node;
 			nodex = node->next;
@@ -791,12 +800,15 @@ swap(struct mpd_connection *mpdConnection, char **args, int n){
 
 	}
 	
+	// switch the nodes
 	prevx->next = nodey;
 	nodey->next = nextx;
 
 	prevy->next = nodex;
 	nodex->next = nexty;
 	
+	// NEED TO PUT HERE ADD!	
+
 	return true;
 }
 
