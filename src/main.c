@@ -4,6 +4,7 @@
 #include "util.h" // handle for libmpdclient
 #include "gc_util.h" // gc handler
 #include <gc.h> // gc_init
+#include "kpd_search.h"
 
 bool funct ()
 {
@@ -23,7 +24,7 @@ static functionTable functions[] = {
 	{"shuffle",			's',	(void *) &funct},
 	{"update",			'u', 	(void *) &update},
 	{"add",				'a', 	(void *) &funct},
-	{"search",			's', 	(void *) &funct},
+	{"search",			's', 	(void *) &search},
 	{"filter",			'f', 	(void *) &funct},
 	{"v-filter",		'v', 	(void *) &funct},
 	{"list",			'l', 	(void *) &list},

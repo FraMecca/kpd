@@ -72,7 +72,7 @@ bool consume(struct mpd_connection *mpdServer, char **args, int n);
 bool single(struct mpd_connection *mpdServer, char **args, int n);
 bool repeat(struct mpd_connection *mpdServer, char **args, int n);
 bool seek(struct mpd_connection *mpdServer, char **args, int n);
-bool update(struct mpd_connection *mpdServer, char **args, int n);
+bool update(struct mpd_connection *mpdSession, char **args, int n);
 bool output_enable(struct mpd_connection *mpdServer, char **args, int n);
 
 #endif

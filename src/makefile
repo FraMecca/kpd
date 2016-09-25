@@ -7,7 +7,7 @@ clear_o:
 clear_all: clear_o
 		rm ../build/*
 debug:
-		gcc $(ALL) -Wall -g -o ../build/main -lgc -lm -lmpdclient
+		gcc $(ALL) -Wall -g -o ../build/main -lgc -lm -lmpdclient -lz
 asan:
 		gcc $(ALL) -fsanitize=address -Wall -g -o ../build/main -lgc -lm -lmpdclient -lz
 gprof:

@@ -1,12 +1,83 @@
-#include "kpd_search.h"
 #include <stdlib.h>
-#include <string.h> // strcpy strcat
 #include <zlib.h> // gzgets gzopen
+#include <stdio.h> //sscanf
+#include <stdbool.h> // true false
+#include "kpd_search.h"
+#define _GNU_SOURCE
+#include <string.h> // strcpy strcat
 
-list_t
-node()
+static bool is_contained (char *st, list_t *ptr);
+
+/************************************* directory_struct functions *************************************/ 
+
+// creation of a new node of the directory
+static directory_list_t *
+new_directory_node(){
+	directory_list_t *node;
+
+	node = malloc(sizeof(directory_list_t));
+	
+	node->next = NULL;
+	node->prev = NULL;
+	node->name = NULL;
+
+	return node;
+}
+
+
+static directory_list_t *
+new_directory(directory_list_t *dirlist, char *dirname){
+	directory_list_t *node;
+
+	node = new_directory_node();
+	
+	// linking the nodes
+	strcpy(dirname, node->name);
+	dirlist->next = node;
+	node->prev = dirlist;
+
+	return	node;
+
+}
+
+static directory_list_t *
+destroy_directory(directory_list_t *dirlist){
+	directory_list_t *node;
+	
+	// node returned as current	
+	node = dirlist->prev;
+	
+	free(dirlist);
+
+	return node;
+}
+
+static char *
+get_current_directory(directory_list_t *dirlist){
+	int n=0;	
+	directory_list_t *node;
+	char *directory;
+
+	for(node=dirlist; node->prev != NULL; node=node->prev){
+		n += strlen(node->name) + 1;
+	}
+
+	directory = malloc(n*sizeof(char));	
+
+	for( ; node->next != NULL; node = node->next){
+		strcat(directory, node->name);
+		strcat(directory, "/");
+	}
+
+	return directory;
+}
+
+/************************************* directory_struct functions *************************************/ 
+
+list_t *
+new_node()
 {
-	list_t x = malloc(sizeof(struct list));
+	list_t *x = malloc(sizeof(list_t));
 
 	x->directory = NULL;
 	x->fsName = NULL;
@@ -15,7 +86,7 @@ node()
 	x->artist = NULL;
 	x->genre = NULL;
 	x->date = NULL;
-	x->netx = NULL;
+	x->next = NULL;
 	x->prev = NULL;
 	
 	return x;
@@ -31,16 +102,15 @@ add_node(list_t* list, list_t* node)
 }
 
 list_t*
-create_list(const char* line)
+create_list(const char* line, list_t *list, directory_list_t *dir)
 {
-	list_t list = NULL, node = NULL;
-	char temp[50],type[50];
-	directory_list_t dir = NULL;
+	// insert line in memory
+	list_t  *node = NULL;
+	char temp[5000],type[50];
 	int l = 0;
 
-	dir = new_directory_node();
 
-	sscanf(line"%s:%s", type, temp);
+	sscanf(line, "%s:%s", type, temp);
 	
 	//add new directory
 	if(strcmp(type,"directory")==0)
@@ -59,7 +129,7 @@ create_list(const char* line)
 		//if the head is empty
 		if(list==NULL)
 		{
-			list = node();
+			list = new_node();
 			l = strlen(temp);
 			list->fsName = malloc(l*sizeof(char));
 			strcpy(list->fsName,temp);
@@ -68,7 +138,7 @@ create_list(const char* line)
 		//insert in the list, the pointer point to the last song
 		else
 		{
-			node = node();
+			node = new_node();
 			l = strlen(temp);
 			node->fsName = malloc(l*sizeof(char));
 			strcpy(node->fsName,temp);
@@ -122,66 +192,6 @@ create_list(const char* line)
 	return list;
 }
 
-// creation of a new node of the directory
-static directory_list_t *
-new_directory_node(){
-	directory_list_t *node;
-
-	node = malloc(sizeof(directory_list_t));
-	
-	node->next = NULL;
-	node->prev = NULL;
-	node->name = NULL;
-
-	return node;
-}
-
-
-directory_list_t *
-new_directory(directory_list_t *dirlist, char *dirname){
-	directory_list_t *node;
-
-	node = new_directory_node();
-	
-	// linking the nodes
-	strcpy(dirname, node.name);
-	dirlist->next = node;
-	node->prev = dirlist;
-
-	return	node;
-
-}
-
-directory_list_t *
-destroy_directory(directory_list_t *dirlist){
-	directory_list_t *node;
-	
-	// node returned as current	
-	node = dirlist->prev;
-	
-	free(dirlist);
-
-	return node;
-}
-
-char *
-get_current_directory(directory_list_t *dirlist){
-	int n=0;	
-	directory_list_t *node;
-	char *directory;
-
-	for(node=dirlist; node->prev != NULL; node=node->prev){
-		n += strlen(node.name) + 1;
-	}
-
-	directory = malloc(n*sizeof(char));	
-
-	for( ; node->next != NULL; node = node->next){
-		strcat(directory, node->name);
-		strcat(directory, "/");
-	}
-
-	return directory;
 
 
 /************************************ Begin of filter functions ************************************/
@@ -276,8 +286,8 @@ parse_filter_struct (char *filterSt)
 
 	filter.type = (char **) malloc (sizeof (char *));
 	filter.key = (char **) malloc (sizeof (char *));
-	memset (filter.type, sizeof (char *), 0);
-	memset (filter.key, sizeof (char *), 0);
+	/*memset (filter.type, sizeof (char *), 0);*/
+	/*memset (filter.key, sizeof (char *), 0);*/
 
 
 	filter.size = 0;
@@ -399,14 +409,15 @@ search_handler (char *key, int *size, char *DBlocation, char *filterSt, char *re
 	// This function is the main handler for the search
 	
 	gzFile fp = gzopen (DBlocation, "r");
-	list_t *kpdDB = initialize_list ();
-	directory_list_t *dirs = NULL;
+	list_t *kpdDB = NULL; // will be initialized in create_list
+	directory_list_t *dir = new_directory_node();
+
 	char buf[5000], **results;
 	int i, filterFlag, revFilterFlag;
 	Filter_struct filter, revFilter;
 
 	while (gzgets (fp, buf, 5000) != NULL) {
-		listDB = insert_line_in_memory (buf, listDB, &dirs);
+		kpdDB = create_list (buf, kpdDB, dir);
 	}
 	gzclose (fp);
 

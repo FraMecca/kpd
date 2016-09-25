@@ -761,7 +761,7 @@ swap(struct mpd_connection *mpdConnection, char **args, int n){
 	
 	// control argument
 	if(n != 2){
-		STANDARD_USAGE_ERROR(swap);
+		STANDARD_USAGE_ERROR("swap");
 	}
 	
 	sscanf(args[0], "%d %d", &x, &y);
@@ -812,6 +812,7 @@ swap(struct mpd_connection *mpdConnection, char **args, int n){
 	return true;
 }
 
+bool 
 update (struct mpd_connection *mpdSession, char **args, int n)
 {
 	if(n != 0){
