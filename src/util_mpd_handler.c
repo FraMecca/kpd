@@ -755,7 +755,6 @@ output_enable (struct mpd_connection *m, char **args, int n)
 }
 
 bool
-<<<<<<< HEAD
 swap(struct mpd_connection *mpdConnection, char **args, int n){
 	int x, y, t, i=0;
 	QUEUE *q, *prevx, *nextx, *prevy, *nexty, *node, *nodex, *nodey;
@@ -801,7 +800,6 @@ swap(struct mpd_connection *mpdConnection, char **args, int n){
 	return true;
 }
 
-=======
 update (struct mpd_connection *mpdSession, char **args, int n)
 {
 	if(n != 0){
@@ -809,4 +807,3 @@ update (struct mpd_connection *mpdSession, char **args, int n)
 	}
 	return ((mpd_run_update (mpdSession, NULL) > 0));
 }
->>>>>>> f3387a095f6d1611749e853119c74751127e0124
