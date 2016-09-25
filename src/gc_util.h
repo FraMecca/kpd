@@ -9,9 +9,10 @@
  * will be free'd on next sweep
  */
 
-#define malloc(x) GC_malloc(x)
-#define calloc(n,x) GC_malloc((n)*(x))
-#define realloc(p,x) GC_realloc((p),(x))
-#define free(x) (x) = NULL
+//#define malloc(x) GC_malloc(x)
+//#define calloc(n,x) GC_malloc((n)*(x))
+//#define realloc(p,x) GC_realloc((p),(x))
+//#define free(x) (x) = NULL
+
 
 #endif

@@ -6,6 +6,25 @@
 #include <stdbool.h> // true false
 #include <string.h> // strcmp
 
+/* This macro is a first step towards a sort of try except macro system
+ * the objective of this macro is to have y = f(x) non NULL
+ * but if it fails it trashes x and generates a new X using newX
+ * and starts again
+ */
+static bool doNotClose = true;
+
+#define TRY(x, delX, newX, y, f) do {\
+		if ((y = f (x)) == NULL) {\
+		delX (x); doNotClose = false;\
+		}\
+	} while (y == NULL && (x = newX ("127.0.0.1", 6600)) != NULL)
+
+bool should_close ()
+{
+	return doNotClose;
+}
+/* this is ugly */
+
 /* opens a new connection to the mpd server
  * arguments: host, port (timeout defined)
  * returns a pointer to the connection structure if successful
@@ -78,7 +97,6 @@ open_connection(const char *host, unsigned port)
 void
 close_connection(struct mpd_connection *mpdConnection)
 {
-	fprintf(stdout, "Closing connection...\n");
 	mpd_connection_free(mpdConnection);
 }
 
@@ -99,16 +117,39 @@ parse_mpd_song(struct mpd_song* mpdSong)
 		return NULL;
 	}
 	
-	song->title = mpd_song_get_tag(mpdSong, MPD_TAG_TITLE, 0);
-	song->artist = mpd_song_get_tag(mpdSong, MPD_TAG_ARTIST, 0);
-	song->album = mpd_song_get_tag(mpdSong, MPD_TAG_ALBUM, 0);
-	duration = mpd_song_get_duration(mpdSong);;
+	song->title = strdup (mpd_song_get_tag(mpdSong, MPD_TAG_TITLE, 0));
+	song->artist = strdup (mpd_song_get_tag(mpdSong, MPD_TAG_ARTIST, 0));
+	song->album = strdup (mpd_song_get_tag(mpdSong, MPD_TAG_ALBUM, 0));
+	duration = mpd_song_get_duration(mpdSong);
 	song->duration_min = duration/60;
 	song->duration_sec = duration%60;
 	song->position = mpd_song_get_pos(mpdSong);
-	song->uri = mpd_song_get_uri (mpdSong);
+	song->uri = strdup (mpd_song_get_uri (mpdSong));
 
+	mpd_song_free (mpdSong);
 	return song;
+}
+
+/* function to free song_struct */
+void free_song_st (SONG *s)
+{
+	if (s!=NULL) {
+		free (s->title);
+		free (s->artist);
+		free (s->album);
+		free (s->uri);
+		free (s);
+	}
+}
+
+/* function to free status_struct */
+void free_status_st (STATUS *s)
+{
+	if (s != NULL) {
+		free (s->state);
+		free_song_st (s->song);
+		free (s);
+	}
 }
 
 /* queries the server for the current song, inserts it into a structure
@@ -116,16 +157,6 @@ parse_mpd_song(struct mpd_song* mpdSong)
  * returns a NULL structure if no current song / error,
  * returns a pointer to a SONG structure if successful
  */
-
-
-#define TRY(x, delX, newX, y, f) do {\
-		if ((y = f (x)) == NULL) {\
-		delX (x);\
-		if ((x = newX ("127.0.0.1", 6600)) != NULL){\
-			fprintf (stderr, "RICORSIONE");\
-		}\
-	}\
-} while (y == NULL)
 
 SONG*
 get_current_song(struct mpd_connection *mpdConnection)
@@ -146,7 +177,7 @@ get_current_song(struct mpd_connection *mpdConnection)
  * returns NULL if error,
  * returns a pointer to a string with the status if successful
  */
-char* 
+static char* 
 get_current_state(struct mpd_status* mpdStatus)
 {
 	int mpdState;
@@ -158,16 +189,13 @@ get_current_state(struct mpd_status* mpdStatus)
 
 	switch(mpdState){
 		case MPD_STATE_STOP:
-			state = (char*)malloc(4*sizeof(char));
-			strcpy(state, "stop");
+			state = strdup ("stop"); 
 			break;
 		case MPD_STATE_PLAY:
-			state = (char*)malloc(4*sizeof(char));
-			strcpy(state, "play");
+			state = strdup ("play"); 
 			break;
 		case MPD_STATE_PAUSE:
-			state = (char*)malloc(5*sizeof(char));
-			strcpy(state, "pause");
+			state = strdup ("pause");
 			break;
 		default:
 			state = NULL;
@@ -191,6 +219,7 @@ get_current_status(struct mpd_connection *mpdConnection)
 
 	/*mpdStatus = mpd_run_status(mpdConnection);*/
 	TRY (mpdConnection, close_connection, open_connection, mpdStatus, mpd_run_status);
+
 	if(mpdStatus == NULL){
 		fprintf(stderr, "Unable to retrieve status. Connection error.\n");
 		return NULL;
@@ -204,6 +233,7 @@ get_current_status(struct mpd_connection *mpdConnection)
 	status->repeat = mpd_status_get_repeat(mpdStatus);
 	status->single = mpd_status_get_single(mpdStatus);
 	status->consume = mpd_status_get_consume(mpdStatus);
+	status->update = mpd_status_get_update_id (mpdStatus); 
 	status->crossfade = mpd_status_get_crossfade(mpdStatus);
 	status->song = get_current_song(mpdConnection);
 	status->state = get_current_state(mpdStatus);			
@@ -211,7 +241,8 @@ get_current_status(struct mpd_connection *mpdConnection)
 	status->elapsedTime_min = eltime/60;
 	status->elapsedTime_sec = eltime%60;	
 	status->queueLenght = mpd_status_get_queue_length(mpdStatus);
-	
+
+	mpd_status_free (mpdStatus);	
 	return status;	
 }
 
@@ -262,6 +293,15 @@ dequeue(QUEUE* q)
 		q->next = NULL;
 	}
 	return song;
+}
+
+void destroy_queue (QUEUE *q)
+{
+	if (q != NULL) {
+		destroy_queue (q->next);
+		/*free_song_st (q->song);*/
+		free (q);
+	}
 }
 
 /* receives the songs in the playlist, one by one
