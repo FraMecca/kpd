@@ -1,16 +1,17 @@
 # kpd-client
-This is a mpd client written entirely in python.
+This is a rewrite for an mpd client called kpd (Kyuss Music Player, python_old branch)
 It is very similar to mpc in functionality but the with a more efficent and less strict search.
 
-It requires python-musicpd module to run, install it with pip.
-
-`pip3 install python-musicpd`
+~~It requires python-musicpd module to run, install it with pip~~
+It now uses [libmpdclient](https://www.musicpd.org/libs/libmpdclient/)
 
 ## Usage
 ---
-After installing the client (with superuser permission)
 
-`python3 setup.py install` 
+```
+make
+sudo make install
+```
 
 you can run the client on your console.
 At the first run you will be prompted for the configuration file (.kpd.conf on your home).
@@ -52,7 +53,7 @@ optional arguments:
   -f FILTER [FILTER ...], --filter FILTER [FILTER ...]
                         filter search result, can use 'artist', 'album',
                         'title', grep like functionality
-  -nf NO_FILTER [NO_FILTER ...], --no-filter NO_FILTER [NO_FILTER ...]
+  -vf NO_FILTER [NO_FILTER ...], --no-filter NO_FILTER [NO_FILTER ...]
                         filter search result excluding matching, can use
                         'artist', 'album', 'title', grep -n like functionality
   --clear               clear playlist
@@ -114,9 +115,8 @@ The filter nd no-filterflag is case insensitive and accepts _artist, album, titl
 Actually the filter flag has grep like functionality so it can filter the search on any parameters, symbols or file extensions included.
 
 ### Search Methods
-Originally the client allowed the user to use a pickle serial db.
-Now the search method has been rewritten in C (with cython bindings) in a simplier way: it just looks inside the gzipped default mpd database.
-The search is way faster in C rather than in pickle.
+The search method has been rewritten in C in a simplier way: it just looks inside the gzipped default mpd database.
+The search is way less strict: case-insensitive, no type field.
 
 ### Add result
 The result of the search can be added to the playlist with `--add` or `-a` arguments. kpd can also be used in a pipe like this:
