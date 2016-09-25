@@ -1,12 +1,20 @@
-#include <stdlib.h>
+#define _GNU_SOURCE
+#include <string.h> // strcpy strcat
 #include <zlib.h> // gzgets gzopen
+#include <stdlib.h>
 #include <stdio.h> //sscanf
 #include <stdbool.h> // true false
 #include "kpd_search.h"
-#define _GNU_SOURCE
-#include <string.h> // strcpy strcat
 
 static bool is_contained (char *st, list_t *ptr);
+
+list_t *return_to_head (list_t *ptr)
+{
+	while (ptr->prev != NULL) {
+		ptr = ptr->prev;
+	}
+	return ptr;
+}
 
 /************************************* directory_struct functions *************************************/ 
 
@@ -32,8 +40,10 @@ new_directory(directory_list_t *dirlist, char *dirname){
 	node = new_directory_node();
 	
 	// linking the nodes
-	strcpy(dirname, node->name);
-	dirlist->next = node;
+	node->name = strdup (dirname);
+	if (dirlist != NULL) {
+		dirlist->next = node;
+	}
 	node->prev = dirlist;
 
 	return	node;
@@ -46,6 +56,9 @@ destroy_directory(directory_list_t *dirlist){
 	
 	// node returned as current	
 	node = dirlist->prev;
+	if (node != NULL) {
+		node->next = NULL;
+	}
 	
 	free(dirlist);
 
@@ -58,13 +71,19 @@ get_current_directory(directory_list_t *dirlist){
 	directory_list_t *node;
 	char *directory;
 
+	if (dirlist == NULL) {
+		return "";
+	}
+
 	for(node=dirlist; node->prev != NULL; node=node->prev){
 		n += strlen(node->name) + 1;
 	}
+	n+= strlen (node->name) + 1; // the last one should be added as well
 
-	directory = malloc(n*sizeof(char));	
+	directory = malloc((n + 1)*sizeof(char));	
+	memset (directory, 0, (n+1)*sizeof (char));
 
-	for( ; node->next != NULL; node = node->next){
+	for( ; node != NULL; node = node->next){
 		strcat(directory, node->name);
 		strcat(directory, "/");
 	}
@@ -102,7 +121,7 @@ add_node(list_t* list, list_t* node)
 }
 
 list_t*
-create_list(const char* line, list_t *list, directory_list_t *dir)
+create_list(const char* line, list_t *list, directory_list_t **dir)
 {
 	// insert line in memory
 	list_t  *node = NULL;
@@ -110,17 +129,14 @@ create_list(const char* line, list_t *list, directory_list_t *dir)
 	int l = 0;
 
 
-	sscanf(line, "%s:%s", type, temp);
+	sscanf(line, "%s %[^\n]", type, temp);
+	type[strlen(type)-1] = '\0';
+	
 	
 	//add new directory
 	if(strcmp(type,"directory")==0)
 	{
-		//if exit from the main directory
-		if(dir==NULL)
-	   	{
-			dir = new_directory_node();
-		}
-		dir = new_directory(dir,temp);			
+		*dir = new_directory(*dir,temp);			
 	}
 	
 	//begin new song
@@ -130,19 +146,15 @@ create_list(const char* line, list_t *list, directory_list_t *dir)
 		if(list==NULL)
 		{
 			list = new_node();
-			l = strlen(temp);
-			list->fsName = malloc(l*sizeof(char));
-			strcpy(list->fsName,temp);
-			list->directory = get_current_directory(dir);
+			list->fsName = strdup (temp);
+			list->directory = get_current_directory(*dir);
 		}
 		//insert in the list, the pointer point to the last song
 		else
 		{
 			node = new_node();
-			l = strlen(temp);
-			node->fsName = malloc(l*sizeof(char));
-			strcpy(node->fsName,temp);
-			node->directory = get_current_directory(dir);
+			node->fsName = strdup (temp);
+			node->directory = get_current_directory(*dir);
 
 			list = add_node(list, node);
 		}
@@ -151,7 +163,7 @@ create_list(const char* line, list_t *list, directory_list_t *dir)
 	//if the song end
 	if(strcmp(type,"end")==0)
 	{
-		dir = destroy_directory(dir);
+		*dir = destroy_directory(*dir);
 	}
 	
 	if(strcmp(type,"genre")==0)
@@ -184,9 +196,7 @@ create_list(const char* line, list_t *list, directory_list_t *dir)
 
 	if(strcmp(type,"title")==0)
 	{
-		l = strlen(temp);
-		list->title = malloc(l*sizeof(char));
-		strcpy(list->title,temp);
+		list->title = strdup (temp);
 	}
 
 	return list;
@@ -278,11 +288,11 @@ destroy_filter_struct (Filter_struct filter)
 }
 
 static Filter_struct 
-parse_filter_struct (char *filterSt)
+parse_filter_struct (const char *filterSt)
 {
 	// this function create a filter struct to be used 
 	Filter_struct filter;
-	char *tmp;
+	char *tmp = NULL, *tmpfSt = strdup (filterSt);
 
 	filter.type = (char **) malloc (sizeof (char *));
 	filter.key = (char **) malloc (sizeof (char *));
@@ -291,12 +301,13 @@ parse_filter_struct (char *filterSt)
 
 
 	filter.size = 0;
-	tmp = strtok (filterSt, " ");
+	tmp = strtok (tmpfSt, " ");
+	/* ARtist banco Album tracce libro */
 	// a filter can have a key such as artist or album
 	// tokenize the string and check if there is a key or no tipekey was issued
 	while (tmp != NULL) {
-		if (strcasecmp ("artist", tmp) == 0 || strcasecmp ("album", tmp) == 0 || 
-				strcasecmp ("title", tmp) == 0 || strcasecmp ("directory", tmp) == 0) {
+		if (strcmp ("Artist", tmp) == 0 || strcmp ("Album", tmp) == 0 || 
+				strcmp ("Title", tmp) == 0 || strcmp ("Directory", tmp) == 0) {
 			filter.type[filter.size] = strdup (tmp);
 			tmp = strtok (NULL, " ");
 		} else {
@@ -310,6 +321,7 @@ parse_filter_struct (char *filterSt)
 		filter.type = (char **) realloc (filter.type, (filter.size + 1) * sizeof (char *));
 		filter.key = (char **) realloc (filter.key, (filter.size + 1) * sizeof (char *));
 	}
+	free (tmpfSt);
 
 	return filter;
 }
@@ -353,7 +365,7 @@ get_complete_name (list_t *ptr)
 	strcpy (st, ptr->directory);
 	st[strlen (st) - 1] = '/';
 	strcat (st, ptr->fsName);
-	st[strlen (st) - 1] = '\0';
+	st[strlen (st)] = '\0';
 	return (st);
 }
 
@@ -410,14 +422,14 @@ search_handler (char *key, int *size, char *DBlocation, char *filterSt, char *re
 	
 	gzFile fp = gzopen (DBlocation, "r");
 	list_t *kpdDB = NULL; // will be initialized in create_list
-	directory_list_t *dir = new_directory_node();
+	directory_list_t *dir = NULL;
 
 	char buf[5000], **results;
 	int i, filterFlag, revFilterFlag;
 	Filter_struct filter, revFilter;
 
 	while (gzgets (fp, buf, 5000) != NULL) {
-		kpdDB = create_list (buf, kpdDB, dir);
+		kpdDB = create_list (buf, kpdDB, &dir);
 	}
 	gzclose (fp);
 
@@ -435,9 +447,20 @@ search_handler (char *key, int *size, char *DBlocation, char *filterSt, char *re
 		revFilterFlag = 0;
 	}
 	
+	kpdDB = return_to_head (kpdDB);
 	// now the search can start 
 	results = search (key, kpdDB, size, filter, filterFlag, revFilter, revFilterFlag);
+	for (i = 0; i <* size; ++i) {
+		printf ("%s\n", results[i]);
+	}
 
 	// destroy filter_struct
 	// destroy search_struct
+}
+
+int main (int argc, char **argv)
+{
+	int i;
+	search_handler (argv[1], &i, "/home/user/.mpd/database", "tracce", NULL);
+	return 0;
 }

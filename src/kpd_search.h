@@ -20,6 +20,5 @@ typedef struct directory_list_t {
 	struct directory_list_t *prev;
 } directory_list_t;
 
-char **search_handler
 
 #endif
