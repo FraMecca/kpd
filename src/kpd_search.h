@@ -7,6 +7,8 @@ typedef struct list_t {
 	char* album;
 	char* title;
 	char* artist;
+	char* genre;
+	char* date;
 	struct list_t *next;
 	struct list_t *prev;
 } list_t;
