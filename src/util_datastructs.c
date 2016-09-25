@@ -11,13 +11,20 @@
  * but if it fails it trashes x and generates a new X using newX
  * and starts again
  */
-static bool doNotClose = true;
-
 #define TRY(x, delX, newX, y, f) do {\
 		if ((y = f (x)) == NULL) {\
 		delX (x); doNotClose = false;\
 		}\
 	} while (y == NULL && (x = newX ("127.0.0.1", 6600)) != NULL)
+
+/* You may wonder... why this mess?
+ * libmpdclient seems to corrupt the mpd_connection_struct when you issue commands in a short span of time.
+ * Given that my assumptions are correct, I get a sigabort everytime I free the mpd_connection_struct if it is opened a second time
+ * by the TRY macro.
+ * For this reason I use a static bool to take track of that.
+ * I hate myself for this
+ */
+static bool doNotClose = true;
 
 bool should_close ()
 {
