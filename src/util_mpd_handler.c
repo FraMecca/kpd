@@ -620,3 +620,50 @@ output_enable (struct mpd_connection *m, char **args, int n)
 		}
 	}
 }
+
+bool
+swap(struct mpd_connection *mpdConnection, char **args, int n){
+	int x, y, t, i=0;
+	QUEUE *q, *prevx, *nextx, *prevy, *nexty, *node, *nodex, *nodey;
+
+	if(n != 2){
+		STANDARD_USAGE_ERROR(swap);
+	}
+	
+	sscanf(args[0], "%d %d", &x, &y);
+	
+	if(x > y){
+		t = x;
+		x = y;
+		y = t;
+	}
+
+	q = get_current_playlist(mpdConnection);
+
+	for(node=q; node != NULL; node=node->next, i++){
+		
+		if(i == x-1 && x != 0){
+			prevx = node;
+			nodex = node->next;
+			nextx = node->next->next;
+		}else{
+			prevx = NULL;
+		}
+
+		if(i == y-1){
+			prevy = node;
+			nodey = node->next;
+			nexty = node->next->next;
+		}
+
+	}
+	
+	prevx->next = nodey;
+	nodey->next = nextx;
+
+	prevy->next = nodex;
+	nodex->next = nexty;
+	
+	return true;
+}
+
