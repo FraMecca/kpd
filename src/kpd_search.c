@@ -59,7 +59,7 @@ destroy_directory(directory_list_t *dirlist){
 	if (node != NULL) {
 		node->next = NULL;
 	}
-	
+	free (dirlist->name);	
 	free(dirlist);
 
 	return node;
@@ -72,7 +72,7 @@ get_current_directory(directory_list_t *dirlist){
 	char *directory;
 
 	if (dirlist == NULL) {
-		return "";
+		return strdup ("");
 	}
 
 	for(node=dirlist; node->prev != NULL; node=node->prev){
@@ -109,6 +109,39 @@ new_node()
 	x->prev = NULL;
 	
 	return x;
+}
+
+static void 
+destroy_nodes (list_t *ptr)
+{
+	list_t *tmp;
+	while (ptr != NULL) {
+		if (ptr->directory != NULL) {
+			free (ptr->directory);
+			/*printf ("%s\n", ptr->directory);*/
+		}
+		if (ptr->fsName != NULL) {
+			free (ptr->fsName);
+		}
+		if (ptr->album != NULL) {
+			free (ptr->album);
+		}
+		if (ptr->title != NULL) {
+			free (ptr->title);
+		}
+		if (ptr->artist != NULL) {
+			free (ptr->artist);
+		}
+		if (ptr->genre != NULL) {
+			free (ptr->genre);
+		}
+		if (ptr->date != NULL) {
+			free (ptr->date);
+		}
+		tmp = ptr;
+		ptr = ptr->next; 
+		free (tmp);
+	}
 }
 
 static list_t*
@@ -366,6 +399,21 @@ get_complete_name (list_t *ptr)
 	return (st);
 }
 
+void 
+destroy_results (char **res, int size)
+{
+	int j; 
+	if (res == NULL) {
+		return;
+	} else {
+		for (j = 0; j < size; ++j) {
+			free (res[j]);
+		}
+	}
+	free (res);
+}
+
+
 static char **
 search (char *st, list_t *listDB, int *cnt, Filter_struct filter, int filterFlag, Filter_struct revFilter, int revFilterFlag)
 {
@@ -376,7 +424,7 @@ search (char *st, list_t *listDB, int *cnt, Filter_struct filter, int filterFlag
 		struct resList *next;
 	};
 
-	struct resList *resultsList = NULL, *head = NULL;
+	struct resList *resultsList = NULL, *head = NULL, *tmp = NULL;
 	char **results;
 	int size = 0, i; // size holds the number of entries
 
@@ -403,17 +451,22 @@ search (char *st, list_t *listDB, int *cnt, Filter_struct filter, int filterFlag
 	// now convert resultsList into a char **
 	results = (char **) malloc (size * sizeof (char *));
 	resultsList = head;
+	head = NULL;
 	for (i = 0; i < size; ++i) {
 		results[i] = strdup (resultsList->name);
+		tmp = resultsList; // for next free
 		resultsList = resultsList->next;
+		free (tmp->name);
+		free (tmp);
 	}
+	free (resultsList); // no name field in last
 	
 	*cnt = size;
 	return results;
 }
 
-char **
-search_handler (char *key, int *size, char *DBlocation, char *filterSt, char *revFilterSt)
+void
+search_handler (char *key, char *DBlocation, char *filterSt, char *revFilterSt)
 {
 	// This function is the main handler for the search
 	
@@ -422,7 +475,7 @@ search_handler (char *key, int *size, char *DBlocation, char *filterSt, char *re
 	directory_list_t *dir = NULL;
 
 	char buf[5000], **results;
-	int i, filterFlag, revFilterFlag;
+	int i, filterFlag, revFilterFlag, size;
 	Filter_struct filter, revFilter;
 
 	while (gzgets (fp, buf, 5000) != NULL) {
@@ -446,19 +499,36 @@ search_handler (char *key, int *size, char *DBlocation, char *filterSt, char *re
 	
 	kpdDB = return_to_head (kpdDB);
 	// now the search can start 
-	results = search (key, kpdDB, size, filter, filterFlag, revFilter, revFilterFlag);
-	for (i = 0; i <* size; ++i) {
+	results = search (key, kpdDB, &size, filter, filterFlag, revFilter, revFilterFlag);
+
+	// print results
+	for (i = 0; i < size; ++i) {
 		printf ("%s\n", results[i]);
 	}
 
-	// destroy filter_struct
-	// destroy search_struct
-	return results;
+	destroy_nodes (kpdDB); // free the struct used to allocate the whole mpd db
+	if (filterFlag != false) {
+		destroy_filter_struct (filter);
+	}
+	if (revFilterFlag != false) {
+		destroy_filter_struct (revFilter);
+	}
+
+	destroy_results (results, size);
 }
 
 /*int main (int argc, char **argv)*/
 /*{*/
 	/*int i;*/
-	/*search_handler (argv[1], &i, "/home/user/.mpd/database", "tracce", NULL);*/
+	/*char **results;*/
+	/*results = search_handler (argv[1], &i, "/home/user/.mpd/database", NULL, NULL);*/
+/*int j;*/
+	/*for (j = 0; j < i; ++j) {*/
+		/*[>printf ("%s\n", results[j]);<]*/
+		/*free (results[j]);*/
+	/*}*/
+	/*free (results);*/
+
+
 	/*return 0;*/
 /*}*/

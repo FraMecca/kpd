@@ -6,6 +6,7 @@
 #include <stdbool.h> // true false
 #include <string.h> // strcmp
 #include <math.h> // pow
+#include "kpd_search.h"
 
 static char *filterSt = NULL, *revfilterSt = NULL; 
 
@@ -615,7 +616,7 @@ seek(struct mpd_connection *mpdSession, char **args, int n)
 		
 		int totalTime = status->song->duration_sec + status->song->duration_min * 60;
 		final_value = (unsigned) (totalTime / 100 ) * num;
-		printf ("FIN = %d\n", final_value);
+		//printf ("FIN = %d\n", final_value);
 
 		return(mpd_send_seek_pos(mpdSession, status->song->position, final_value));
 	}
@@ -674,8 +675,8 @@ seek(struct mpd_connection *mpdSession, char **args, int n)
 			case '\0':	
 			case 's':
 				final_value = (unsigned)  status->elapsedTime_sec + num;
-				printf ("%d + %d\n", status->elapsedTime_sec + status->elapsedTime_min * 60 + num);
-				printf ("%d + %d\n", status->elapsedTime_sec + num);
+				//printf ("%d + %d\n", status->elapsedTime_sec + status->elapsedTime_min * 60 + num);
+				//printf ("%d + %d\n", status->elapsedTime_sec + num);
 			
 				if(!check_limit(status, status->elapsedTime_sec + num))
 				{
@@ -683,7 +684,7 @@ seek(struct mpd_connection *mpdSession, char **args, int n)
 					return false;
 				}	
 
-				fprintf(stdout,"%d", final_value);
+				//fprintf(stdout,"%d", final_value);
 				return(mpd_send_seek_pos(mpdSession, status->song->position, final_value));
 				break;
 			
@@ -697,14 +698,14 @@ seek(struct mpd_connection *mpdSession, char **args, int n)
 					return false;
 				}	
 
-				fprintf(stdout,"%d", final_value);
+				//fprintf(stdout,"%d", final_value);
 				return(mpd_send_seek_pos(mpdSession, status->song->position, final_value));
 				break;
 			
 			case 'h':
 				num *= (60*60);
-				printf ("%d + %d\n", status->elapsedTime_sec + status->elapsedTime_min * 60 + num);
-				printf ("%d + %d\n", status->elapsedTime_sec + num);
+				//printf ("%d + %d\n", status->elapsedTime_sec + status->elapsedTime_min * 60 + num);
+				//printf ("%d + %d\n", status->elapsedTime_sec + num);
 				final_value = (unsigned)  status->elapsedTime_sec + num;
 
 				if(!check_limit(status, status->elapsedTime_sec + num))
@@ -713,7 +714,7 @@ seek(struct mpd_connection *mpdSession, char **args, int n)
 					return false;
 				}	
 
-				fprintf(stdout,"%d", final_value);
+				//fprintf(stdout,"%d", final_value);
 				return(mpd_send_seek_pos(mpdSession, status->song->position, final_value));
 				break;
 
@@ -820,3 +821,23 @@ update (struct mpd_connection *mpdSession, char **args, int n)
 	return ((mpd_run_update (mpdSession, NULL) > 0));
 }
 
+bool
+search_util (struct mpd_connection *mpdSession, char **args, int n)
+{
+	if (n != 1) {
+		STANDARD_USAGE_ERROR ("search");
+		return false;
+	}
+	// else number of arguments is correct
+	search_handler (args[0], _DBlocation, filterSt, revfilterSt);
+
+	/*	 search_handler does:
+ 	 *	 1. loads the db in memory
+ 	 *	 2. searches the key in the list that contains the db
+ 	 *	 3. filters the results for filterSt and revFiltersSt
+ 	 *	 4. prints the result
+ 	 *	 5. frees the datastructures
+ 	 *	 IT IS SELF CONTAINED
+ 	 */
+ 	return true;
+}

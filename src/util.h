@@ -40,13 +40,14 @@ typedef struct q {
 	struct q *next;	
 } QUEUE;
 
-static char *_host, *_DBlocation;
-static unsigned int _port;
+char *_host, *_DBlocation;
+unsigned int _port;
 
 
 bool change_port ();
 bool change_host ();
 void import_var_from_settings ();
+void free_var_from_settings ();
 
 struct mpd_connection *open_connection();
 void close_connection(struct mpd_connection *mpdConnection);
@@ -82,5 +83,8 @@ bool repeat(struct mpd_connection *mpdServer, char **args, int n);
 bool seek(struct mpd_connection *mpdServer, char **args, int n);
 bool update(struct mpd_connection *mpdSession, char **args, int n);
 bool output_enable(struct mpd_connection *mpdServer, char **args, int n);
+
+
+bool search_util (struct mpd_connection *mpdSession, char **args, int n);
 
 #endif

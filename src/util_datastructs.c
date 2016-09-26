@@ -42,6 +42,13 @@ import_var_from_settings ()
 	_DBlocation = strdup (defDBlocation);
 }
 
+void
+free_var_from_settings ()
+{
+	free (_host);
+	free (_DBlocation);
+}
+
 bool change_host (void * p, char **args, int n)
 { 
 	_host = strdup (args[0]);

@@ -29,7 +29,7 @@ static functionTable functions[] = {
 	{"shuffle",			's',	(void *) &funct},
 	{"update",			'u', 	(void *) &update},
 	{"add",				'a', 	(void *) &funct},
-	{"search",			's', 	(void *) &funct},
+	{"search",			's', 	(void *) &search_util},
 	{"filter",			'f', 	(void *) &funct},
 	{"v-filter",		'v', 	(void *) &funct},
 	{"list",			'l', 	(void *) &list},
@@ -73,6 +73,9 @@ int main (int argc, char *argv[])
 	if (mpdSession != NULL && should_close (mpdSession)) {
 		close_connection (mpdSession);
 	}
+	
+	free_var_from_settings ();
+
 	return ret;
 }
 
