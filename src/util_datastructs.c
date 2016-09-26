@@ -145,21 +145,43 @@ parse_mpd_song(struct mpd_song* mpdSong)
 {
 	SONG *song = NULL;
 	int duration;
+	const char *tmp;
 
 	song = (SONG*)malloc(sizeof(SONG));
 	if(song == NULL){
 		fprintf(stderr, "Memory allocation error.\n");
 		return NULL;
 	}
-	
-	song->title = strdup (mpd_song_get_tag(mpdSong, MPD_TAG_TITLE, 0));
-	song->artist = strdup (mpd_song_get_tag(mpdSong, MPD_TAG_ARTIST, 0));
-	song->album = strdup (mpd_song_get_tag(mpdSong, MPD_TAG_ALBUM, 0));
+
+	// get every field of mpdsong and allocate it on kpd song struct
+	tmp = mpd_song_get_tag(mpdSong, MPD_TAG_TITLE, 0);
+	if (tmp != NULL) { 
+		song->title = strdup (tmp);
+	} else {
+		song->title = NULL;
+	}
+	tmp = mpd_song_get_tag(mpdSong, MPD_TAG_ARTIST, 0);
+	if (tmp != NULL) {
+		song->artist = strdup (tmp);
+	} else {
+		song->artist = NULL;
+	}
+	tmp = mpd_song_get_tag(mpdSong, MPD_TAG_ALBUM, 0);
+	if (tmp != NULL) {
+		song->album = strdup (tmp);
+	} else {
+		song->album = NULL;
+	}
+	tmp = mpd_song_get_uri (mpdSong);
+	if (tmp != NULL) {
+		song->uri = strdup (tmp);
+	} else {
+		song->uri = NULL;
+	}
 	duration = mpd_song_get_duration(mpdSong);
 	song->duration_min = duration/60;
 	song->duration_sec = duration%60;
 	song->position = mpd_song_get_pos(mpdSong);
-	song->uri = strdup (mpd_song_get_uri (mpdSong));
 
 	mpd_song_free (mpdSong);
 	return song;
@@ -169,10 +191,18 @@ parse_mpd_song(struct mpd_song* mpdSong)
 void free_song_st (SONG *s)
 {
 	if (s!=NULL) {
-		free (s->title);
-		free (s->artist);
-		free (s->album);
-		free (s->uri);
+		if (s->title != NULL) {
+			free (s->title);
+		}
+		if (s->artist != NULL) {
+			free (s->artist);
+		}
+		if (s->album != NULL) {
+			free (s->album);
+		}
+		if (s->uri != NULL) {
+			free (s->uri);
+		}
 		free (s);
 	}
 }

@@ -390,12 +390,12 @@ static char *
 get_complete_name (list_t *ptr)
 {
 	// this function returns the complete name AKA the uri for mpd
-	char *st = malloc ( (1 + strlen (ptr->directory) + strlen (ptr->fsName)) * sizeof (char));
+	char *st;
 
-	strcpy (st, ptr->directory);
-	st[strlen (st) - 1] = '/';
-	strcat (st, ptr->fsName);
-	st[strlen (st)] = '\0';
+	st = calloc ((strlen (ptr->directory) + strlen (ptr->fsName) + 1), sizeof (char));
+	strncpy (st, ptr->directory, strlen (ptr->directory));
+	strncat (st, ptr->fsName, strlen (ptr->fsName));
+	
 	return (st);
 }
 
@@ -451,12 +451,12 @@ search (char *st, list_t *listDB, int *cnt, Filter_struct filter, int filterFlag
 	// now convert resultsList into a char **
 	results = (char **) malloc (size * sizeof (char *));
 	resultsList = head;
-	head = NULL;
+	/*head = NULL;*/
 	for (i = 0; i < size; ++i) {
 		results[i] = strdup (resultsList->name);
 		tmp = resultsList; // for next free
 		resultsList = resultsList->next;
-		free (tmp->name);
+			free (tmp->name);
 		free (tmp);
 	}
 	free (resultsList); // no name field in last
