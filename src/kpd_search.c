@@ -477,6 +477,11 @@ search_handler (char *key, char *DBlocation, char *filterSt, char *revFilterSt)
 	char buf[5000], **results;
 	int i, filterFlag, revFilterFlag, size;
 	Filter_struct filter, revFilter;
+	
+	if(fp == NULL){
+		fprintf(stdout, "No database found in %s\n", DBlocation);
+		return;
+	}
 
 	while (gzgets (fp, buf, 5000) != NULL) {
 		kpdDB = create_list (buf, kpdDB, &dir);
