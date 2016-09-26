@@ -8,7 +8,7 @@
 
 static bool is_contained (char *st, list_t *ptr);
 
-list_t *return_to_head (list_t *ptr)
+static list_t *return_to_head (list_t *ptr)
 {
 	while (ptr->prev != NULL) {
 		ptr = ptr->prev;
@@ -93,7 +93,7 @@ get_current_directory(directory_list_t *dirlist){
 
 /************************************* directory_struct functions *************************************/ 
 
-list_t *
+static list_t *
 new_node()
 {
 	list_t *x = malloc(sizeof(list_t));
@@ -111,7 +111,7 @@ new_node()
 	return x;
 }
 
-list_t*
+static list_t*
 add_node(list_t* list, list_t* node)
 {
 	list->next = node;
@@ -120,23 +120,21 @@ add_node(list_t* list, list_t* node)
 	return list;
 }
 
-list_t*
+static list_t*
 create_list(const char* line, list_t *list, directory_list_t **dir)
 {
 	// insert line in memory
 	list_t  *node = NULL;
-	char temp[5000],type[50];
-	int l = 0;
-
+	char temp[5000],type[20];
 
 	sscanf(line, "%s %[^\n]", type, temp);
 	type[strlen(type)-1] = '\0';
-	
 	
 	//add new directory
 	if(strcmp(type,"directory")==0)
 	{
 		*dir = new_directory(*dir,temp);			
+		return list;
 	}
 	
 	//begin new song
@@ -148,6 +146,7 @@ create_list(const char* line, list_t *list, directory_list_t **dir)
 			list = new_node();
 			list->fsName = strdup (temp);
 			list->directory = get_current_directory(*dir);
+			return list;
 		}
 		//insert in the list, the pointer point to the last song
 		else
@@ -157,6 +156,7 @@ create_list(const char* line, list_t *list, directory_list_t **dir)
 			node->directory = get_current_directory(*dir);
 
 			list = add_node(list, node);
+			return list;
 		}
 	}
 	
@@ -164,45 +164,41 @@ create_list(const char* line, list_t *list, directory_list_t **dir)
 	if(strcmp(type,"end")==0)
 	{
 		*dir = destroy_directory(*dir);
+		return list;
 	}
 	
 	if(strcmp(type,"genre")==0)
 	{
-		l = strlen(temp);
-		list->genre = malloc(l*sizeof(char));
-		strcpy(list->genre,temp);
+		list->genre = strdup (temp);
+		return list;
 	}
 	
 	if(strcmp(type,"artist")==0)
 	{
-		l = strlen(temp);
-		list->artist = malloc(l*sizeof(char));
-		strcpy(list->artist,temp);
+		list->artist = strdup (temp);
+		return list;
 	}
 	
 	if(strcmp(type,"date")==0)
 	{
-		l = strlen(temp);
-		list->date = malloc(l*sizeof(char));
-		strcpy(list->date,temp);
+		list->date = strdup (temp);
+		return list;
 	}
 
 	if(strcmp(type,"album")==0)
 	{
-		l = strlen(temp);
-		list->album = malloc(l*sizeof(char));
-		strcpy(list->album,temp);
+		list->album = strdup (temp);
+		return list;
 	}
 
 	if(strcmp(type,"title")==0)
 	{
 		list->title = strdup (temp);
+		return list;
 	}
 
-	return list;
+	return list; // does not happen, but issues a warning because no if-else structure
 }
-
-
 
 /************************************ Begin of filter functions ************************************/
 typedef struct Filter_struct {
@@ -211,7 +207,7 @@ typedef struct Filter_struct {
 	int size;
 } Filter_struct;
 
-bool
+static bool
 filter_items (Filter_struct f, list_t *ptr, int i)
 {
 	if (strcasecmp (f.type[i], "any") == 0) {
@@ -325,6 +321,7 @@ parse_filter_struct (const char *filterSt)
 
 	return filter;
 }
+
 /************************************ End of filter functions ************************************/
 
 static bool 
@@ -380,7 +377,7 @@ search (char *st, list_t *listDB, int *cnt, Filter_struct filter, int filterFlag
 	};
 
 	struct resList *resultsList = NULL, *head = NULL;
-	char *res, **results;
+	char **results;
 	int size = 0, i; // size holds the number of entries
 
 	resultsList = (struct resList *) malloc (sizeof (struct resList));
@@ -456,11 +453,12 @@ search_handler (char *key, int *size, char *DBlocation, char *filterSt, char *re
 
 	// destroy filter_struct
 	// destroy search_struct
+	return results;
 }
 
-int main (int argc, char **argv)
-{
-	int i;
-	search_handler (argv[1], &i, "/home/user/.mpd/database", "tracce", NULL);
-	return 0;
-}
+/*int main (int argc, char **argv)*/
+/*{*/
+	/*int i;*/
+	/*search_handler (argv[1], &i, "/home/user/.mpd/database", "tracce", NULL);*/
+	/*return 0;*/
+/*}*/

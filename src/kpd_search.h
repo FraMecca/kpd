@@ -20,5 +20,11 @@ typedef struct directory_list_t {
 	struct directory_list_t *prev;
 } directory_list_t;
 
+/*
+ * search_handler manages search for kpd.
+ * it wants a single key and a size pointer to store the size of the results;
+ * it uses also a system of filters.
+ */
+char ** search_handler (char *key, int *size, char *DBlocation, char *filterSt, char *revFilterSt);
 
 #endif

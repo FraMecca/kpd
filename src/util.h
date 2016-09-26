@@ -40,7 +40,15 @@ typedef struct q {
 	struct q *next;	
 } QUEUE;
 
-struct mpd_connection *open_connection(const char *host, unsigned port);
+static char *_host, *_DBlocation;
+static unsigned int _port;
+
+
+bool change_port ();
+bool change_host ();
+void import_var_from_settings ();
+
+struct mpd_connection *open_connection();
 void close_connection(struct mpd_connection *mpdConnection);
 bool should_close (); // shame
 SONG* get_current_song(struct mpd_connection *mpdConnection);

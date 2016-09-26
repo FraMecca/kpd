@@ -3,13 +3,18 @@
 #include"parse_args.h" // function table struct
 #include "util.h" // handle for libmpdclient
 #include "gc_util.h" // gc handler
-#include <gc.h> // gc_init
 #include "kpd_search.h"
 
 bool funct ()
 {
 	return true;
 }
+
+
+static functionTable hostANDport[] = {
+	{"host",			'0',	(void *) &change_host},
+	{"port",			'0',	(void *) &change_host},
+};
 
 static functionTable functions[] = {
 	{"help",			'h',	(void *) &funct},
@@ -24,7 +29,7 @@ static functionTable functions[] = {
 	{"shuffle",			's',	(void *) &funct},
 	{"update",			'u', 	(void *) &update},
 	{"add",				'a', 	(void *) &funct},
-	{"search",			's', 	(void *) &search},
+	{"search",			's', 	(void *) &funct},
 	{"filter",			'f', 	(void *) &funct},
 	{"v-filter",		'v', 	(void *) &funct},
 	{"list",			'l', 	(void *) &list},
@@ -44,13 +49,14 @@ int main (int argc, char *argv[])
 {
 	STATUS* currentStatus = NULL;
 	struct mpd_connection *mpdSession = NULL;
-	int ret;
-
-	/*GC_INIT ();*/
+	int ret = 0;
 	
+	import_var_from_settings (); // import DBlocation, host, port to util.h
+	process_cli (argc, argv, hostANDport, 2, NULL, 0); 
+
 	// attach client to mpd server
 	// should specify the host as config or as command line argument
-	mpdSession = open_connection ("localhost", 6600); 
+	mpdSession = open_connection (_host, _port);  
 	if (mpdSession == NULL) {
 		// didn't get a connection successfully
 		return 2;

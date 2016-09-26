@@ -5,6 +5,7 @@
 #include <gc.h> // garbage collector
 #include <stdbool.h> // true false
 #include <string.h> // strcmp
+#include "settings.h"
 
 /* This macro is a first step towards a sort of try except macro system
  * the objective of this macro is to have y = f(x) non NULL
@@ -15,7 +16,7 @@
 		if ((y = f (x)) == NULL) {\
 		delX (x); doNotClose = false;\
 		}\
-	} while (y == NULL && (x = newX ("127.0.0.1", 6600)) != NULL)
+	} while (y == NULL && (x = newX () ) != NULL)
 
 /* You may wonder... why this mess?
  * libmpdclient seems to corrupt the mpd_connection_struct when you issue commands in a short span of time.
@@ -32,18 +33,38 @@ bool should_close ()
 }
 /* this is ugly */
 
+void
+import_var_from_settings ()
+{
+	// import variables from settings.h to be passed to other functions
+	_host = strdup (defHost);
+	_port = defPort;
+	_DBlocation = strdup (defDBlocation);
+}
+
+bool change_host (void * p, char **args, int n)
+{ 
+	_host = strdup (args[0]);
+	return true;
+}
+bool change_port (void *p, char **args, int n)
+{
+	_port = atoi (args[0]);
+	return true;
+}
+
 /* opens a new connection to the mpd server
  * arguments: host, port (timeout defined)
  * returns a pointer to the connection structure if successful
  * returns a null pointer if error occours
  */
 struct mpd_connection*
-open_connection(const char *host, unsigned port)
+open_connection()
 {
 	struct mpd_connection *newConn = NULL;
 	enum mpd_error connErr;
 	
-	newConn = mpd_connection_new(host, port, TIMEOUT);
+	newConn = mpd_connection_new(_host, _port, TIMEOUT);
 	connErr = mpd_connection_get_error(newConn);
 	
 	/*if error occours*/

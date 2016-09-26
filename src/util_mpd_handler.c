@@ -5,7 +5,9 @@
 #include <gc.h> // garbage collector
 #include <stdbool.h> // true false
 #include <string.h> // strcmp
-#include <math.h>
+#include <math.h> // pow
+
+static char *filterSt = NULL, *revfilterSt = NULL; 
 
 /* prints a STATUS structure to stdout */
 void 
@@ -215,17 +217,14 @@ play (struct mpd_connection *mpdSession, char **args, int n)
 		}
 		free_status_st (status);
 		return check;
-	}
-	
-	//reproduce the specified song
-	if(n==1)
-	{
+	} else { // n == 1
+		//reproduce the specified song
 		check = mpd_send_play_pos(mpdSession, pos-1);
 		status = get_current_status(mpdSession);
 		print_current_status (status);
 		free_status_st (status);
 		return check;
-	}	
+	}
 }
 
 bool
@@ -820,3 +819,4 @@ update (struct mpd_connection *mpdSession, char **args, int n)
 	}
 	return ((mpd_run_update (mpdSession, NULL) > 0));
 }
+
