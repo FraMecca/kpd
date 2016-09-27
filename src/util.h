@@ -87,5 +87,6 @@ void destroy_search_results ();
 void print_search_results (char **results, int size);
 bool filter_helper (struct mpd_connection *m, char **args, int n);
 bool vfilter_helper (struct mpd_connection *m, char **args, int n);
+bool add(struct mpd_connection *mpdSession, char **args, int n);
 
 #endif
