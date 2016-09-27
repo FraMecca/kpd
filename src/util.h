@@ -8,7 +8,6 @@
 
 #define MAXFEAT 4
 #define STANDARD_USAGE_ERROR(commandname) fprintf (stderr,"kpd: incorrect usage of %s\nTry 'kpd --help' for more information.\n", commandname); 
-#define TIMEOUT 500
 
 typedef struct so {
 	char *title;
@@ -40,9 +39,9 @@ typedef struct q {
 	struct q *next;	
 } QUEUE;
 
-char *_host, *_DBlocation;
+char *_host;
+char *_DBlocation;
 unsigned int _port;
-
 
 bool change_port ();
 bool change_host ();

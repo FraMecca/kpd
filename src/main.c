@@ -2,7 +2,6 @@
 #include <getopt.h> // long_option struct
 #include"parse_args.h" // function table struct
 #include "util.h" // handle for libmpdclient
-#include "gc_util.h" // gc handler
 #include "kpd_search.h"
 
 bool funct ()
@@ -44,11 +43,12 @@ static functionTable functions[] = {
 	{"single",			'0', 	(void *) &single},
 	{"swap",			'w', 	(void *) &funct},
 	{"format",			'0', 	(void *) &funct},
-	{"output-enable",   '0', 	(void *) &output_enable},
+	{"verbose",		    'v', 	(void *) &output_enable},
 	{"delete", 			'd', 	(void *) &delete},
 	{"delete-range", 	'D', 	(void *) &delete_range},
+	{"version",			'0',    (void *) &funct},
 };    
-#define NOPTIONS 25 
+#define NOPTIONS 26 
 
 int main (int argc, char *argv[])
 {

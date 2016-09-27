@@ -4,6 +4,7 @@
 #include <stdio.h> // frintf
 #include <gc.h> // garbage collector
 #include <stdbool.h> // true false
+#define _GNU_SOURCE
 #include <string.h> // strcmp
 #include <math.h> // pow
 #include "kpd_search.h"
@@ -90,14 +91,16 @@ print_current_playlist(QUEUE* q, struct mpd_connection *mpdConnection)
 	}
 	while(i < cur->position){
 		i++;
-		if (song->artist != NULL && song->title != NULL) {
-			// some songs have null title or/and artist field, so the filesystem name will be used
-			fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
-		} else {
-			fprintf (stdout, "%d. %s\n", i, song->uri);
+		if (song != NULL) {
+			if (song->artist != NULL && song->title != NULL) {
+				// some songs have null title or/and artist field, so the filesystem name will be used
+				fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
+			} else {
+				fprintf (stdout, "%d. %s\n", i, song->uri);
+			}
+			free_song_st (song);
+			song = dequeue(q);
 		}
-		free_song_st (song);
-		song = dequeue(q);
 	}
 	// now we got the current playing song,
 	// will be printed bold
@@ -844,7 +847,7 @@ search_util (struct mpd_connection *mpdSession, char **args, int n)
 		return false;
 	}
 	// else number of arguments is correct
-	printf ("%s\n%s\n", filterSt, revFilterSt);
+	/*printf ("%s\n%s\n", filterSt, revFilterSt);*/
 	results = search_handler (args[0], &resultsSize, _DBlocation, filterSt, revFilterSt);
 
 	/*	 search_handler does:

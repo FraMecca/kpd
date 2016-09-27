@@ -1,0 +1,67 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "KPD" "1" "September 2016" "" ""
+.
+.SH "NAME"
+\fBkpd\fR \- client for Music Player Daemon (MPD)
+.
+.SH "SYNOPSIS"
+\fBkpd\fR \fIoptions\fR [\fIarguments\fR]
+.
+.SH "DESCRIPTION"
+\fBkpd\fR is a client for MPD, the Music Player Daemon\. kpd connects to a MPD istance ad controls it according to commands issued\. If no command is given, the current status is printed\.
+.
+.SH "OPTIONS"
+\fB\-f,\-\-format\fR
+.
+.IP "" 4
+.
+.nf
+
+Configure the format of song display for status and the playlist\. The metadata delimiters are "%name%", "%artist%", "%album%", "%title%", "%track%", "%time%", and "%file%"\. The []
+operator is used to group output such that if no metadata delimiters are found or matched between \'[\' and \']\', then none of the characters between \'[\' and \']\' are output\. \'&\' and \'|\'
+are logical operators for and and or\. \'#\' is used to escape characters\. Some useful examples for format are: "%file%" and "[[%artist% \- ]%title%]|[%file%]"\. This command also takes
+the following defined escape sequences:
+    \e\e \- backslash
+    \ea \- alert
+    \eb \- backspace
+    \et \- tab
+    \en \- newline
+    \ev \- vertical tab
+    \ef \- form\-feed
+    \er \- carriage return
+.
+.fi
+.
+.IP "" 0
+.
+.P
+\fB\-v, \-\-verbose\fR \fIon|off\fR Enable or disable output on screen
+.
+.P
+\fB\-\-host\fR The host to connect to\. If not given \fBkpd\fR will use the value set on \fBsettings\.h\fR
+.
+.P
+\fB\-\-port\fR The port to connect to\. If not given \fBkpd\fR will use the value set on \fBsettings\.h\fR
+.
+.P
+\fB\-a, \-\-add\fR Add a song from the search results to the playlist\. Can also read input from pipes\.
+.
+.P
+\fB\-\-clear\fR Empties the playlist
+.
+.P
+\fBdelete\fR Aspettando Galla
+.
+.P
+\fB\-n, \-\-next\fR Starts playing next song
+.
+.P
+\fB\-P, \-\-pause\fR Pauses playing
+.
+.SH "BUGS"
+Report bugs to me@francescomecca\.eu
+.
+.SH "AUTHOR"
+Eugenio Corso, Gabriele Corso, Francesco Galla, Francesco Mecca
