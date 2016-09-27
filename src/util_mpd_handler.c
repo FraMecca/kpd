@@ -8,6 +8,8 @@
 #include <string.h> // strcmp
 #include <math.h> // pow
 #include "kpd_search.h"
+#include "settings.h"
+
 
 static char *filterSt = NULL, *revFilterSt = NULL; 
 
@@ -941,3 +943,35 @@ vfilter_helper (struct mpd_connection *m, char **args, int n)
 	revFilterSt[strlen(revFilterSt) - 1] = '\0';
 	return true;
 }
+
+bool
+add(struct mpd_connection *mpdSession, char **args, int n)
+{
+	char *uri = NULL;
+	int i;
+	int len = strlen(defMusicFolder);	
+
+	fprintf(stdout, "hi!\n");
+	if(n < 1){
+		STANDARD_USAGE_ERROR("add");
+		return false;
+	}
+	
+	for(i=0; i<n; i++){
+		uri = (char*)malloc((len+strlen(args[i]))*sizeof(char));
+		if(!uri){
+			fprintf(stderr, "Memory allocation error.\n");
+			return false;
+		}
+		
+		uri = strncpy(uri, defMusicFolder, len);
+		uri = strncat(uri, args[i], strlen(args[i])+1);
+		printf("uri: %s\n", uri); 
+		if(!mpd_run_add(mpdSession, uri)){
+			STANDARD_USAGE_ERROR("mpd_run_add");
+			return false;
+		}
+	}
+	return true;
+}
+
