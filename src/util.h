@@ -8,7 +8,7 @@
 
 #define MAXFEAT 4
 #define STANDARD_USAGE_ERROR(commandname) fprintf (stderr,"kpd: incorrect usage of %s\nTry 'kpd --help' for more information.\n", commandname); 
-#define TIMEOUT 5000
+#define TIMEOUT 500
 
 typedef struct so {
 	char *title;
@@ -55,7 +55,6 @@ bool should_close (); // shame
 SONG* get_current_song(struct mpd_connection *mpdConnection);
 void free_song_st (SONG *s);
 void free_status_st (STATUS *s);
-//char* get_current_state(struct mpd_status* mpdStatus); // IT IS NOW STATIC
 STATUS* get_current_status(struct mpd_connection *mpdConnection);
 void print_current_status(STATUS* status);
 QUEUE* get_current_playlist(struct mpd_connection* mpdConnection);
@@ -84,7 +83,10 @@ bool seek(struct mpd_connection *mpdServer, char **args, int n);
 bool update(struct mpd_connection *mpdSession, char **args, int n);
 bool output_enable(struct mpd_connection *mpdServer, char **args, int n);
 
-
 bool search_util (struct mpd_connection *mpdSession, char **args, int n);
+void destroy_search_results ();
+void print_search_results (char **results, int size);
+bool filter_helper (struct mpd_connection *m, char **args, int n);
+bool vfilter_helper (struct mpd_connection *m, char **args, int n);
 
 #endif

@@ -243,22 +243,22 @@ typedef struct Filter_struct {
 static bool
 filter_items (Filter_struct f, list_t *ptr, int i)
 {
-	if (strcasecmp (f.type[i], "any") == 0) {
+	if (strcmp (f.type[i], "Any") == 0) {
 		return is_contained (f.key[i], ptr);
 	} else {
-		if (strcasecmp ("artist", f.type[i]) == 0 && 
+		if (strcmp ("Artist", f.type[i]) == 0 && 
 				ptr->artist != NULL && strcasestr (ptr->artist, f.key[i]) != NULL) {
 			return 1;
 		} else {
-			if (strcasecmp ("album", f.type[i]) == 0 && 
+			if (strcmp ("Album", f.type[i]) == 0 && 
 					ptr->album != NULL && strcasestr (ptr->album, f.key[i]) != NULL) {
 				return 1;
 			} else {
-				if (strcasecmp ("title", f.type[i]) == 0 && 
+				if (strcmp ("Title", f.type[i]) == 0 && 
 						ptr->title != NULL && strcasestr (ptr->title, f.key[i]) != NULL) {
 					return 1;
 				} else {
-					if (strcasecmp ("directory", f.type[i]) == 0 &&
+					if (strcmp ("Directory", f.type[i]) == 0 &&
 							ptr->directory != NULL && strcasestr (ptr->directory, f.key[i]) != NULL) {
 							return 1;
 					}
@@ -465,8 +465,8 @@ search (char *st, list_t *listDB, int *cnt, Filter_struct filter, int filterFlag
 	return results;
 }
 
-void
-search_handler (char *key, char *DBlocation, char *filterSt, char *revFilterSt)
+char **
+search_handler (char *key, int *size, char *DBlocation, char *filterSt, char *revFilterSt)
 {
 	// This function is the main handler for the search
 	
@@ -475,7 +475,7 @@ search_handler (char *key, char *DBlocation, char *filterSt, char *revFilterSt)
 	directory_list_t *dir = NULL;
 
 	char buf[5000], **results;
-	int i, filterFlag, revFilterFlag, size;
+	int filterFlag, revFilterFlag;
 	Filter_struct filter, revFilter;
 
 	while (gzgets (fp, buf, 5000) != NULL) {
@@ -499,12 +499,12 @@ search_handler (char *key, char *DBlocation, char *filterSt, char *revFilterSt)
 	
 	kpdDB = return_to_head (kpdDB);
 	// now the search can start 
-	results = search (key, kpdDB, &size, filter, filterFlag, revFilter, revFilterFlag);
+	results = search (key, kpdDB, size, filter, filterFlag, revFilter, revFilterFlag);
 
-	// print results
-	for (i = 0; i < size; ++i) {
-		printf ("%s\n", results[i]);
-	}
+	/*// print results*/
+	/*for (i = 0; i < size; ++i) {*/
+		/*printf ("%s\n", results[i]);*/
+	/*}*/
 
 	destroy_nodes (kpdDB); // free the struct used to allocate the whole mpd db
 	if (filterFlag != false) {
@@ -514,7 +514,8 @@ search_handler (char *key, char *DBlocation, char *filterSt, char *revFilterSt)
 		destroy_filter_struct (revFilter);
 	}
 
-	destroy_results (results, size);
+	/*destroy_results (results, size);*/
+	return results;
 }
 
 /*int main (int argc, char **argv)*/

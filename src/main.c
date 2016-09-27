@@ -16,6 +16,11 @@ static functionTable hostANDport[] = {
 	{"port",			'0',	(void *) &change_host},
 };
 
+static functionTable filters[] = {
+	{"filter",			'f', 	(void *) &filter_helper},
+	{"v-filter",		'v', 	(void *) &vfilter_helper},
+};
+
 static functionTable functions[] = {
 	{"help",			'h',	(void *) &funct},
 	{"play",			'p', 	(void *) &play},
@@ -52,7 +57,8 @@ int main (int argc, char *argv[])
 	int ret = 0;
 	
 	import_var_from_settings (); // import DBlocation, host, port to util.h
-	process_cli (argc, argv, hostANDport, 2, NULL, 0); 
+	process_cli (argc, argv, hostANDport, 2, NULL, 0);  // check if host and port is issued and use them
+	process_cli (argc, argv, filters, 2, NULL, 0); // filters strings must be parsed at the begin so when search is issued has the filter Strings
 
 	// attach client to mpd server
 	// should specify the host as config or as command line argument
@@ -68,12 +74,14 @@ int main (int argc, char *argv[])
 		print_current_status(currentStatus);
 		exit(EXIT_SUCCESS);
 	} else {
+		// from this point on the remaining args are parsed in the order they appear in argv
 		ret = (process_cli (argc, argv, functions, NOPTIONS, mpdSession, 1) == 0);
 	}
 	if (mpdSession != NULL && should_close (mpdSession)) {
 		close_connection (mpdSession);
 	}
 	
+	destroy_search_results (); // filtersStrings as well
 	free_var_from_settings ();
 
 	return ret;
