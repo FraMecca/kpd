@@ -10,6 +10,9 @@ static bool is_contained (char *st, list_t *ptr);
 
 static list_t *return_to_head (list_t *ptr)
 {
+	if (ptr == NULL) {
+		return ptr; // should not happen
+	}
 	while (ptr->prev != NULL) {
 		ptr = ptr->prev;
 	}
@@ -162,6 +165,7 @@ create_list(const char* line, list_t *list, directory_list_t **dir)
 
 	sscanf(line, "%s %[^\n]", type, temp);
 	type[strlen(type)-1] = '\0';
+	/*printf ("%s\t%s\n", type, temp);*/
 	
 	//add new directory
 	if(strcmp(type,"directory")==0)
@@ -200,31 +204,31 @@ create_list(const char* line, list_t *list, directory_list_t **dir)
 		return list;
 	}
 	
-	if(strcmp(type,"genre")==0)
-	{
-		list->genre = strdup (temp);
-		return list;
-	}
+	/*if(strcmp(type,"genre:")==0)*/
+	/*{*/
+		/*list->genre = strdup (temp);*/
+		/*return list;*/
+	/*}*/
 	
-	if(strcmp(type,"artist")==0)
+	if(strcmp(type,"Artist")==0)
 	{
 		list->artist = strdup (temp);
 		return list;
 	}
 	
-	if(strcmp(type,"date")==0)
-	{
-		list->date = strdup (temp);
-		return list;
-	}
+	/*if(strcmp(type,"date")==0)*/
+	/*{*/
+		/*list->date = strdup (temp);*/
+		/*return list;*/
+	/*}*/
 
-	if(strcmp(type,"album")==0)
+	if(strcmp(type,"Album")==0)
 	{
 		list->album = strdup (temp);
 		return list;
 	}
 
-	if(strcmp(type,"title")==0)
+	if(strcmp(type,"Title")==0)
 	{
 		list->title = strdup (temp);
 		return list;
@@ -243,7 +247,7 @@ typedef struct Filter_struct {
 static bool
 filter_items (Filter_struct f, list_t *ptr, int i)
 {
-	if (strcmp (f.type[i], "Any") == 0) {
+	if (strcmp (f.type[i], "any") == 0) {
 		return is_contained (f.key[i], ptr);
 	} else {
 		if (strcmp ("Artist", f.type[i]) == 0 && 
@@ -480,7 +484,7 @@ search_handler (char *key, int *size, char *DBlocation, char *filterSt, char *re
 	
 	if(fp == NULL){
 		fprintf(stdout, "No database found in %s\n", DBlocation);
-		return;
+		return NULL;
 	}
 
 	while (gzgets (fp, buf, 5000) != NULL) {
