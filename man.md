@@ -30,30 +30,71 @@ If no command is given, the current status is printed.
 
 	
 `-v, --verbose` <on|off>
+
 	Enable or disable output on screen
 
 `--host`
+
 	The host to connect to. If not given `kpd` will use the value set on `settings.h`
 
 `--port`
+
 	The port to connect to. If not given `kpd` will use the value set on `settings.h`
 
 `-a, --add`
+
 	Add a song from the search results to the playlist. Can also read input from pipes.
 
 `--clear`
+
 	Empties the playlist
+
+`--consume` <on|off|true|false|0|1>
+
+	Toggle consume mode if state is not specified
 
 `delete`
 	Aspettando Galla
 
 `-n, --next`
+
 	Starts playing next song
 
 `-P, --pause`
+
 	Pauses playing
 
+`-p, --play` <position>
 
+	Starts playing the song on playlist specified by the number. If no position is specified, toggles play
+
+`-b, --prev, --previous`
+
+	Starts playing previous song on playlist
+
+`--random` <on|off|true|false|0|1>
+
+	Toggle random mode if state is not specified
+
+`--seek`
+	Aspettando Eug
+
+`--single` <on|off|true|false|0|1>
+
+	Toggle single mode if state is not specified
+
+`--shuffle`
+
+	Shuffles all songs on the playlist
+
+`--swap`
+	Aspettando Gab
+
+`--update`
+
+	Scans music directory for updates
+
+## RETURN VALUES
 
 ## BUGS
 

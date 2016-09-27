@@ -37,28 +37,197 @@ the following defined escape sequences:
 .IP "" 0
 .
 .P
-\fB\-v, \-\-verbose\fR \fIon|off\fR Enable or disable output on screen
+\fB\-v, \-\-verbose\fR \fIon|off\fR
+.
+.IP "" 4
+.
+.nf
+
+Enable or disable output on screen
+.
+.fi
+.
+.IP "" 0
 .
 .P
-\fB\-\-host\fR The host to connect to\. If not given \fBkpd\fR will use the value set on \fBsettings\.h\fR
+\fB\-\-host\fR
+.
+.IP "" 4
+.
+.nf
+
+The host to connect to\. If not given `kpd` will use the value set on `settings\.h`
+.
+.fi
+.
+.IP "" 0
 .
 .P
-\fB\-\-port\fR The port to connect to\. If not given \fBkpd\fR will use the value set on \fBsettings\.h\fR
+\fB\-\-port\fR
+.
+.IP "" 4
+.
+.nf
+
+The port to connect to\. If not given `kpd` will use the value set on `settings\.h`
+.
+.fi
+.
+.IP "" 0
 .
 .P
-\fB\-a, \-\-add\fR Add a song from the search results to the playlist\. Can also read input from pipes\.
+\fB\-a, \-\-add\fR
+.
+.IP "" 4
+.
+.nf
+
+Add a song from the search results to the playlist\. Can also read input from pipes\.
+.
+.fi
+.
+.IP "" 0
 .
 .P
-\fB\-\-clear\fR Empties the playlist
+\fB\-\-clear\fR
+.
+.IP "" 4
+.
+.nf
+
+Empties the playlist
+.
+.fi
+.
+.IP "" 0
+.
+.P
+\fB\-\-consume\fR \fIon|off|true|false|0|1\fR
+.
+.IP "" 4
+.
+.nf
+
+Toggle consume mode if state is not specified
+.
+.fi
+.
+.IP "" 0
 .
 .P
 \fBdelete\fR Aspettando Galla
 .
 .P
-\fB\-n, \-\-next\fR Starts playing next song
+\fB\-n, \-\-next\fR
+.
+.IP "" 4
+.
+.nf
+
+Starts playing next song
+.
+.fi
+.
+.IP "" 0
 .
 .P
-\fB\-P, \-\-pause\fR Pauses playing
+\fB\-P, \-\-pause\fR
+.
+.IP "" 4
+.
+.nf
+
+Pauses playing
+.
+.fi
+.
+.IP "" 0
+.
+.P
+\fB\-p, \-\-play\fR \fIposition\fR
+.
+.IP "" 4
+.
+.nf
+
+Starts playing the song on playlist specified by the number\. If no position is specified, toggles play
+.
+.fi
+.
+.IP "" 0
+.
+.P
+\fB\-b, \-\-prev, \-\-previous\fR
+.
+.IP "" 4
+.
+.nf
+
+Starts playing previous song on playlist
+.
+.fi
+.
+.IP "" 0
+.
+.P
+\fB\-\-random\fR \fIon|off|true|false|0|1\fR
+.
+.IP "" 4
+.
+.nf
+
+Toggle random mode if state is not specified
+.
+.fi
+.
+.IP "" 0
+.
+.P
+\fB\-\-seek\fR Aspettando Eug
+.
+.P
+\fB\-\-single\fR \fIon|off|true|false|0|1\fR
+.
+.IP "" 4
+.
+.nf
+
+Toggle single mode if state is not specified
+.
+.fi
+.
+.IP "" 0
+.
+.P
+\fB\-\-shuffle\fR
+.
+.IP "" 4
+.
+.nf
+
+Shuffles all songs on the playlist
+.
+.fi
+.
+.IP "" 0
+.
+.P
+\fB\-\-swap\fR Aspettando Gab
+.
+.P
+\fB\-\-update\fR
+.
+.IP "" 4
+.
+.nf
+
+Scans music directory for updates
+.
+.fi
+.
+.IP "" 0
+.
+.SH "RETURN VALUES"
 .
 .SH "BUGS"
 Report bugs to me@francescomecca\.eu
