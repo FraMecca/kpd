@@ -414,3 +414,20 @@ get_current_playlist(struct mpd_connection* mpdConnection)
 	return q;
 }
 
+int
+count_playlist_elements (QUEUE *q)
+{
+	QUEUE *tmp = q;
+	int i = 0;
+
+	if (q == NULL) {
+		return 0;
+	} else {
+		while (tmp != NULL) {
+			i++;
+			tmp = tmp->next;
+		}
+		return i;
+	}
+}
+

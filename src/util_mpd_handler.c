@@ -982,23 +982,5 @@ add(struct mpd_connection *mpdSession, char **args, int n)
 bool
 shuffle (struct mpd_connection *mpdSession, char **args, int n)
 {
-	int i;
-	if (n != 0) {
-		STANDARD_USAGE_ERROR ("shuffle");
-		return false;
-	}
-	// this function shuffles the array. It takes a number from random A
-	/* 
-	 * 1. get current playlist
-	 * 2. allocate one resultsarray (char **) that can store the results when they are shuffled
-	 * 3. take an elemente from the playlist
-	 * 4. put it in a random cell of the results array that is not initialized
-	 * 5. clear the playlist
-	 * 6. add the results to the playlist
-	 * 7. free the results
-	 */
-	for (i = 0; i < 100; ++i) {
-		printf ("%d\n", random () % 20);
-	}
-	return true;
+	return mpd_run_shuffle (mpdSession);
 }

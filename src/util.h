@@ -57,6 +57,7 @@ void free_status_st (STATUS *s);
 STATUS* get_current_status(struct mpd_connection *mpdConnection);
 void print_current_status(STATUS* status);
 QUEUE* get_current_playlist(struct mpd_connection* mpdConnection);
+int count_playlist_elements (QUEUE *q);
 bool enqueue(QUEUE* q, SONG* s);
 SONG* dequeue(QUEUE* q);
 void destroy_queue (QUEUE *q);
