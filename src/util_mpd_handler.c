@@ -1,7 +1,8 @@
 #include "util.h" 
 #include "gc_util.h" // malloc, free def
 #include <mpd/client.h> // libmpdclient
-#include <stdio.h> // frintf
+/*#include <mpd/run.h> // run_check*/
+#include <stdio.h> // fprintf
 #include <gc.h> // garbage collector
 #include <stdbool.h> // true false
 #define _GNU_SOURCE
@@ -10,6 +11,8 @@
 #include "kpd_search.h"
 
 static char *filterSt = NULL, *revFilterSt = NULL; 
+static char **results = NULL;
+static int resultsSize = 0;
 
 /* prints a STATUS structure to stdout */
 	void 
@@ -98,6 +101,7 @@ print_current_playlist(QUEUE* q, struct mpd_connection *mpdConnection)
 			} else {
 				fprintf (stdout, "%d. %s\n", i, song->uri);
 			}
+			printf ("%d %s\n", i, song->uri); 
 			free_song_st (song);
 			song = dequeue(q);
 		}
@@ -824,8 +828,6 @@ update (struct mpd_connection *mpdSession, char **args, int n)
 	return ((mpd_run_update (mpdSession, NULL) > 0));
 }
 
-static char **results = NULL;
-static int resultsSize = 0;
 
 	void
 destroy_search_results ()
@@ -945,18 +947,58 @@ vfilter_helper (struct mpd_connection *m, char **args, int n)
 bool
 add(struct mpd_connection *mpdSession, char **args, int n)
 {
-	int i;
-
-	if(n < 1){
-		STANDARD_USAGE_ERROR("add");
+	int i = 0;
+	
+	if (n != 0) {
+		STANDARD_USAGE_ERROR ("add");
 		return false;
 	}
-	for(i=0; i<n; i++){	
-		if(!mpd_run_add(mpdSession, args[i])){
-			STANDARD_USAGE_ERROR("mpd_run_add");
-			return false;
+
+	/*while (i < resultsSize) {*/
+		/*if (mpd_run_check (mpdSession)) {*/ // run_check is not an exposed api. It is included in run.h
+			/*mpd_send_add(mpdSession, args[i]);*/
+			/*mpd_response_finish (mpdSession);*/
+		/*} else {*/
+			/*close_connection (mpdSession);*/
+			/*mpdSession = open_connection ();*/
+			/*--i;*/
+		/*}*/
+		/*++i;*/
+	/*}*/
+
+	for (i = 0; i < resultsSize; ++i) {
+		// send to mpd the uri of a song to be added to the playlist
+		while (mpd_send_add (mpdSession, results[i]) == false) {
+			/*sometimes the connection decades, so better open a new one*/
+			close_connection (mpdSession);
+			mpdSession = open_connection();
 		}
+		mpd_response_finish (mpdSession);
 	}
+		
 	return true;
 }
 
+bool
+shuffle (struct mpd_connection *mpdSession, char **args, int n)
+{
+	int i;
+	if (n != 0) {
+		STANDARD_USAGE_ERROR ("shuffle");
+		return false;
+	}
+	// this function shuffles the array. It takes a number from random A
+	/* 
+	 * 1. get current playlist
+	 * 2. allocate one resultsarray (char **) that can store the results when they are shuffled
+	 * 3. take an elemente from the playlist
+	 * 4. put it in a random cell of the results array that is not initialized
+	 * 5. clear the playlist
+	 * 6. add the results to the playlist
+	 * 7. free the results
+	 */
+	for (i = 0; i < 100; ++i) {
+		printf ("%d\n", random () % 20);
+	}
+	return true;
+}

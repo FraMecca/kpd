@@ -30,7 +30,7 @@ static functionTable functions[] = {
 	{"stop",			'S', 	(void *) &stop},
 	{"clear",			'c',	(void *) &clear},
 	{"random",			'r', 	(void *) &random_kpd},
-	{"shuffle",			't',	(void *) &funct},
+	{"shuffle",			't',	(void *) &shuffle},
 	{"update",			'u', 	(void *) &update},
 	{"add",				'a', 	(void *) &add},
 	{"search",			's', 	(void *) &search_util},
@@ -43,7 +43,7 @@ static functionTable functions[] = {
 	{"single",			'0', 	(void *) &single},
 	{"swap",			'w', 	(void *) &funct},
 	{"format",			'0', 	(void *) &funct},
-	{"verbose",		    'v', 	(void *) &output_enable},
+	{"verbose",		    'V', 	(void *) &output_enable},
 	{"delete", 			'd', 	(void *) &delete},
 	{"delete-range", 	'D', 	(void *) &delete_range},
 	{"version",			'0',    (void *) &funct},
@@ -81,7 +81,7 @@ int main (int argc, char *argv[])
 		close_connection (mpdSession);
 	}
 	
-	destroy_search_results (); // filtersStrings as well
+	destroy_search_results (); // filtersStrings as well, if any
 	free_var_from_settings ();
 
 	return ret;

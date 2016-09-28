@@ -135,9 +135,9 @@ destroy_nodes (list_t *ptr)
 		if (ptr->artist != NULL) {
 			free (ptr->artist);
 		}
-		if (ptr->genre != NULL) {
-			free (ptr->genre);
-		}
+		/*if (ptr->genre != NULL) {*/
+			/*free (ptr->genre);*/
+		/*}*/
 		if (ptr->date != NULL) {
 			free (ptr->date);
 		}
@@ -509,11 +509,6 @@ search_handler (char *key, int *size, char *DBlocation, char *filterSt, char *re
 	kpdDB = return_to_head (kpdDB);
 	// now the search can start 
 	results = search (key, kpdDB, size, filter, filterFlag, revFilter, revFilterFlag);
-
-	/*// print results*/
-	/*for (i = 0; i < size; ++i) {*/
-		/*printf ("%s\n", results[i]);*/
-	/*}*/
 
 	destroy_nodes (kpdDB); // free the struct used to allocate the whole mpd db
 	if (filterFlag != false) {

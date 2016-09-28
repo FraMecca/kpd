@@ -160,7 +160,9 @@ static argumentsArray initialize_argsarray (int argc, char **argv, functionTable
 	argumentsArray args;
 
 	args.size = count_n_args (argc, argv, functions, n);
-	args.arguments = (struct ArgumentsStruct *) malloc (args.size * sizeof (struct ArgumentsStruct));
+	args.arguments = (struct ArgumentsStruct *) calloc (args.size , sizeof (struct ArgumentsStruct));
+	/*memset (args.arguments, 0, args.size * sizeof (char));*/
+
 
 	return args;
 }
