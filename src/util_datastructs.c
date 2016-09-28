@@ -25,13 +25,7 @@
  * For this reason I use a static bool to take track of that.
  * I hate myself for this
  */
-static bool doNotClose = true;
 
-bool should_close ()
-{
-	return doNotClose;
-}
-/* this is ugly */
 
 void
 import_var_from_settings ()
@@ -132,7 +126,9 @@ open_connection()
 void
 close_connection(struct mpd_connection *mpdConnection)
 {
-	mpd_connection_free(mpdConnection);
+	if (mpdConnection != NULL) {
+		mpd_connection_free(mpdConnection);
+	}
 }
 
 /* converts a (struct mpd_song*) defined in libmpdclient
@@ -224,12 +220,15 @@ void free_status_st (STATUS *s)
  */
 
 SONG*
-get_current_song(struct mpd_connection *mpdConnection)
+get_current_song()
 {
+	struct mpd_connection *mpdConnection = NULL;
 	struct mpd_song* mpdSong = NULL;
 	
-		/*mpdSong = mpd_run_current_song(mpdConnection);*/
-	TRY (mpdConnection, close_connection, open_connection, mpdSong, mpd_run_current_song);
+	mpdConnection = open_connection ();
+	mpdSong = mpd_run_current_song(mpdConnection);
+	close_connection (mpdConnection);
+	/*TRY (mpdConnection, close_connection, open_connection, mpdSong, mpd_run_current_song);*/
 		if(mpdSong == NULL){
 			fprintf (stderr, "can't get running song\n");
 			return NULL;
@@ -276,14 +275,17 @@ get_current_state(struct mpd_status* mpdStatus)
  * returns a pointer to a STATUS structure if successful
  */
 STATUS* 
-get_current_status(struct mpd_connection *mpdConnection)
+get_current_status()
 {
+	struct mpd_connection *mpdConnection = NULL;
 	struct mpd_status* mpdStatus = NULL;
 	STATUS *status = NULL;
 	int eltime;
 
-	/*mpdStatus = mpd_run_status(mpdConnection);*/
-	TRY (mpdConnection, close_connection, open_connection, mpdStatus, mpd_run_status);
+	mpdConnection = open_connection ();
+	mpdStatus = mpd_run_status(mpdConnection);
+	close_connection (mpdConnection);
+	/*TRY (mpdConnection, close_conneccion, open_connection, mpdStatus, mpd_run_status);*/
 
 	if(mpdStatus == NULL){
 		fprintf(stderr, "Unable to retrieve status. Connection error.\n");
@@ -300,7 +302,7 @@ get_current_status(struct mpd_connection *mpdConnection)
 	status->consume = mpd_status_get_consume(mpdStatus);
 	status->update = mpd_status_get_update_id (mpdStatus); 
 	status->crossfade = mpd_status_get_crossfade(mpdStatus);
-	status->song = get_current_song(mpdConnection);
+	status->song = get_current_song();
 	status->state = get_current_state(mpdStatus);			
 	eltime = (float)mpd_status_get_elapsed_time(mpdStatus);
 	status->elapsedTime_min = eltime/60;
@@ -375,12 +377,15 @@ void destroy_queue (QUEUE *q)
  * returns a queue of songs if successful
  */
 static QUEUE* 
-retrieve_songs(struct mpd_connection *mpdConnection, QUEUE *q)
+retrieve_songs(QUEUE *q)
 {
+	struct mpd_connection *mpdConnection = NULL;
 	SONG* song = NULL;
 	struct mpd_song* mpdSong = NULL;
 
+	mpdConnection = open_connection ();
 	if((mpdSong = mpd_recv_song(mpdConnection)) == NULL){		
+		close_connection (mpdConnection);
 		return q;
 	}	
 		
@@ -389,7 +394,7 @@ retrieve_songs(struct mpd_connection *mpdConnection, QUEUE *q)
 		return NULL;
 	}
 	
-	retrieve_songs(mpdConnection, q);
+	retrieve_songs(q);
 	return q;
 }
 
@@ -399,18 +404,21 @@ retrieve_songs(struct mpd_connection *mpdConnection, QUEUE *q)
  * returns a playlist queue if successful
  */
 QUEUE* 
-get_current_playlist(struct mpd_connection* mpdConnection)
+get_current_playlist()
 {
 	QUEUE *q = NULL;	
-	
+	struct mpd_connection *mpdConnection = NULL;
+
+	mpdConnection = open_connection ();
 	mpd_send_list_queue_meta(mpdConnection);
+	close_connection (mpdConnection);
 	
 	if((q = (QUEUE*)malloc(sizeof(QUEUE))) == NULL){
 		STANDARD_USAGE_ERROR("calloc");		
 		return NULL;
 	}
 	q->next = NULL;
-	retrieve_songs(mpdConnection, q);
+	retrieve_songs(q);
 	return q;
 }
 
@@ -430,4 +438,3 @@ count_playlist_elements (QUEUE *q)
 		return i;
 	}
 }
-

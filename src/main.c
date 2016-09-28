@@ -9,7 +9,6 @@ bool funct ()
 	return true;
 }
 
-
 static functionTable hostANDport[] = {
 	{"host",			'0',	(void *) &change_host},
 	{"port",			'0',	(void *) &change_host},
@@ -52,33 +51,22 @@ static functionTable functions[] = {
 
 int main (int argc, char *argv[])
 {
-	STATUS* currentStatus = NULL;
-	struct mpd_connection *mpdSession = NULL;
 	int ret = 0;
 	
 	import_var_from_settings (); // import DBlocation, host, port to util.h
-	process_cli (argc, argv, hostANDport, 2, NULL, 0);  // check if host and port is issued and use them
-	process_cli (argc, argv, filters, 2, NULL, 0); // filters strings must be parsed at the begin so when search is issued has the filter Strings
+	process_cli (argc, argv, hostANDport, 2, 0);  // check if host and port is issued and use them
+	process_cli (argc, argv, filters, 2, 0); // filters strings must be parsed at the begin so when search is issued has the filter Strings
 
 	// attach client to mpd server
 	// should specify the host as config or as command line argument
-	mpdSession = open_connection (_host, _port);  
-	if (mpdSession == NULL) {
-		// didn't get a connection successfully
-		return 2;
-	}
 	
 	/*check if no arguments -> display current status and exit*/
 	if(argc == 1){
-		currentStatus = get_current_status(mpdSession);
-		print_current_status(currentStatus);
+		print_current_status(get_current_status ());
 		exit(EXIT_SUCCESS);
 	} else {
 		// from this point on the remaining args are parsed in the order they appear in argv
-		ret = (process_cli (argc, argv, functions, NOPTIONS, mpdSession, 1) == 0);
-	}
-	if (mpdSession != NULL && should_close (mpdSession)) {
-		close_connection (mpdSession);
+		ret = (process_cli (argc, argv, functions, NOPTIONS, 1) == 0);
 	}
 	
 	destroy_search_results (); // filtersStrings as well, if any

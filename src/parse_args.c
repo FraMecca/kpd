@@ -167,7 +167,7 @@ static argumentsArray initialize_argsarray (int argc, char **argv, functionTable
 	return args;
 }
 
-static bool push_to_table_sequentially (argumentsArray args, functionTable *functions, int n, void *structused)
+static bool push_to_table_sequentially (argumentsArray args, functionTable *functions, int n)
 {
 	/* if order flag == false 
 	 * functions are evaluated in the order they apeear in the command line # sequential
@@ -184,7 +184,7 @@ static bool push_to_table_sequentially (argumentsArray args, functionTable *func
 					(strlen (args.arguments[i].functionName) == 1 &&
  					 args.arguments[i].functionName[0] == functions[j].shortOption)) {
 				// execute function on functionTable
-				ret = functions[j].functionPtr (structused, args.arguments[i].values, args.arguments[i].nValues);
+				ret = functions[j].functionPtr (args.arguments[i].values, args.arguments[i].nValues);
 				if (ret == false) return false;
 				// halt process_cli if one of the functions return false
 				flag = true;
@@ -194,7 +194,7 @@ static bool push_to_table_sequentially (argumentsArray args, functionTable *func
 	return flag;
 }
 
-static bool push_to_table_ordered (argumentsArray args, functionTable *functions, int n, void *structused)
+static bool push_to_table_ordered (argumentsArray args, functionTable *functions, int n)
 {
 	// same as push_to_table_sequentially, but the functions are evaluated in the order they appear in the struct
 	int i, j;
@@ -206,7 +206,7 @@ static bool push_to_table_ordered (argumentsArray args, functionTable *functions
 					(strlen (args.arguments[i].functionName) == 1 &&
  					 args.arguments[i].functionName[0] == functions[j].shortOption)) {
 				// execute function on functionTable
-				ret = functions[j].functionPtr (structused, args.arguments[i].values, args.arguments[i].nValues);
+				ret = functions[j].functionPtr ( args.arguments[i].values, args.arguments[i].nValues);
 				if (ret == false) return false;
 				// halt process_cli if one of the functions return false
 
@@ -231,7 +231,7 @@ static void destroy_struct (argumentsArray args)
 	free (args.arguments);
 }
 
-bool process_cli (int argc, char **argv, functionTable * functions, int nFunctions, void *structused, bool orderFlag)
+bool process_cli (int argc, char **argv, functionTable * functions, int nFunctions, bool orderFlag)
 {
 	 /* process command line arguments, sequantialyl or ordered
 	  * returns a flag if an argument is found and a function is executed
@@ -251,10 +251,10 @@ bool process_cli (int argc, char **argv, functionTable * functions, int nFunctio
 		/* parse the command line and populates args with arguments and values */
 
 	if (orderFlag == false) {
-		flag = push_to_table_ordered (args, functions, nFunctions, structused);
+		flag = push_to_table_ordered (args, functions, nFunctions);
 	// same as push_to_table_sequentially, but the functions are evaluated in the order they appear in the struct
 	} else {
-		flag = push_to_table_sequentially (args, functions, nFunctions, structused);
+		flag = push_to_table_sequentially (args, functions, nFunctions);
 	}
 	/* execute every function linked to the commandline option */
 	destroy_struct (args);	

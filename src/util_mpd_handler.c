@@ -83,12 +83,12 @@ print_current_status(STATUS* status)
 
 /* prints the playlist queue on stdout */
 	void 
-print_current_playlist(QUEUE* q, struct mpd_connection *mpdConnection)
+print_current_playlist(QUEUE* q)
 {
 	int i = 0;	
 	SONG* song = dequeue(q);
 
-	SONG *cur = get_current_song (mpdConnection);
+	SONG *cur = get_current_song ();
 	if(cur == NULL){
 		return;		
 	}
@@ -110,7 +110,7 @@ print_current_playlist(QUEUE* q, struct mpd_connection *mpdConnection)
 	// will be printed bold
 	{
 		char color[5] = "[0m";
-		STATUS *status = get_current_status (mpdConnection);
+		STATUS *status = get_current_status ();
 		if (strcmp (status->state, "play") == 0) {
 			strncpy (color, "[31m", 4);
 		} else {
@@ -146,7 +146,7 @@ print_current_playlist(QUEUE* q, struct mpd_connection *mpdConnection)
 	return;
 }
 
-bool list (struct mpd_connection *mpdSession, char **argv, int n)
+bool list (char **argv, int n)
 {
 	QUEUE* playlist = NULL;
 
@@ -154,8 +154,8 @@ bool list (struct mpd_connection *mpdSession, char **argv, int n)
 		STANDARD_USAGE_ERROR ("output-enable");
 		return false;
 	}
-	if((playlist = get_current_playlist(mpdSession)) != NULL){
-		print_current_playlist(playlist, mpdSession);
+	if((playlist = get_current_playlist()) != NULL){
+		print_current_playlist(playlist);
 	} else {
 		fprintf(stdout, "Empty playlist.\n");
 	}
@@ -163,14 +163,19 @@ bool list (struct mpd_connection *mpdSession, char **argv, int n)
 	return true;
 }
 
-	bool 
-pause (struct mpd_connection *mpdSession, char **args, int n)
+bool 
+pause (char **args, int n)
 {
+	struct mpd_connection *mpdSession = NULL;
+	bool f;
 	if (n != 0) {
 		STANDARD_USAGE_ERROR("pause");
 		return false;
 	} else {
-		return mpd_send_toggle_pause (mpdSession);
+		mpdSession = open_connection ();
+		f =  mpd_send_toggle_pause (mpdSession);
+		close_connection (mpdSession);
+		return f;
 	}
 }
 
@@ -180,9 +185,10 @@ pause (struct mpd_connection *mpdSession, char **args, int n)
  * if arg, play the song specified by the number (-1 because mpd start from 0)
  * prototype is standard because it is called from parse_args
  */
-	bool
-play (struct mpd_connection *mpdSession, char **args, int n)
+bool
+play (char **args, int n)
 {
+	struct mpd_connection *mpdSession = NULL;
 	bool check;	
 	unsigned pos;
 	STATUS *status = NULL;
@@ -201,25 +207,33 @@ play (struct mpd_connection *mpdSession, char **args, int n)
 	//zero elements, reproduce current song or the first
 	if(n==0)
 	{
+		mpdSession = open_connection ();
 		status = get_current_status(mpdSession);
+		close_connection (mpdSession);
 		//if state == stop reproduce the first song
 		if(strcmp(status->state,"stop")==0)
 		{
+			mpdSession = open_connection ();
 			check = mpd_send_play_pos(mpdSession, 0);
+			close_connection (mpdSession);
 		}
 		else
 		{	
 			if (strcmp (status->state, "play")==0)
 			{
-				check = pause (mpdSession, NULL, 0);
+				check = pause ( NULL, 0);
 
 			} 
 			else
 			{
+				mpdSession = open_connection ();
 				check = mpd_send_play (mpdSession);
+				close_connection (mpdSession);
 				free_status_st (status);
 				status = NULL;
+				mpdSession = open_connection ();
 				status = get_current_status(mpdSession);
+				close_connection (mpdSession);
 				print_current_status (status);
 			}
 		}
@@ -227,49 +241,76 @@ play (struct mpd_connection *mpdSession, char **args, int n)
 		return check;
 	} else { // n == 1
 		//reproduce the specified song
+		mpdSession = open_connection ();
 		check = mpd_send_play_pos(mpdSession, pos-1);
+		close_connection (mpdSession);
+
+		mpdSession = open_connection ();
 		status = get_current_status(mpdSession);
+		close_connection (mpdSession);
 		print_current_status (status);
 		free_status_st (status);
+
 		return check;
 	}
 }
 
-	bool
-next(struct mpd_connection *mpdSession, char **args, int n)
+bool
+next( char **args, int n)
 {
+	struct mpd_connection *mpdSession = NULL;
 	if(n != 0){
 		STANDARD_USAGE_ERROR("next");
 	}
-	return (mpd_send_next(mpdSession));
+	mpdSession = open_connection ();
+	mpd_send_next(mpdSession);
+	close_connection (mpdSession);
+	return true;
 }
 
-	bool
-previous(struct mpd_connection *mpdSession, char **args, int n)
+bool
+previous(char **args, int n)
 {
+	struct mpd_connection *mpdSession = NULL;
 	if(n != 0){
 		STANDARD_USAGE_ERROR("previous");
 	}
 
-	return(mpd_send_previous(mpdSession));
+	mpdSession = open_connection ();
+	mpd_send_previous(mpdSession);
+	close_connection (mpdSession);
+	return true;
 }
 
 
-	bool
-stop(struct mpd_connection *mpdSession)
+bool
+stop(char **argv, int n)
 {	
-	return(mpd_send_stop(mpdSession));
+	struct mpd_connection *mpdSession = NULL;
+	if(n != 0){
+		STANDARD_USAGE_ERROR("previous");
+	}
+
+	mpdSession = open_connection ();
+	mpd_send_stop(mpdSession);
+	close_connection (mpdSession);
+	return true;
 }
 
 /* a wrapper to mpd_run_delete */
-	bool 
-delete_song(struct mpd_connection *mpdSession, int pos)
+bool 
+delete_song(int pos)
 {	
-	return mpd_run_delete(mpdSession, pos);
+	struct mpd_connection *mpdSession = NULL;
+	bool f;
+	mpdSession = open_connection ();
+	f = mpd_run_delete(mpdSession, pos);
+	close_connection (mpdSession);
+	return f;
 }
 
 /* the function used by qsort to compare integers */
-	int 
+int 
 compare_pos(const void *pos1, const void *pos2)
 {
 	return (pos1 - pos2);
@@ -281,9 +322,10 @@ compare_pos(const void *pos1, const void *pos2)
  * returns false if error
  * returns true if successful
  */
-	bool 
-delete_range(struct mpd_connection *mpdSession, char **args, int n)
+bool 
+delete_range(char **args, int n)
 {
+	struct mpd_connection *mpdSession = NULL;
 	int **ranges = NULL;
 	int i;
 	int cnt = 0;
@@ -307,9 +349,12 @@ delete_range(struct mpd_connection *mpdSession, char **args, int n)
 	}
 
 	for(i=0; i<n_ranges; i++){
+		mpdSession = open_connection ();
 		if(!mpd_run_delete_range(mpdSession, ranges[i][0], ranges[i][1])){
+			close_connection (mpdSession);
 			return false;
 		}
+		close_connection (mpdSession);
 	}
 	return true;
 
@@ -318,7 +363,7 @@ delete_range(struct mpd_connection *mpdSession, char **args, int n)
 /* converts a string of char to an integer
  * returns it when done
  */
-	int 
+int 
 convert_to_int(char *arg)
 {
 	int len = strlen(arg);
@@ -338,8 +383,8 @@ convert_to_int(char *arg)
  * returns false if error,
  * returns true if done, and prints the playlist
  */
-	bool 
-delete(struct mpd_connection *mpdSession, char **args, int n)
+bool 
+delete(char **args, int n)
 {
 	int i;
 	int pos;
@@ -352,7 +397,7 @@ delete(struct mpd_connection *mpdSession, char **args, int n)
 
 	if(n == 1){
 		pos = convert_to_int(args[0]);
-		if(!delete_song(mpdSession, pos - 1)){
+		if(!delete_song(pos - 1)){
 			STANDARD_USAGE_ERROR("delete_song");
 			return false;
 		}
@@ -373,25 +418,32 @@ delete(struct mpd_connection *mpdSession, char **args, int n)
 
 	for(i=0; i<n; i++){
 		pos = positions[i] - i - 1;	
-		if(!delete_song(mpdSession, pos)){
+		if(!delete_song(pos)){
 			STANDARD_USAGE_ERROR("delete_song");
 			return false;
 		}
 	}
-	list(mpdSession, args, n);
+	list(args, n);
 	return true;
 }
 
-	bool
-clear(struct mpd_connection *mpdSession)
+bool
+clear(char **args, int n)
 {	
-	return mpd_send_clear(mpdSession);
+	struct mpd_connection *mpdSession = NULL;
+	bool f;
+	mpdSession = open_connection ();
+	f =  mpd_send_clear(mpdSession);
+	close_connection (mpdSession);
+	return f;
 } 
 
-	bool
-random_kpd(struct mpd_connection *mpdSession, char **args, int n)
+bool
+random_kpd(char **args, int n)
 {	
+	struct mpd_connection *mpdSession = NULL;
 	STATUS *status = NULL; 	
+	bool f;
 
 	//check the number of argument
 	if(n>1)
@@ -404,21 +456,32 @@ random_kpd(struct mpd_connection *mpdSession, char **args, int n)
 	if(n==0)
 	{
 		bool value;
+		mpdSession = open_connection ();
 		status = get_current_status(mpdSession);
+		close_connection (mpdSession);
 		value = !status->random;
 		free_status_st (status);
-		return(mpd_send_random(mpdSession, value));
+		mpdSession = open_connection ();
+		f = mpd_send_random(mpdSession, value);
+		close_connection (mpdSession);
+		return f;
 	}
 
 	//if there is an attivation char random_kpd switch on
 	if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1)
 	{
-		return(mpd_send_random(mpdSession,1));
+		mpdSession = open_connection ();
+		f = mpd_send_random(mpdSession,1);
+		close_connection (mpdSession);
+		return f;
 	}
 
 	if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0)
    	{
-		return(mpd_send_random(mpdSession,0));
+		mpdSession = open_connection ();
+		f = mpd_send_random(mpdSession,0);
+		close_connection (mpdSession);
+		return f;
 	}	
 
 	STANDARD_USAGE_ERROR ("random");
@@ -430,9 +493,11 @@ random_kpd(struct mpd_connection *mpdSession, char **args, int n)
  * accepts standard args
  * the user can pass as parameters: on, off, true, false, 0, 1 case insensitive
  */
-	bool
-consume(struct mpd_connection *mpdSession, char **args, int n)
+bool
+consume(char **args, int n)
 {	
+	struct mpd_connection *mpdSession = NULL;
+	bool f;
 	STATUS *status = NULL; 	
 
 	//check the number of argument
@@ -446,22 +511,32 @@ consume(struct mpd_connection *mpdSession, char **args, int n)
 	if(n==0)
 	{
 		bool value;
+		mpdSession = open_connection ();
 		status = get_current_status(mpdSession);
-		status = get_current_status(mpdSession);
+		close_connection (mpdSession);
 		value = !status->consume;
 		free_status_st (status);
-		return(mpd_send_consume(mpdSession, value));
+		mpdSession = open_connection ();
+		f = mpd_send_consume(mpdSession, value);
+		close_connection (mpdSession);
+		return f;
 	}
 
 	//if there is an attivation char consume_kpd switch on
 	if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1)
 	{
-		return(mpd_send_consume(mpdSession,1));
+		mpdSession = open_connection ();
+		f = mpd_send_consume(mpdSession,1);
+		close_connection (mpdSession);
+		return f;
 	}
 
 	if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0)
    	{
-		return(mpd_send_consume(mpdSession,0));
+		mpdSession = open_connection ();
+		f = mpd_send_consume(mpdSession,0);
+		close_connection (mpdSession);
+		return f;
 	}	
 
 	STANDARD_USAGE_ERROR ("consume");
@@ -473,10 +548,12 @@ consume(struct mpd_connection *mpdSession, char **args, int n)
  * this function accepts standard args
  * the user can pass as parameters: on, off, true, false, 0, 1 case insensitive
  */ 
-	bool
-repeat(struct mpd_connection *mpdSession, char **args, int n)
+bool
+repeat(char **args, int n)
 {	
+	struct mpd_connection *mpdSession = NULL;
 	STATUS *status = NULL; 	
+	bool f;
 
 	//check the number of argument
 	if(n>1)
@@ -489,21 +566,32 @@ repeat(struct mpd_connection *mpdSession, char **args, int n)
 	if(n==0)
 	{
 		bool value;
+		mpdSession = open_connection ();
 		status = get_current_status(mpdSession);
+		close_connection (mpdSession);
 		value = !status->repeat;
 		free_status_st (status);
-		return(mpd_send_repeat(mpdSession, value));
+		mpdSession = open_connection ();
+		f = mpd_send_repeat (mpdSession, value);
+		close_connection (mpdSession);
+		return f;
 	}
 
 	//if there is an attivation char repeat_kpd switch on
 	if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1)
 	{
-		return(mpd_send_repeat(mpdSession,1));
+		mpdSession = open_connection ();
+		f = mpd_send_repeat(mpdSession,1);
+		close_connection (mpdSession);
+		return f;
 	}
 
 	if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0)
    	{
-		return(mpd_send_repeat(mpdSession,0));
+		mpdSession = open_connection ();
+		f = mpd_send_repeat(mpdSession,0);
+		close_connection (mpdSession);
+		return f;
 	}	
 
 	STANDARD_USAGE_ERROR ("repeat");
@@ -516,10 +604,12 @@ repeat(struct mpd_connection *mpdSession, char **args, int n)
  * accepts as args the standard args
  * the user can pass as parameters: on, off, true, false, 0, 1 case insensitive
  */
-	bool
-single(struct mpd_connection *mpdSession, char **args, int n)
+bool
+single(char **args, int n)
 {	
+	struct mpd_connection *mpdSession = NULL;
 	STATUS *status = NULL; 	
+	bool f;
 
 	//check the number of argument
 	if(n>1)
@@ -532,21 +622,31 @@ single(struct mpd_connection *mpdSession, char **args, int n)
 	if(n==0)
 	{
 		bool value;
+		mpdSession = open_connection ();
 		status = get_current_status(mpdSession);
 		value = !status->single;
+		close_connection (mpdSession);
 		free_status_st (status);
-		return(mpd_send_single(mpdSession, value));
+		mpdSession = open_connection ();
+		f = mpd_send_single(mpdSession, value);
+		close_connection (mpdSession);
 	}
 
 	//if there is an attivation char single_kpd switch on
 	if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1)
 	{
-		return(mpd_send_single(mpdSession,1));
+		mpdSession = open_connection ();
+		f = mpd_send_single(mpdSession,1);
+		close_connection (mpdSession);
+		return f;
 	}
 
 	if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0)
    	{
-		return(mpd_send_single(mpdSession,0));
+		mpdSession = open_connection ();
+		f = mpd_send_single(mpdSession,0);
+		close_connection (mpdSession);
+		return f;
 	}	
 
 	STANDARD_USAGE_ERROR ("single");
@@ -555,7 +655,7 @@ single(struct mpd_connection *mpdSession, char **args, int n)
 }
 
 //verify if the seek function goes over the edges
-	bool
+bool
 check_limit(STATUS *status, int final_val)
 {
 	if(final_val<0 && (status->elapsedTime_sec + final_val<0))
@@ -571,15 +671,18 @@ check_limit(STATUS *status, int final_val)
 	return true;
 }
 
-	bool
-seek(struct mpd_connection *mpdSession, char **args, int n)
+bool
+seek(char **args, int n)
 {
+	struct mpd_connection *mpdSession = NULL;
 	int num = 0, l = 0;
 	char time_val='\0', sign='\0';	
 	unsigned final_value = 0;
 	STATUS *status = NULL;
 
+	mpdSession = open_connection ();
 	status = get_current_status(mpdSession);
+	close_connection (mpdSession);
 
 	//check number of arguments
 	if(n>1)
@@ -738,8 +841,8 @@ seek(struct mpd_connection *mpdSession, char **args, int n)
  * accepts standard arguments
  * accepts from the user: on, off, true, false, 0, 1, case insensivite
  */
-	bool
-output_enable (struct mpd_connection *m, char **args, int n)
+bool
+output_enable (char **args, int n)
 {
 	if (n != 1) {
 		STANDARD_USAGE_ERROR ("output-enable");
@@ -762,7 +865,8 @@ output_enable (struct mpd_connection *m, char **args, int n)
 }
 
 bool
-swap(struct mpd_connection *mpdConnection, char **args, int n){
+swap(char **args, int n){
+	/*struct mpd_connection *mpdSession = NULL;*/
 	int x, y, t, i=0;
 	QUEUE *q, *prevx, *nextx, *prevy, *nexty, *node, *nodex, *nodey;
 
@@ -780,7 +884,7 @@ swap(struct mpd_connection *mpdConnection, char **args, int n){
 		y = t;
 	}
 
-	q = get_current_playlist(mpdConnection);
+	q = get_current_playlist();
 
 	// take the nodes and the prevs and nexts
 	for(node=q; node != NULL; node=node->next, i++){
@@ -819,17 +923,22 @@ swap(struct mpd_connection *mpdConnection, char **args, int n){
 	return true;
 }
 
-	bool 
-update (struct mpd_connection *mpdSession, char **args, int n)
+bool 
+update (char **args, int n)
 {
+	struct mpd_connection *mpdSession = NULL;
+	bool f;
 	if(n != 0){
 		STANDARD_USAGE_ERROR("next");
 	}
-	return ((mpd_run_update (mpdSession, NULL) > 0));
+	mpdSession = open_connection ();
+	f = (mpd_run_update (mpdSession, NULL) > 0);
+	close_connection (mpdSession);
+	return f;
 }
 
 
-	void
+void
 destroy_search_results ()
 {
 	if (filterSt != NULL) {
@@ -841,8 +950,8 @@ destroy_search_results ()
 	destroy_results (results, resultsSize);
 }
 
-	bool
-search_util (struct mpd_connection *mpdSession, char **args, int n)
+bool
+search_util (char **args, int n)
 {
 	if (n != 1) {
 		STANDARD_USAGE_ERROR ("search");
@@ -861,7 +970,7 @@ search_util (struct mpd_connection *mpdSession, char **args, int n)
  	return true;
 }
 
-	void
+void
 print_search_results (char **results, int size)
 {
 	int i;
@@ -870,7 +979,7 @@ print_search_results (char **results, int size)
 	}
 }
 
-	static bool
+static bool
 check_for_type_words (char *w)
 {
 	// this function checks if w is: Artist, Album, Title
@@ -885,7 +994,7 @@ check_for_type_words (char *w)
 }
 
 bool
-filter_helper (struct mpd_connection *m, char **args, int n)
+filter_helper (char **args, int n)
 {
 	/*
 	 * this function:
@@ -915,7 +1024,7 @@ filter_helper (struct mpd_connection *m, char **args, int n)
 }
 
 bool
-vfilter_helper (struct mpd_connection *m, char **args, int n)
+vfilter_helper (char **args, int n)
 {
 	/*
 	 * this function:
@@ -945,8 +1054,9 @@ vfilter_helper (struct mpd_connection *m, char **args, int n)
 }
 
 bool
-add(struct mpd_connection *mpdSession, char **args, int n)
+add(char **args, int n)
 {
+	struct mpd_connection *mpdSession = NULL;
 	int i = 0;
 	
 	if (n != 0) {
@@ -967,20 +1077,23 @@ add(struct mpd_connection *mpdSession, char **args, int n)
 	/*}*/
 
 	for (i = 0; i < resultsSize; ++i) {
+		mpdSession = open_connection ();
 		// send to mpd the uri of a song to be added to the playlist
-		while (mpd_send_add (mpdSession, results[i]) == false) {
-			/*sometimes the connection decades, so better open a new one*/
-			close_connection (mpdSession);
-			mpdSession = open_connection();
-		}
+		mpd_send_add (mpdSession, results[i]);
 		mpd_response_finish (mpdSession);
-	}
-		
+		/*sometimes the connection decades, so better open a new one*/
+		close_connection (mpdSession);
+		}
 	return true;
 }
 
 bool
-shuffle (struct mpd_connection *mpdSession, char **args, int n)
+shuffle (char **args, int n)
 {
-	return mpd_run_shuffle (mpdSession);
+	struct mpd_connection *mpdSession = NULL;
+	bool f;
+	mpdSession = open_connection ();
+	f= mpd_run_shuffle (mpdSession);
+	close_connection (mpdSession);
+	return f;
 }

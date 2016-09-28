@@ -34,9 +34,9 @@ static functionTable functions[] = {
 typedef struct functionTable {
 	char *name;
 	char shortOption;
-	void* (*functionPtr) (void *usedstruct, char **, int);
+	void* (*functionPtr) (char **, int);
 } functionTable;	
 
-bool process_cli (int argc, char **argv, functionTable * functions, int nFunctions, void *structused, bool orderFlag);
+bool process_cli (int argc, char **argv, functionTable * functions, int nFunctions, bool orderFlag);
 
 #endif
