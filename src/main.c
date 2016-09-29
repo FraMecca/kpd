@@ -25,7 +25,7 @@ static functionTable functions[] = {
 	{"pause",			'P', 	(void *) &pause},
 	{"next",			'n',	(void *) &next},
 	{"previous",		'b', 	(void *) &previous},
-	{"prev",			'b', 	(void *) &previous},
+	{"prev",			'0', 	(void *) &previous},
 	{"stop",			'S', 	(void *) &stop},
 	{"clear",			'c',	(void *) &clear},
 	{"random",			'r', 	(void *) &random_kpd},

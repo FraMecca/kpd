@@ -1,8 +1,6 @@
 #include "util.h" 
-#include "gc_util.h" // malloc, free def
 #include <mpd/client.h> // libmpdclient
 #include <stdio.h> // fprintf
-#include <gc.h> // garbage collector
 #include <stdbool.h> // true false
 #include <string.h> // strcmp
 #include "settings.h"
@@ -377,15 +375,12 @@ void destroy_queue (QUEUE *q)
  * returns a queue of songs if successful
  */
 static QUEUE* 
-retrieve_songs(QUEUE *q)
+retrieve_songs(QUEUE *q, struct mpd_connection *mpdConnection)
 {
-	struct mpd_connection *mpdConnection = NULL;
 	SONG* song = NULL;
 	struct mpd_song* mpdSong = NULL;
 
-	mpdConnection = open_connection ();
 	if((mpdSong = mpd_recv_song(mpdConnection)) == NULL){		
-		close_connection (mpdConnection);
 		return q;
 	}	
 		
@@ -394,7 +389,7 @@ retrieve_songs(QUEUE *q)
 		return NULL;
 	}
 	
-	retrieve_songs(q);
+	retrieve_songs(q, mpdConnection);
 	return q;
 }
 
@@ -411,14 +406,15 @@ get_current_playlist()
 
 	mpdConnection = open_connection ();
 	mpd_send_list_queue_meta(mpdConnection);
-	close_connection (mpdConnection);
-	
+		
 	if((q = (QUEUE*)malloc(sizeof(QUEUE))) == NULL){
 		STANDARD_USAGE_ERROR("calloc");		
 		return NULL;
 	}
 	q->next = NULL;
-	retrieve_songs(q);
+	retrieve_songs(q, mpdConnection);
+	close_connection (mpdConnection);
+
 	return q;
 }
 

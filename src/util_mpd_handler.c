@@ -1,9 +1,7 @@
 #include "util.h" 
-#include "gc_util.h" // malloc, free def
 #include <mpd/client.h> // libmpdclient
 /*#include <mpd/run.h> // run_check*/
 #include <stdio.h> // fprintf
-#include <gc.h> // garbage collector
 #include <stdbool.h> // true false
 #define _GNU_SOURCE
 #include <string.h> // strcmp
@@ -101,7 +99,6 @@ print_current_playlist(QUEUE* q)
 			} else {
 				fprintf (stdout, "%d. %s\n", i, song->uri);
 			}
-			printf ("%d %s\n", i, song->uri); 
 			free_song_st (song);
 			song = dequeue(q);
 		}
@@ -109,27 +106,29 @@ print_current_playlist(QUEUE* q)
 	// now we got the current playing song,
 	// will be printed bold
 	{
-		char color[5] = "[0m";
-		STATUS *status = get_current_status ();
-		if (strcmp (status->state, "play") == 0) {
-			strncpy (color, "[31m", 4);
-		} else {
-			if (strcmp (status->state, "pause") == 0) {
-				strncpy (color, "[33m", 4);
+		if (song != NULL){  // not really needed
+			char color[5] = "[0m";
+			STATUS *status = get_current_status ();
+			if (strcmp (status->state, "play") == 0) {
+				strncpy (color, "[31m", 4);
+			} else {
+				if (strcmp (status->state, "pause") == 0) {
+					strncpy (color, "[33m", 4);
+				}
 			}
-		}
-		free_status_st (status);
+			free_status_st (status);
 
-		fprintf (stdout, "\x1b%s", color);
-		i++;
-		if (song->artist != NULL && song->title != NULL) {
-			fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
-		} else {
-			fprintf (stdout, "%d. %s\n", i, song->uri);
+			fprintf (stdout, "\x1b%s", color);
+			i++;
+			if (song->artist != NULL && song->title != NULL) {
+				fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
+			} else {
+				fprintf (stdout, "%d. %s\n", i, song->uri);
+			}
+			free_song_st (song);
+			song = dequeue(q);
+			fprintf (stdout, "\x1b[0m"); // reset ansi_escape_code
 		}
-		free_song_st (song);
-		song = dequeue(q);
-		fprintf (stdout, "\x1b[0m"); // reset ansi_escape_code
 	}	
 	while(song != NULL){
 		i++;
