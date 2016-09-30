@@ -88,6 +88,18 @@ print_current_playlist(QUEUE* q)
 
 	SONG *cur = get_current_song ();
 	if(cur == NULL){
+		// in case there is no playing song
+		while(song!= NULL){
+			i++;
+			if (song->artist != NULL && song->title != NULL) {
+				// some songs have null title or/and artist field, so the filesystem name will be used
+				fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
+			} else {
+				fprintf (stdout, "%d. %s\n", i, song->uri);
+			}
+			free_song_st (song);
+			song = dequeue(q);
+		}
 		return;		
 	}
 	while(i < cur->position){
@@ -1019,6 +1031,7 @@ filter_helper (char **args, int n)
 		strncat (filterSt, sp, strlen (sp));
 	}
 	filterSt[strlen(filterSt) - 1] = '\0';
+	printf ("%s --> filter\n", filterSt);
 	return true;
 }
 
@@ -1049,6 +1062,7 @@ vfilter_helper (char **args, int n)
 		strncat (revFilterSt, sp, strlen (sp));
 	}
 	revFilterSt[strlen(revFilterSt) - 1] = '\0';
+	printf ("%s --> filter\n", revFilterSt);
 	return true;
 }
 

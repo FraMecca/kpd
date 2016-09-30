@@ -161,7 +161,7 @@ create_list(const char* line, list_t *list, directory_list_t **dir)
 {
 	// insert line in memory
 	list_t  *node = NULL;
-	char temp[5000],type[20];
+	char temp[5000],type[2000];
 
 	sscanf(line, "%s %[^\n]", type, temp);
 	type[strlen(type)-1] = '\0';

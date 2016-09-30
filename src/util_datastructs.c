@@ -228,7 +228,6 @@ get_current_song()
 	close_connection (mpdConnection);
 	/*TRY (mpdConnection, close_connection, open_connection, mpdSong, mpd_run_current_song);*/
 		if(mpdSong == NULL){
-			fprintf (stderr, "can't get running song\n");
 			return NULL;
 		}
 	return parse_mpd_song(mpdSong);	
