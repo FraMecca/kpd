@@ -3,7 +3,7 @@ kpd(1) - client for Music Player Daemon (MPD)
 
 ## SYNOPSIS
 
-`kpd` <options> [<arguments>]
+`kpd` <options> [<arguments>] <options> [<arguments>] ... ...
 
 ## DESCRIPTION 
 
@@ -13,23 +13,7 @@ If no command is given, the current status is printed.
 
 ## OPTIONS
 
-`-f,--format`
-
-	Configure the format of song display for status and the playlist. The metadata delimiters are "%name%", "%artist%", "%album%", "%title%", "%track%", "%time%", and "%file%". The [] 
-	operator is used to group output such that if no metadata delimiters are found or matched between '[' and ']', then none of the characters between '[' and ']' are output. '&' and '|' 
-	are logical operators for and and or. '#' is used to escape characters. Some useful examples for format are: "%file%" and "[[%artist% - ]%title%]|[%file%]". This command also takes 
-	the following defined escape sequences:
-    	\\ - backslash
-    	\a - alert
-    	\b - backspace
-    	\t - tab
-    	\n - newline
-    	\v - vertical tab
-    	\f - form-feed
-    	\r - carriage return 
-
-	
-`-v, --verbose` <on|off>
+`-V, --verbose` <on|off>
 
 	Enable or disable output on screen
 
@@ -43,7 +27,7 @@ If no command is given, the current status is printed.
 
 `-a, --add`
 
-	Add a song from the search results to the playlist. Can also read input from pipes.
+	Add a song from the search results to the playlist. Can also read input from pipes. Doesn't accept arguments.
 
 `--clear`
 
@@ -55,6 +39,17 @@ If no command is given, the current status is printed.
 
 `delete`
 	Aspettando Galla
+
+`delete range`
+	Aspettando Galla
+
+`-h, --help`
+
+	Show help
+
+`-l, --list`
+
+	Prints entire playlist
 
 `-n, --next`
 
@@ -76,6 +71,14 @@ If no command is given, the current status is printed.
 
 	Toggle random mode if state is not specified
 
+`--repeat` <on|off|true|false|0|1>
+
+	Toggle repeat mode if state is not specified
+
+`-S, --stop`
+
+	Stops playing
+
 `--seek`
 	Aspettando Eug
 
@@ -93,6 +96,13 @@ If no command is given, the current status is printed.
 `--update`
 
 	Scans music directory for updates
+
+`-V, --verbose` <on|off|true|false|0|1>
+
+	Disable (redirect to /dev/null) or enable output. The state must be specified
+
+	
+	
 
 ## RETURN VALUES
 

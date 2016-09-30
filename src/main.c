@@ -36,7 +36,6 @@ static functionTable filters[] = {
 	{"repeat",			'0', 	(void *) &funct},
 	{"single",			'0', 	(void *) &funct},
 	{"swap",			'w', 	(void *) &funct},
-	{"format",			'0', 	(void *) &funct},
 	{"verbose",		    'V', 	(void *) &funct},
 	{"delete", 			'd', 	(void *) &funct},
 	{"delete-range", 	'D', 	(void *) &funct},
@@ -67,13 +66,12 @@ static functionTable functions[] = {
 	{"repeat",			'0', 	(void *) &repeat},
 	{"single",			'0', 	(void *) &single},
 	{"swap",			'w', 	(void *) &funct},
-	{"format",			'0', 	(void *) &funct},
 	{"verbose",		    'V', 	(void *) &output_enable},
 	{"delete", 			'd', 	(void *) &delete},
 	{"delete-range", 	'D', 	(void *) &delete_range},
 	{"version",			'0',    (void *) &funct},
 };    
-#define NOPTIONS 26 
+#define NOPTIONS 25 
 
 int main (int argc, char *argv[])
 {
@@ -81,7 +79,7 @@ int main (int argc, char *argv[])
 	
 	import_var_from_settings (); // import DBlocation, host, port to util.h
 	process_cli (argc, argv, hostANDport, 2, 0);  // check if host and port is issued and use them
-	process_cli (argc, argv, filters, 28, 0); // filters strings must be parsed at the begin so when search is issued has the filter Strings
+	process_cli (argc, argv, filters, 27, 0); // filters strings must be parsed at the begin so when search is issued has the filter Strings
 
 	// attach client to mpd server
 	// should specify the host as config or as command line argument

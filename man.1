@@ -7,37 +7,13 @@
 \fBkpd\fR \- client for Music Player Daemon (MPD)
 .
 .SH "SYNOPSIS"
-\fBkpd\fR \fIoptions\fR [\fIarguments\fR]
+\fBkpd\fR \fIoptions\fR [\fIargument\fR] \fIoptions\fR [\fIargument\fR] \.\.\. \.\.\.
 .
 .SH "DESCRIPTION"
 \fBkpd\fR is a client for MPD, the Music Player Daemon\. kpd connects to a MPD istance ad controls it according to commands issued\. If no command is given, the current status is printed\.
 .
 .SH "OPTIONS"
-\fB\-f,\-\-format\fR
-.
-.IP "" 4
-.
-.nf
-
-Configure the format of song display for status and the playlist\. The metadata delimiters are "%name%", "%artist%", "%album%", "%title%", "%track%", "%time%", and "%file%"\. The []
-operator is used to group output such that if no metadata delimiters are found or matched between \'[\' and \']\', then none of the characters between \'[\' and \']\' are output\. \'&\' and \'|\'
-are logical operators for and and or\. \'#\' is used to escape characters\. Some useful examples for format are: "%file%" and "[[%artist% \- ]%title%]|[%file%]"\. This command also takes
-the following defined escape sequences:
-    \e\e \- backslash
-    \ea \- alert
-    \eb \- backspace
-    \et \- tab
-    \en \- newline
-    \ev \- vertical tab
-    \ef \- form\-feed
-    \er \- carriage return
-.
-.fi
-.
-.IP "" 0
-.
-.P
-\fB\-v, \-\-verbose\fR \fIon|off\fR
+\fB\-V, \-\-verbose\fR \fIon|off\fR
 .
 .IP "" 4
 .
@@ -82,7 +58,7 @@ The port to connect to\. If not given `kpd` will use the value set on `settings\
 .
 .nf
 
-Add a song from the search results to the playlist\. Can also read input from pipes\.
+Add a song from the search results to the playlist\. Can also read input from pipes\. Doesn\'t accept arguments\.
 .
 .fi
 .
@@ -116,6 +92,35 @@ Toggle consume mode if state is not specified
 .
 .P
 \fBdelete\fR Aspettando Galla
+.
+.P
+\fBdelete range\fR Aspettando Galla
+.
+.P
+\fB\-h, \-\-help\fR
+.
+.IP "" 4
+.
+.nf
+
+Show help
+.
+.fi
+.
+.IP "" 0
+.
+.P
+\fB\-l, \-\-list\fR
+.
+.IP "" 4
+.
+.nf
+
+Prints entire playlist
+.
+.fi
+.
+.IP "" 0
 .
 .P
 \fB\-n, \-\-next\fR
@@ -183,6 +188,32 @@ Toggle random mode if state is not specified
 .IP "" 0
 .
 .P
+\fB\-\-repeat\fR \fIon|off|true|false|0|1\fR
+.
+.IP "" 4
+.
+.nf
+
+Toggle repeat mode if state is not specified
+.
+.fi
+.
+.IP "" 0
+.
+.P
+\fB\-S, \-\-stop\fR
+.
+.IP "" 4
+.
+.nf
+
+Stops playing
+.
+.fi
+.
+.IP "" 0
+.
+.P
 \fB\-\-seek\fR Aspettando Eug
 .
 .P
@@ -222,6 +253,19 @@ Shuffles all songs on the playlist
 .nf
 
 Scans music directory for updates
+.
+.fi
+.
+.IP "" 0
+.
+.P
+\fB\-V, \-\-verbose\fR \fIon|off|true|false|0|1\fR
+.
+.IP "" 4
+.
+.nf
+
+Disable (redirect to /dev/null) or enable output\. The state must be specified
 .
 .fi
 .
