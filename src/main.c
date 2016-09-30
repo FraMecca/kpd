@@ -30,8 +30,6 @@ static functionTable filters[] = {
 	{"update",			'u', 	(void *) &funct},
 	{"add",				'a', 	(void *) &funct},
 	{"search",			's', 	(void *) &funct},
-	{"filter",			'f', 	(void *) &funct},
-	{"v-filter",		'v', 	(void *) &funct},
 	{"list",			'l', 	(void *) &funct},
 	{"seek",			'0', 	(void *) &funct},
 	{"consume",			'0', 	(void *) &funct},
@@ -83,7 +81,7 @@ int main (int argc, char *argv[])
 	
 	import_var_from_settings (); // import DBlocation, host, port to util.h
 	process_cli (argc, argv, hostANDport, 2, 0);  // check if host and port is issued and use them
-	process_cli (argc, argv, filters, 2, 0); // filters strings must be parsed at the begin so when search is issued has the filter Strings
+	process_cli (argc, argv, filters, 28, 0); // filters strings must be parsed at the begin so when search is issued has the filter Strings
 
 	// attach client to mpd server
 	// should specify the host as config or as command line argument

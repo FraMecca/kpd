@@ -1031,7 +1031,6 @@ filter_helper (char **args, int n)
 		strncat (filterSt, sp, strlen (sp));
 	}
 	filterSt[strlen(filterSt) - 1] = '\0';
-	printf ("%s --> filter\n", filterSt);
 	return true;
 }
 
@@ -1062,7 +1061,6 @@ vfilter_helper (char **args, int n)
 		strncat (revFilterSt, sp, strlen (sp));
 	}
 	revFilterSt[strlen(revFilterSt) - 1] = '\0';
-	printf ("%s --> filter\n", revFilterSt);
 	return true;
 }
 
