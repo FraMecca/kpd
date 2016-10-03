@@ -39,9 +39,9 @@ typedef struct q {
 	struct q *next;	
 } QUEUE;
 
-char *_host;
-char *_DBlocation;
-unsigned int _port;
+extern char *_host;
+extern char *_DBlocation;
+extern unsigned int _port;
 
 bool change_port ();
 bool change_host ();
@@ -79,8 +79,11 @@ bool consume(  char **args, int n);
 bool single(  char **args, int n);
 bool repeat(  char **args, int n);
 bool seek(  char **args, int n);
+bool swap(  char **args, int n);
+bool move(  char **args, int n);
 bool update(  char **args, int n);
 bool shuffle(  char **args, int n);
+bool shuffle_range(  char **args, int n);
 bool output_enable(  char **args, int n);
 
 bool search_util (  char **args, int n);

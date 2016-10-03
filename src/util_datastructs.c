@@ -10,20 +10,16 @@
  * but if it fails it trashes x and generates a new X using newX
  * and starts again
  */
+/* it is not used anymore since now open_connection is called every time it is needed */
 #define TRY(x, delX, newX, y, f) do {\
 		if ((y = f (x)) == NULL) {\
 		delX (x); doNotClose = false;\
 		}\
 	} while (y == NULL && (x = newX () ) != NULL)
 
-/* You may wonder... why this mess?
- * libmpdclient seems to corrupt the mpd_connection_struct when you issue commands in a short span of time.
- * Given that my assumptions are correct, I get a sigabort everytime I free the mpd_connection_struct if it is opened a second time
- * by the TRY macro.
- * For this reason I use a static bool to take track of that.
- * I hate myself for this
- */
-
+char *_host;
+char *_DBlocation;
+unsigned int _port;
 
 void
 import_var_from_settings ()
@@ -41,13 +37,21 @@ free_var_from_settings ()
 	free (_DBlocation);
 }
 
-bool change_host (void * p, char **args, int n)
+bool change_host (char **args, int n)
 { 
+	if (n == 0) {
+		STANDARD_USAGE_ERROR ("port");
+		return false;
+	}
 	_host = strdup (args[0]);
 	return true;
 }
-bool change_port (void *p, char **args, int n)
+bool change_port (char **args, int n)
 {
+	if (n == 0) {
+		STANDARD_USAGE_ERROR ("port");
+		return false;
+	}
 	_port = atoi (args[0]);
 	return true;
 }
@@ -112,7 +116,7 @@ open_connection()
 				break;
 		}
 
-		return NULL;
+		exit (69); // can't open the connection, mpd is unavailable
 	}
 
 	return newConn;

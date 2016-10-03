@@ -205,7 +205,7 @@ play (char **args, int n)
 	STATUS *status = NULL;
 
 	if (n != 0) {
-		pos=args[0][0] - '0';
+		sscanf (args[0], "%d", &pos);
 	}
 
 	//check args elements, must be at max 1
@@ -441,6 +441,10 @@ delete(char **args, int n)
 bool
 clear(char **args, int n)
 {	
+	if (n != 0) {
+		STANDARD_USAGE_ERROR ("clear");
+		return false;
+	}
 	struct mpd_connection *mpdSession = NULL;
 	bool f;
 	mpdSession = open_connection ();
@@ -689,6 +693,7 @@ seek(char **args, int n)
 	int num = 0, l = 0;
 	char time_val='\0', sign='\0';	
 	unsigned final_value = 0;
+	bool f;
 	STATUS *status = NULL;
 
 	mpdSession = open_connection ();
@@ -739,7 +744,11 @@ seek(char **args, int n)
 		final_value = (unsigned) (totalTime / 100 ) * num;
 		//printf ("FIN = %d\n", final_value);
 
-		return(mpd_send_seek_pos(mpdSession, status->song->position, final_value));
+		mpdSession = open_connection ();
+		f = mpd_send_seek_pos(mpdSession, status->song->position, final_value);
+		close_connection (mpdSession);
+		free_status_st (status);
+		return f;
 	}
 	else
 	{
@@ -765,7 +774,11 @@ seek(char **args, int n)
 						STANDARD_USAGE_ERROR("Edge not respected\n");
 						return false;
 					}
-					return(mpd_send_seek_pos(mpdSession, status->song->position, (unsigned) num));
+					mpdSession = open_connection ();
+					f = mpd_send_seek_pos(mpdSession, status->song->position, (unsigned) num);
+					close_connection (mpdSession);
+					free_status_st (status);
+					return f;
 
 				case 'm':
 					num *= 60;
@@ -774,7 +787,11 @@ seek(char **args, int n)
 						STANDARD_USAGE_ERROR("Edge not respected\n");
 						return false;
 					}	
-					return(mpd_send_seek_pos(mpdSession, status->song->position, (unsigned) num));
+					mpdSession = open_connection ();
+					f = mpd_send_seek_pos(mpdSession, status->song->position, (unsigned) num);
+					free_status_st (status);
+					close_connection (mpdSession);
+					return f;
 
 				case 'h':
 					num *= (60*60);
@@ -783,7 +800,11 @@ seek(char **args, int n)
 						STANDARD_USAGE_ERROR("Edge not respected\n");
 						return false;
 					}
-					return(mpd_send_seek_pos(mpdSession, status->song->position, (unsigned) num));
+					mpdSession = open_connection ();
+					f = mpd_send_seek_pos(mpdSession, status->song->position, (unsigned) num);
+					close_connection (mpdSession);
+					free_status_st (status);
+					return f;
 
 				default:
 					STANDARD_USAGE_ERROR("Command is not valid\n");
@@ -806,8 +827,11 @@ seek(char **args, int n)
 				}	
 
 				//fprintf(stdout,"%d", final_value);
-				return(mpd_send_seek_pos(mpdSession, status->song->position, final_value));
-				break;
+				mpdSession = open_connection ();
+				f = mpd_send_seek_pos(mpdSession, status->song->position, (unsigned) num);
+				free_status_st (status);
+				close_connection (mpdSession);
+				return f;
 
 			case 'm':
 				num *= 60;
@@ -820,8 +844,11 @@ seek(char **args, int n)
 				}	
 
 				//fprintf(stdout,"%d", final_value);
-				return(mpd_send_seek_pos(mpdSession, status->song->position, final_value));
-				break;
+				mpdSession = open_connection ();
+				f = mpd_send_seek_pos(mpdSession, status->song->position, (unsigned) num);
+				free_status_st (status);
+				close_connection (mpdSession);
+				return f;
 
 			case 'h':
 				num *= (60*60);
@@ -836,8 +863,11 @@ seek(char **args, int n)
 				}	
 
 				//fprintf(stdout,"%d", final_value);
-				return(mpd_send_seek_pos(mpdSession, status->song->position, final_value));
-				break;
+				mpdSession = open_connection ();
+				f = mpd_send_seek_pos(mpdSession, status->song->position, (unsigned) num);
+				close_connection (mpdSession);
+				free_status_st (status);
+				return f;
 
 			default:
 				STANDARD_USAGE_ERROR("Command is not valid\n");
@@ -878,59 +908,74 @@ output_enable (char **args, int n)
 bool
 swap(char **args, int n){
 	/*struct mpd_connection *mpdSession = NULL;*/
-	int x, y, t, i=0;
-	QUEUE *q, *prevx, *nextx, *prevy, *nexty, *node, *nodex, *nodey;
+	int x, y,i=0;
+	STATUS *st = get_current_status ();
+
+	i = st->queueLenght;
+	free_status_st (st);
+	if (i == 0) {
+		fprintf (stderr, "No songs in playlist\n");
+		return false;
+	}
 
 	// control argument
 	if(n != 2){
 		STANDARD_USAGE_ERROR("swap");
 	}
 
-	sscanf(args[0], "%d %d", &x, &y);
-
-	// put the lower in x
-	if(x > y){
-		t = x;
-		x = y;
-		y = t;
+	sscanf(args[0], "%d", &x);
+	sscanf(args[1], "%d", &y);
+	if (x < 0 || y < 0) {
+		fprintf (stderr, "numbers can't be negative\n");
+		STANDARD_USAGE_ERROR ("swap");
+	}
+	if (x > i || y > i) {
+		fprintf (stderr, "numbers can't be out of range\n");
+		STANDARD_USAGE_ERROR ("swap");
 	}
 
-	q = get_current_playlist();
+	struct mpd_connection *mpdSession;
+	mpdSession = open_connection ();
+	mpd_send_swap (mpdSession, x - 1, y - 1);
+		mpd_response_finish (mpdSession);
+	close_connection (mpdSession);
+	return true;
+}
 
-	// take the nodes and the prevs and nexts
-	for(node=q; node != NULL; node=node->next, i++){
+bool
+move(char **args, int n){
+	/*struct mpd_connection *mpdSession = NULL;*/
+	int x, y, i=0;
+	STATUS *st = get_current_status ();
 
-		if(x == 0){
-			prevx = NULL;
-			nodex = node;
-			nextx = node->next;
-		}
-
-		if(i == x-1 && x != 0){
-			prevx = node;
-			nodex = node->next;
-			nextx = node->next->next;
-		}else{
-			prevx = NULL;
-		}
-
-		if(i == y-1){
-			prevy = node;
-			nodey = node->next;
-			nexty = node->next->next;
-		}
-
+	i = st->queueLenght;
+	free_status_st (st);
+	if (i == 0) {
+		fprintf (stderr, "No songs in playlist\n");
+		return false;
 	}
 
-	// switch the nodes
-	prevx->next = nodey;
-	nodey->next = nextx;
+	// control argument
+	if(n != 2){
+		STANDARD_USAGE_ERROR("move");
+	}
 
-	prevy->next = nodex;
-	nodex->next = nexty;
+	sscanf(args[0], "%d", &x);
+	sscanf(args[1], "%d", &y);
+	if (x < 0 || y < 0) {
+		fprintf (stderr, "numbers can't be negative\n");
+		STANDARD_USAGE_ERROR ("move");
+	}
+	if (x > i || y > i) {
+		fprintf (stderr, "numbers can't be out of range\n");
+		STANDARD_USAGE_ERROR ("move");
+	}
 
-	// NEED TO PUT HERE ADD!	
-
+	struct mpd_connection *mpdSession;
+	mpdSession = open_connection ();
+	mpd_send_move (mpdSession, x - 1, y - 1);
+	mpd_response_finish (mpdSession);
+	close_connection (mpdSession);
 	return true;
 }
 
@@ -1107,4 +1152,41 @@ shuffle (char **args, int n)
 	f= mpd_run_shuffle (mpdSession);
 	close_connection (mpdSession);
 	return f;
+}
+
+bool
+shuffle_range(char **args, int n){
+	/*struct mpd_connection *mpdSession = NULL;*/
+	int x, y,i=0;
+	STATUS *st = get_current_status ();
+
+	i = st->queueLenght;
+	free_status_st (st);
+	if (i == 0) {
+		fprintf (stderr, "No songs in playlist\n");
+		return false;
+	}
+
+	// control argument
+	if(n != 2){
+		STANDARD_USAGE_ERROR("shuffle-range");
+	}
+
+	sscanf(args[0], "%d", &x);
+	sscanf(args[1], "%d", &y);
+	if (x < 0 || y < 0) {
+		fprintf (stderr, "numbers can't be negative\n");
+		STANDARD_USAGE_ERROR ("shuffle-range");
+	}
+	if (x > i || y > i) {
+		fprintf (stderr, "numbers can't be out of range\n");
+		STANDARD_USAGE_ERROR ("shuffle-range");
+	}
+
+	struct mpd_connection *mpdSession;
+	mpdSession = open_connection ();
+	mpd_send_shuffle_range (mpdSession, x - 1, y - 1);
+	mpd_response_finish (mpdSession);
+	close_connection (mpdSession);
+	return true;
 }

@@ -101,9 +101,14 @@ bool long_option_exist (const char *opt, const functionTable *functions, const i
 
 bool check_sanity (int argc, char **argv, const functionTable *functions, const int n)
 {
-	// check for argv sanity 
-	// will check if the args exist,
-	// if it doesn't it check if it can be a value for a precedent 
+	/*int i;*/
+	// Will be done in the future
+	/*for (i = 0; i < argc; ++i) {*/
+		/*if (argv[i][0] == '-' && (!is_short_option (argv[i], functions, n) || !is_long_option (argv[i], functions, n))) {*/
+			/*fprintf (stderr, "Incorrect usage of command line arguments.\nCheck '-h' for usage.\n");*/
+			/*return false;*/
+		/*}*/
+	/*}*/
 	return true;
 }
 
@@ -231,7 +236,7 @@ static void destroy_struct (argumentsArray args)
 	free (args.arguments);
 }
 
-bool process_cli (int argc, char **argv, functionTable * functions, int nFunctions, bool orderFlag)
+bool process_cli (int argc, char **argv, functionTable * functions, int nFunctions, bool orderFlag, bool checkSanity)
 {
 	 /* process command line arguments, sequantialyl or ordered
 	  * returns a flag if an argument is found and a function is executed
@@ -243,8 +248,10 @@ bool process_cli (int argc, char **argv, functionTable * functions, int nFunctio
 		// check for argv sanity 
 		// for now funct is shit and only checks that there is no '--' or '----' and more dashes (sigsev)
 		// will improve with time
-	if (check_sanity (argc, argv, functions, nFunctions) == false) {
-		return false;
+	if (checkSanity == true) {
+		if (check_sanity (argc, argv, functions, nFunctions) == false) {
+			return false;
+		}
 	}
 
 	parse_args (argc, argv, args, functions, nFunctions);

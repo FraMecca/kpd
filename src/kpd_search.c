@@ -483,7 +483,7 @@ search_handler (char *key, int *size, char *DBlocation, char *filterSt, char *re
 	Filter_struct filter, revFilter;
 	
 	if(fp == NULL){
-		fprintf(stdout, "No database found in %s\n", DBlocation);
+		fprintf(stderr, "No database found in %s\n", DBlocation);
 		return NULL;
 	}
 

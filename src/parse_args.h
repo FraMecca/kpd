@@ -37,6 +37,6 @@ typedef struct functionTable {
 	void* (*functionPtr) (char **, int);
 } functionTable;	
 
-bool process_cli (int argc, char **argv, functionTable * functions, int nFunctions, bool orderFlag);
+bool process_cli (int argc, char **argv, functionTable * functions, int nFunctions, bool orderFlag, bool checkSanity);
 
 #endif
