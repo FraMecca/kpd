@@ -51,6 +51,9 @@ If no command is given, the current status is printed.
 
 	Prints entire playlist
 
+`-m, --move`
+	COMPLETa
+
 `-n, --next`
 
 	Starts playing next song
@@ -75,11 +78,11 @@ If no command is given, the current status is printed.
 
 	Toggle repeat mode if state is not specified
 
-`-S, --stop`
+`--stop`
 
 	Stops playing
 
-`--seek`
+`-S, --seek`
 	Aspettando Eug
 
 `--single` <on|off|true|false|0|1>
@@ -89,6 +92,9 @@ If no command is given, the current status is printed.
 `--shuffle`
 
 	Shuffles all songs on the playlist
+
+`--shuffle-range`
+	COMPLETA
 
 `--swap`
 	Aspettando Gab
@@ -105,6 +111,15 @@ If no command is given, the current status is printed.
 	
 
 ## RETURN VALUES
+
+`0`
+	Success
+
+`64`
+	Error in command line. Remember that arguments that aren't recognized are ignored
+
+`69`
+	Can't open connection to MPD. Check if MPD is running or host is reachable 
 
 ## BUGS
 

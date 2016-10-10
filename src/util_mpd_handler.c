@@ -816,7 +816,7 @@ forward(char **args, int n)
 	struct mpd_connection *mpdSession = NULL;
 	int num = 0, l =0;
 	unsigned final_value = 0;
-	bool f;
+	bool f = false;
 	char time_val = '\0';	
 	STATUS *status = NULL;
 
@@ -871,7 +871,7 @@ forward(char **args, int n)
 		final_value += (unsigned)  status->elapsedTime_sec;
 		
 		//check if the edges are respected
-		if(!check_limit(status, (int) final_value)
+		if(!check_limit(status, (int) final_value))
 		{
 			STANDARD_USAGE_ERROR("Edge not respected\n");
 			return false;
@@ -961,7 +961,7 @@ backward(char **args, int n)
 	struct mpd_connection *mpdSession = NULL;
 	int num = 0, l =0;
 	unsigned final_value = 0;
-	bool f;
+	bool f = false;
 	char time_val = '\0';	
 	STATUS *status = NULL;
 
@@ -1016,7 +1016,7 @@ backward(char **args, int n)
 		final_value = (unsigned)  status->elapsedTime_sec - final_value;
 		
 		//check if the edges are respected
-		if(!check_limit(status, final_value)
+		if(!check_limit(status, final_value))
 		{
 			STANDARD_USAGE_ERROR("Edge not respected\n");
 			return false;

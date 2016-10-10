@@ -23,7 +23,7 @@ static functionTable filters[] = {
 	{"next",			'n',	(void *) &funct},
 	{"previous",		'b', 	(void *) &funct},
 	{"prev",			'0', 	(void *) &funct},
-	{"stop",			'S', 	(void *) &funct},
+	{"stop",			'0', 	(void *) &funct},
 	{"clear",			'c',	(void *) &funct},
 	{"random",			'r', 	(void *) &funct},
 	{"shuffle",			't',	(void *) &funct},
@@ -31,7 +31,9 @@ static functionTable filters[] = {
 	{"add",				'a', 	(void *) &funct},
 	{"search",			's', 	(void *) &funct},
 	{"list",			'l', 	(void *) &funct},
-	{"seek",			'k', 	(void *) &funct},
+	{"seek",			'S', 	(void *) &funct},
+	{"forward",			'F',	(void *) &funct},
+	{"backward",		'B',	(void *) &funct},
 	{"consume",			'0', 	(void *) &funct},
 	{"repeat",			'0', 	(void *) &funct},
 	{"single",			'0', 	(void *) &funct},
@@ -51,7 +53,7 @@ static functionTable functions[] = {
 	{"next",			'n',	(void *) &next},
 	{"previous",		'b', 	(void *) &previous},
 	{"prev",			'0', 	(void *) &previous},
-	{"stop",			'S', 	(void *) &stop},
+	{"stop",			'0', 	(void *) &stop},
 	{"clear",			'c',	(void *) &clear},
 	{"random",			'r', 	(void *) &random_kpd},
 	{"shuffle",			't',	(void *) &shuffle},
@@ -62,7 +64,9 @@ static functionTable functions[] = {
 	{"filter",			'f', 	(void *) &funct},
 	{"v-filter",		'v', 	(void *) &funct},
 	{"list",			'l', 	(void *) &list},
-	{"seek",			'k', 	(void *) &seek},
+	{"seek",			'S', 	(void *) &seek},
+	{"forward",			'F',	(void *) &forward},
+	{"backward",		'B',	(void *) &backward},
 	{"consume",			'0', 	(void *) &consume},
 	{"repeat",			'0', 	(void *) &repeat},
 	{"single",			'0', 	(void *) &single},
@@ -73,7 +77,7 @@ static functionTable functions[] = {
 	{"delete-range", 	'D', 	(void *) &delete_range},
 	{"version",			'0',    (void *) &funct},
 };    
-#define NOPTIONS 27 
+#define NOPTIONS 29 
 
 int main (int argc, char *argv[])
 {
