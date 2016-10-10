@@ -25,12 +25,12 @@ print_current_status(STATUS* status)
 	song = status->song;
 
 	if(song != NULL){
-		if(song->title != NULL){
-			fprintf(stdout, "%s - ", song->title);
+		if(song->artist != NULL){
+			fprintf(stdout, "%s - ", song->artist);
 			nullFlag = true;
 		}
-		if(song->artist != NULL){
-			fprintf(stdout, "%s\n", song->artist);
+		if(song->title != NULL){
+			fprintf(stdout, "%s\n", song->title);
 			nullFlag = true;
 		}
 		if(song->album != NULL){

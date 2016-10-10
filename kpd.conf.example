@@ -1,5 +1,0 @@
-db = /home/user/.mpd/database
-host = localhost
-port = 6600
-
-#this file should be put as '.kpd.conf' in the home directory
