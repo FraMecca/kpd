@@ -79,6 +79,8 @@ bool consume(  char **args, int n);
 bool single(  char **args, int n);
 bool repeat(  char **args, int n);
 bool seek(  char **args, int n);
+bool forward(char **args, int n);
+bool backward(char **args, int n);
 bool swap(  char **args, int n);
 bool move(  char **args, int n);
 bool update(  char **args, int n);
