@@ -1280,6 +1280,10 @@ filter_helper (char **args, int n)
 	 */
 	int i, size = 0;
 	char sp[] = " ";
+	if (n = 0) {
+		STANDARD_USAGE_ERROR ("filter");
+		return false;
+	}
 
 	for (i = 0; i < n; ++i) {
 		size += strlen (args[i]);
@@ -1310,6 +1314,11 @@ vfilter_helper (char **args, int n)
 	 */
 	int i, size = 0;
 	char sp[] = " ";
+
+	if (n = 0) {
+		STANDARD_USAGE_ERROR ("vfilter");
+		return false;
+	}
 
 	for (i = 0; i < n; ++i) {
 		size += strlen (args[i]);
