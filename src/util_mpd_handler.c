@@ -270,12 +270,19 @@ bool
 next( char **args, int n)
 {
 	struct mpd_connection *mpdSession = NULL;
+	STATUS *status;
 	if(n != 0){
 		STANDARD_USAGE_ERROR("next");
 	}
 	mpdSession = open_connection ();
 	mpd_send_next(mpdSession);
 	close_connection (mpdSession);
+
+	mpdSession = open_connection ();
+	status = get_current_status(mpdSession);
+	close_connection (mpdSession);
+	print_current_status (status);
+	free_status_st (status);
 	return true;
 }
 
@@ -283,6 +290,7 @@ bool
 previous(char **args, int n)
 {
 	struct mpd_connection *mpdSession = NULL;
+	STATUS *status;
 	if(n != 0){
 		STANDARD_USAGE_ERROR("previous");
 	}
@@ -290,6 +298,12 @@ previous(char **args, int n)
 	mpdSession = open_connection ();
 	mpd_send_previous(mpdSession);
 	close_connection (mpdSession);
+
+	mpdSession = open_connection ();
+	status = get_current_status(mpdSession);
+	close_connection (mpdSession);
+	print_current_status (status);
+	free_status_st (status);
 	return true;
 }
 
@@ -1280,7 +1294,7 @@ filter_helper (char **args, int n)
 	 */
 	int i, size = 0;
 	char sp[] = " ";
-	if (n = 0) {
+	if (n == 0) {
 		STANDARD_USAGE_ERROR ("filter");
 		return false;
 	}
@@ -1315,7 +1329,7 @@ vfilter_helper (char **args, int n)
 	int i, size = 0;
 	char sp[] = " ";
 
-	if (n = 0) {
+	if (n == 0) {
 		STANDARD_USAGE_ERROR ("vfilter");
 		return false;
 	}

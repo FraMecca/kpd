@@ -1,4 +1,4 @@
-ALL = parse_args.c main.argp.c util_mpd_handler.c util_datastructs.c  kpd_search.c
+ALL = parse_args.c main.c util_mpd_handler.c util_datastructs.c  kpd_search.c
 DEBUG = -g -Wall
 LFLAGS = -lz -lm -lmpdclient
 INSTALL_PATH=/usr/local
