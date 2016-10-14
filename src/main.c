@@ -98,8 +98,6 @@ static struct functionTable filters[] = {
 	{'u', 	(void *) &funct},
 	{'a', 	(void *) &funct},
 	{'s', 	(void *) &funct},
-	{'f', 	(void *) &funct},
-	{'v', 	(void *) &funct},
 	{'l', 	(void *) &funct},
 	{'S', 	(void *) &funct},
 	{'F',	(void *) &funct},
@@ -129,8 +127,6 @@ static struct functionTable functions[] = {
 	{'u', 	(void *) &update},
 	{'a', 	(void *) &add},
 	{'s', 	(void *) &search_util},
-	{'f', 	(void *) &funct},
-	{'v', 	(void *) &funct},
 	{'l', 	(void *) &list},
 	{'S', 	(void *) &seek},
 	{'F',	(void *) &forward},
@@ -317,31 +313,17 @@ int main (int argc, char *argv[])
 
 	// first parse the filters if any	
 	struct argp argpFilters = {options, parse_opt_filters, 0, 0};
-	argp_parse (&argpFilters, argc, argv, ARGP_IN_ORDER |ARGP_NO_HELP |  ARGP_NO_EXIT, 0, 0);
-	/*process_cli (argc, argv, hostANDport, 2, 0, 0);  // check if host and port is issued and use them, last zero because you don't want to check the sanity of argv now*/
+	argp_parse (&argpFilters, argc, argv, ARGP_IN_ORDER | ARGP_SILENT | ARGP_NO_HELP | ARGP_NO_EXIT, 0, 0);
 
 	/*[>check if no arguments -> display current status and exit<]*/
 	if(argc == 1){
 		print_current_status(get_current_status ());
+		exit(EXIT_SUCCESS); 
+	} else if (argc == 2 && strcmp(argv[1],"-V") == 0){
+		version();
 		exit(EXIT_SUCCESS);
 	}
-	/*} else {*/
-		/*if (!process_cli (argc, argv, filters, NOPTIONS, 0, 0)) // filters strings must be parsed at the begin so when search is issued has the filter Strings*/
-			/*ret = 64;*/
-
-		/*// from this point on the remaining args are parsed in the order they appear in argv*/
-		/*if (!process_cli (argc, argv, functions, NOPTIONS, 1, 1))*/
-			/*ret =  64;*/
-	/*}*/
 
 	struct argp argp = {options, parse_opt, 0, 0};
 	return argp_parse (&argp, argc, argv, ARGP_IN_ORDER, 0, 0);
-	
-	destroy_search_results (); // filtersStrings as well, if any
-	free_var_from_settings ();
-
-	if (ret == 1) {
-		ret = 64; // EX_USAGE	64	/* command line usage error */
-	}
-	return ret;
 }

@@ -715,6 +715,11 @@ seek(char **args, int n)
 	mpdSession = open_connection ();
 	status = get_current_status(mpdSession);
 	close_connection (mpdSession);
+	
+	if(n==0){
+		STANDARD_USAGE_ERROR("seek");
+		return false;
+	}
 
 	//check number of arguments
 	if(n>1)
@@ -837,7 +842,12 @@ forward(char **args, int n)
 	mpdSession = open_connection ();
 	status = get_current_status(mpdSession);
 	close_connection (mpdSession);
-
+	
+	if(n==0){
+		STANDARD_USAGE_ERROR("forward");
+		return false;
+	}
+	
 	//check number of arguments
 	if(n>1)
 	{
@@ -982,6 +992,11 @@ backward(char **args, int n)
 	mpdSession = open_connection ();
 	status = get_current_status(mpdSession);
 	close_connection (mpdSession);
+
+	if(n==0){
+		STANDARD_USAGE_ERROR("backward");
+		return false;
+	}
 
 	//check number of arguments
 	if(n>1)
