@@ -1,13 +1,13 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "KPD" "1" "September 2016" "" ""
+.TH "KPD" "1" "October 2016" "" ""
 .
 .SH "NAME"
 \fBkpd\fR \- client for Music Player Daemon (MPD)
 .
 .SH "SYNOPSIS"
-\fBkpd\fR \fIoptions\fR [\fIargument\fR] \fIoptions\fR [\fIargument\fR] \.\.\. \.\.\.
+\fBkpd\fR \fIoptions\fR [\fIarguments\fR] \fIoptions\fR [\fIarguments\fR] \.\.\. \.\.\.
 .
 .SH "DESCRIPTION"
 \fBkpd\fR is a client for MPD, the Music Player Daemon\. kpd connects to a MPD istance ad controls it according to commands issued\. If no command is given, the current status is printed\.
@@ -97,43 +97,16 @@ Toggle consume mode if state is not specified
 \fBdelete range\fR Aspettando Galla
 .
 .P
-\fB\-h, \-\-help\fR
-.
-.IP "" 4
-.
-.nf
-
-Show help
-.
-.fi
-.
-.IP "" 0
+\fB\-h, \-\-help\fR Show help
 .
 .P
-\fB\-l, \-\-list\fR
-.
-.IP "" 4
-.
-.nf
-
-Prints entire playlist
-.
-.fi
-.
-.IP "" 0
+\fB\-l, \-\-list\fR Prints entire playlist
 .
 .P
-\fB\-n, \-\-next\fR
+\fB\-m, \-\-move\fR COMPLETa
 .
-.IP "" 4
-.
-.nf
-
-Starts playing next song
-.
-.fi
-.
-.IP "" 0
+.P
+\fB\-n, \-\-next\fR Starts playing next song
 .
 .P
 \fB\-P, \-\-pause\fR
@@ -175,6 +148,19 @@ Starts playing previous song on playlist
 .IP "" 0
 .
 .P
+\fB\-N, \-\-full\-names\fR \fIon|off|true|false|0|1\fR
+.
+.IP "" 4
+.
+.nf
+
+Print song uri instead title, artist and album
+.
+.fi
+.
+.IP "" 0
+.
+.P
 \fB\-\-random\fR \fIon|off|true|false|0|1\fR
 .
 .IP "" 4
@@ -201,7 +187,7 @@ Toggle repeat mode if state is not specified
 .IP "" 0
 .
 .P
-\fB\-S, \-\-stop\fR
+\fB\-\-stop\fR
 .
 .IP "" 4
 .
@@ -214,7 +200,7 @@ Stops playing
 .IP "" 0
 .
 .P
-\fB\-\-seek\fR Aspettando Eug
+\fB\-S, \-\-seek\fR Aspettando Eug
 .
 .P
 \fB\-\-single\fR \fIon|off|true|false|0|1\fR
@@ -241,6 +227,9 @@ Shuffles all songs on the playlist
 .fi
 .
 .IP "" 0
+.
+.P
+\fB\-\-shuffle\-range\fR COMPLETA
 .
 .P
 \fB\-\-swap\fR Aspettando Gab
@@ -272,6 +261,13 @@ Disable (redirect to /dev/null) or enable output\. The state must be specified
 .IP "" 0
 .
 .SH "RETURN VALUES"
+\fB0\fR Success
+.
+.P
+\fB64\fR Error in command line\. Remember that arguments that aren\'t recognized are ignored
+.
+.P
+\fB69\fR Can\'t open connection to MPD\. Check if MPD is running or host is reachable
 .
 .SH "BUGS"
 Report bugs to me@francescomecca\.eu

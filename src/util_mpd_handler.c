@@ -11,9 +11,31 @@
 static char *filterSt = NULL, *revFilterSt = NULL; 
 static char **results = NULL;
 static int resultsSize = 0;
+static bool printFullNames = false;
+
+bool
+print_full_names (char **args, int n)
+{
+	/* 
+	 * in print functions, print full names instead of artist title and album
+	 */
+	if(n==0)
+	{
+		printFullNames = !printFullNames;
+	} else //if there is an attivation char random_kpd switch on
+		if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1)
+		{
+			printFullNames = true;
+		} else if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0)
+   	{
+   		printFullNames = false;
+	}	
+
+	return true;
+}
 
 /* prints a STATUS structure to stdout */
-	void 
+void 
 print_current_status(STATUS* status)
 {
 	SONG* song = NULL;
@@ -25,22 +47,24 @@ print_current_status(STATUS* status)
 	song = status->song;
 
 	if(song != NULL){
-		if(song->artist != NULL){
-			fprintf(stdout, "%s - ", song->artist);
-			nullFlag = true;
+		if (!printFullNames) {
+			if(song->artist != NULL){
+				fprintf(stdout, "%s - ", song->artist);
+				nullFlag = true;
+			}
+			if(song->title != NULL){
+				fprintf(stdout, "%s\n", song->title);
+				nullFlag = true;
+			}
+			if(song->album != NULL){
+				fprintf(stdout, "%s\n", song->album);
+				nullFlag = true;
+			} else {
+				nullFlag = false;
+				// even if only album field is missing, the filesystem name will be printed
+			}
 		}
-		if(song->title != NULL){
-			fprintf(stdout, "%s\n", song->title);
-			nullFlag = true;
-		}
-		if(song->album != NULL){
-			fprintf(stdout, "%s\n", song->album);
-			nullFlag = true;
-		} else {
-			nullFlag = false;
-			// even if only album field is missing, the filesystem name will be printed
-		}
-		if (nullFlag == false) {
+		if (nullFlag == false || printFullNames == true) {
 			// title, artist, album fields are missing, will print filesystem name
 			fprintf (stdout, "%s\n", song->uri);
 		}
@@ -91,7 +115,7 @@ print_current_playlist(QUEUE* q)
 		// in case there is no playing song
 		while(song!= NULL){
 			i++;
-			if (song->artist != NULL && song->title != NULL) {
+			if (song->artist != NULL && song->title != NULL && !printFullNames) {
 				// some songs have null title or/and artist field, so the filesystem name will be used
 				fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
 			} else {
@@ -105,7 +129,7 @@ print_current_playlist(QUEUE* q)
 	while(i < cur->position){
 		i++;
 		if (song != NULL) {
-			if (song->artist != NULL && song->title != NULL) {
+			if ((song->artist != NULL && song->title != NULL) && !printFullNames) {
 				// some songs have null title or/and artist field, so the filesystem name will be used
 				fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
 			} else {
@@ -132,7 +156,7 @@ print_current_playlist(QUEUE* q)
 
 			fprintf (stdout, "\x1b%s", color);
 			i++;
-			if (song->artist != NULL && song->title != NULL) {
+			if (song->artist != NULL && song->title != NULL && !printFullNames) {
 				fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
 			} else {
 				fprintf (stdout, "%d. %s\n", i, song->uri);
@@ -144,7 +168,7 @@ print_current_playlist(QUEUE* q)
 	}	
 	while(song != NULL){
 		i++;
-		if (song->artist != NULL && song->title != NULL) {
+		if (song->artist != NULL && song->title != NULL && printFullNames) {
 			fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
 		} else {
 			fprintf (stdout, "%d. %s\n", i, song->uri);

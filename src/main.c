@@ -43,6 +43,7 @@ static struct argp_option options[] = {
 		{"verbose",			'v',	  0,			 OPTION_ARG_OPTIONAL,		  "verbose"},
 		{"delete",			'd',	 "NUM",   	     OPTION_ARG_OPTIONAL,		 "delete"},
 		{"delete-range",	'D',	 "NUM1-NUM2",    OPTION_ARG_OPTIONAL,	 "delete_range"},
+		{"full-names",	    'N',	  0,			 OPTION_ARG_OPTIONAL,	 "print full names"},
 		{0}
 };
 
@@ -73,6 +74,7 @@ static struct functionTable filters[] = {
 	{601, 	(void *) &funct},
 	{602, 	(void *) &funct},
 	{603, 	(void *) &funct},
+	{605, 	(void *) &funct},
 	{'w', 	(void *) &funct},
 	{'m', 	(void *) &funct},
 	{'v', 	(void *) &funct},
@@ -103,6 +105,7 @@ static struct functionTable functions[] = {
 	{601, 	(void *) &consume},
 	{602, 	(void *) &repeat},
 	{603, 	(void *) &single},
+	{605, 	(void *) &print_full_names},
 	{'w', 	(void *) &swap},
 	{'m', 	(void *) &move},
 	{'v', 	(void *) &output_enable},

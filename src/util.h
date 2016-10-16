@@ -94,5 +94,6 @@ void print_search_results (char **results, int size);
 bool filter_helper (char **args, int n);
 bool vfilter_helper (char **args, int n);
 bool add(  char **args, int n);
+bool print_full_names (char **args, int n);
 
 #endif
