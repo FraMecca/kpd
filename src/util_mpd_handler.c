@@ -231,7 +231,6 @@ play (char **args, int n)
 	if (n != 0) {
 		sscanf (args[0], "%d", &pos);
 	}
-
 	//check args elements, must be at max 1
 	if(n>=2)
 	{

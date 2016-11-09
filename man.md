@@ -45,18 +45,18 @@ If no command is given, the current status is printed.
 
 `-h, --help`
 
-	Show help
+		Show help
 
 `-l, --list`
 
-	Prints entire playlist
+		Prints entire playlist
 
 `-m, --move`
 	COMPLETa
 
 `-n, --next`
 
-	Starts playing next song
+		Starts playing next song
 
 `-P, --pause`
 
@@ -69,6 +69,11 @@ If no command is given, the current status is printed.
 `-b, --prev, --previous`
 
 	Starts playing previous song on playlist
+`-N, --full-names` <on|off|true|false|0|1>
+	
+	Print song uri instead title, artist and album
+
+	
 
 `--random` <on|off|true|false|0|1>
 
