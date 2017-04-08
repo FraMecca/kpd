@@ -1,8 +1,8 @@
-ALL = src/main.c src/util_mpd_handler.c src/util_datastructs.c  src/kpd_search.c
+ALL = src/main.c src/util_mpd_handler.c src/util_datastructs.c  src/kpd_search.c include/argparse.c
 DEBUG = -g -Wall
 LFLAGS = -lz -lm -lmpdclient
 INSTALL_PATH=/usr/local
-I = -I -Iinclude -Ilib
+I = -I. -Iinclude -Ilib
 
 all:
 		gcc $(ALL) -o build/main $(LFLAGS) $I

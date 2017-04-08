@@ -4,6 +4,7 @@
 #include <stdbool.h> // true false
 #include <string.h> // strcmp
 #include "settings.h"
+#include "include/argparse.h"
 
 /* This macro is a first step towards a sort of try except macro system
  * the objective of this macro is to have y = f(x) non NULL
@@ -20,6 +21,17 @@
 char *_host;
 char *_DBlocation;
 unsigned int _port;
+	
+size_t
+count_args (char **a)
+{
+	size_t n = 0;
+	while (*a) {
+		n++;
+		a++;
+	}
+	return n;
+}
 
 void
 import_var_from_settings ()

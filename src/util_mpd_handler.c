@@ -7,30 +7,30 @@
 #include <string.h> // strcmp
 #include <math.h> // pow
 #include "kpd_search.h"
+#include "include/argparse.h"
 
 static char *filterSt = NULL, *revFilterSt = NULL; 
 static char **results = NULL;
 static int resultsSize = 0;
 static bool printFullNames = false;
 
-bool
-print_full_names (char **args, int n)
-{
+int
+print_full_names (struct argparse *self, const struct argparse_option *opt)
+{	
+	char *args = * (char **) opt->value;
 	/* 
 	 * in print functions, print full names instead of artist title and album
 	 */
-	if(n==0)
-	{
+	if(args != NULL) {
 		printFullNames = !printFullNames;
-	} else //if there is an attivation char random_kpd switch on
-		if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1)
-		{
+	} else if (strcasecmp(args,"on")==0 || strcasecmp(args,"True")==0 || (args[0]-'0')==1) {
 			printFullNames = true;
-		} else if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0)
-   	{
+	} else if (strcasecmp(args,"off")==0 || strcasecmp(args,"False")==0 || (args[0]-'0')==0) {
    		printFullNames = false;
-	}	
-
+	} else {
+		// toggle
+		printFullNames = !printFullNames;
+	}
 	return true;
 }
 
@@ -104,8 +104,8 @@ print_current_status(STATUS* status)
 }
 
 /* prints the playlist queue on stdout */
-	void 
-print_current_playlist(QUEUE* q)
+void 
+print_current_playlist(QUEUE* q) 
 {
 	int i = 0;	
 	SONG* song = dequeue(q);
@@ -181,14 +181,11 @@ print_current_playlist(QUEUE* q)
 	return;
 }
 
-bool list (char **argv, int n)
+int 
+list (struct argparse *self, const struct argparse_option *opt)
 {
 	QUEUE* playlist = NULL;
 
-	if (n != 0) {
-		STANDARD_USAGE_ERROR ("output-enable");
-		return false;
-	}
 	if((playlist = get_current_playlist()) != NULL){
 		print_current_playlist(playlist);
 	} else {
@@ -198,20 +195,15 @@ bool list (char **argv, int n)
 	return true;
 }
 
-bool 
-pause (char **args, int n)
+int 
+pause (struct argparse *self, const struct argparse_option *opt)
 {
 	struct mpd_connection *mpdSession = NULL;
 	bool f;
-	if (n != 0) {
-		STANDARD_USAGE_ERROR("pause");
-		return false;
-	} else {
 		mpdSession = open_connection ();
 		f =  mpd_send_toggle_pause (mpdSession);
 		close_connection (mpdSession);
 		return f;
-	}
 }
 
 /* start play song
@@ -220,46 +212,37 @@ pause (char **args, int n)
  * if arg, play the song specified by the number (-1 because mpd start from 0)
  * prototype is standard because it is called from parse_args
  */
-bool
-play (char **args, int n)
+int
+play (struct argparse *self, const struct argparse_option *opt)
 {
+	/*char **args = *(char ***) opt->value;*/
+	size_t n = -1;
+	if (opt->value) {
+		 n = * (int *) opt->value;
+	}
 	struct mpd_connection *mpdSession = NULL;
 	bool check;	
-	unsigned pos;
 	STATUS *status = NULL;
 
-	if (n != 0) {
-		sscanf (args[0], "%d", &pos);
-	}
-	//check args elements, must be at max 1
-	if(n>=2)
-	{
-		STANDARD_USAGE_ERROR ("play");
-		return false;
-	}
-
-	//zero elements, reproduce current song or the first
-	if(n==0)
-	{
+	//user input is without arguments,  reproduce current song or the first
+	if(n == 0) {
 		mpdSession = open_connection ();
 		status = get_current_status(mpdSession);
 		close_connection (mpdSession);
 		//if state == stop reproduce the first song
-		if(strcmp(status->state,"stop")==0)
-		{
+		if (strcmp(status->state,"stop")==0) {
 			mpdSession = open_connection ();
 			check = mpd_send_play_pos(mpdSession, 0);
 			close_connection (mpdSession);
 		}
-		else
-		{	
-			if (strcmp (status->state, "play")==0)
-			{
+		else {	
+			// horror
+			// TODO pls
+			if (strcmp (status->state, "play")==0) {
 				check = pause ( NULL, 0);
 
 			} 
-			else
-			{
+			else {
 				mpdSession = open_connection ();
 				check = mpd_send_play (mpdSession);
 				close_connection (mpdSession);
@@ -273,10 +256,10 @@ play (char **args, int n)
 		}
 		free_status_st (status);
 		return check;
-	} else { // n == 1
+	} else { // user input contains arguments
 		//reproduce the specified song
 		mpdSession = open_connection ();
-		check = mpd_send_play_pos(mpdSession, pos-1);
+		check = mpd_send_play_pos(mpdSession, n - 1);
 		close_connection (mpdSession);
 
 		mpdSession = open_connection ();
@@ -289,14 +272,11 @@ play (char **args, int n)
 	}
 }
 
-bool
-next( char **args, int n)
+int
+next(struct argparse *self, const struct argparse_option *opt)
 {
 	struct mpd_connection *mpdSession = NULL;
 	STATUS *status;
-	if(n != 0){
-		STANDARD_USAGE_ERROR("next");
-	}
 	mpdSession = open_connection ();
 	mpd_send_next(mpdSession);
 	close_connection (mpdSession);
@@ -309,15 +289,11 @@ next( char **args, int n)
 	return true;
 }
 
-bool
-previous(char **args, int n)
+int
+previous (struct argparse *self, const struct argparse_option *opt)
 {
 	struct mpd_connection *mpdSession = NULL;
 	STATUS *status;
-	if(n != 0){
-		STANDARD_USAGE_ERROR("previous");
-	}
-
 	mpdSession = open_connection ();
 	mpd_send_previous(mpdSession);
 	close_connection (mpdSession);
@@ -331,13 +307,10 @@ previous(char **args, int n)
 }
 
 
-bool
-stop(char **argv, int n)
+int
+stop (struct argparse *self, const struct argparse_option *opt)
 {	
 	struct mpd_connection *mpdSession = NULL;
-	if(n != 0){
-		STANDARD_USAGE_ERROR("previous");
-	}
 
 	mpdSession = open_connection ();
 	mpd_send_stop(mpdSession);
@@ -370,11 +343,13 @@ compare_pos(const void *pos1, const void *pos2)
  * returns false if error
  * returns true if successful
  */
-bool 
-delete_range(char **args, int n)
+int
+delete_range (struct argparse *self, const struct argparse_option *opt)
 {
 	struct mpd_connection *mpdSession = NULL;
 	int **ranges = NULL;
+	char **args = * (char ***) opt->value;
+	int n = count_args (args);
 	int i;
 	int cnt = 0;
 	int n_ranges = n/2;
@@ -431,12 +406,16 @@ convert_to_int(char *arg)
  * returns false if error,
  * returns true if done, and prints the playlist
  */
-bool 
-delete(char **args, int n)
+int
+delete (struct argparse *self, const struct argparse_option *opt)
 {
+	// TODO: for brevity i leave the old logic with arrays
+	// should be integers
 	int i;
 	int pos;
 	int *positions = NULL;
+	char **args = * (char ***) opt->value;
+	int n = count_args (args);
 
 	if(n == 0){
 		STANDARD_USAGE_ERROR("delete");
@@ -471,17 +450,13 @@ delete(char **args, int n)
 			return false;
 		}
 	}
-	list(args, n);
+	list(NULL, NULL);
 	return true;
 }
 
-bool
-clear(char **args, int n)
+int
+clear (struct argparse *self, const struct argparse_option *opt)
 {	
-	if (n != 0) {
-		STANDARD_USAGE_ERROR ("clear");
-		return false;
-	}
 	struct mpd_connection *mpdSession = NULL;
 	bool f;
 	mpdSession = open_connection ();
@@ -490,22 +465,15 @@ clear(char **args, int n)
 	return f;
 } 
 
-bool
-random_kpd(char **args, int n)
+int
+random_kpd (struct argparse *self, const struct argparse_option *opt)
 {	
 	struct mpd_connection *mpdSession = NULL;
 	STATUS *status = NULL; 	
 	bool f;
-
-	//check the number of argument
-	if(n>1)
-	{
-		STANDARD_USAGE_ERROR ("random");
-		return false;
-	}
-
+	char *args = * (char **) opt->value;
 	//zero argument =  toggle
-	if(n==0)
+	if(!args)
 	{
 		bool value;
 		mpdSession = open_connection ();
@@ -520,7 +488,7 @@ random_kpd(char **args, int n)
 	}
 
 	//if there is an attivation char random_kpd switch on
-	if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1)
+	if(strcasecmp(args,"on")==0 || strcasecmp(args,"True")==0 || (args[0] -'0')==1)
 	{
 		mpdSession = open_connection ();
 		f = mpd_send_random(mpdSession,1);
@@ -528,7 +496,7 @@ random_kpd(char **args, int n)
 		return f;
 	}
 
-	if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0)
+	if(strcasecmp(args,"off")==0 || strcasecmp(args,"False")==0 || (args[0] - '0')==0)
    	{
 		mpdSession = open_connection ();
 		f = mpd_send_random(mpdSession,0);
@@ -545,22 +513,16 @@ random_kpd(char **args, int n)
  * accepts standard args
  * the user can pass as parameters: on, off, true, false, 0, 1 case insensitive
  */
-bool
-consume(char **args, int n)
+int
+consume (struct argparse *self, const struct argparse_option *opt)
 {	
 	struct mpd_connection *mpdSession = NULL;
 	bool f;
 	STATUS *status = NULL; 	
-
-	//check the number of argument
-	if(n>1)
-	{
-		STANDARD_USAGE_ERROR ("consume");
-		return false;
-	}
+	char *args = * (char **) opt->value;
 
 	//zero argument =  toggle
-	if(n==0)
+	if(args)
 	{
 		bool value;
 		mpdSession = open_connection ();
@@ -575,7 +537,7 @@ consume(char **args, int n)
 	}
 
 	//if there is an attivation char consume_kpd switch on
-	if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1)
+	if(strcasecmp(args,"on")==0 || strcasecmp(args,"True")==0 || (args[0] -'0')==1)
 	{
 		mpdSession = open_connection ();
 		f = mpd_send_consume(mpdSession,1);
@@ -583,7 +545,7 @@ consume(char **args, int n)
 		return f;
 	}
 
-	if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0)
+	if(strcasecmp(args,"off")==0 || strcasecmp(args,"False")==0 || (args[0] -'0')==0)
    	{
 		mpdSession = open_connection ();
 		f = mpd_send_consume(mpdSession,0);
@@ -600,22 +562,16 @@ consume(char **args, int n)
  * this function accepts standard args
  * the user can pass as parameters: on, off, true, false, 0, 1 case insensitive
  */ 
-bool
-repeat(char **args, int n)
+int
+repeat (struct argparse *self, const struct argparse_option *opt)
 {	
 	struct mpd_connection *mpdSession = NULL;
 	STATUS *status = NULL; 	
 	bool f;
-
-	//check the number of argument
-	if(n>1)
-	{
-		STANDARD_USAGE_ERROR ("repeat");
-		return false;
-	}
+	char *args = * (char **) opt->value;
 
 	//zero argument =  toggle
-	if(n==0)
+	if(args)
 	{
 		bool value;
 		mpdSession = open_connection ();
@@ -630,7 +586,7 @@ repeat(char **args, int n)
 	}
 
 	//if there is an attivation char repeat_kpd switch on
-	if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1)
+	if (strcasecmp(args,"on")==0 || strcasecmp(args,"True")==0 || (args[0] - '0')==1)
 	{
 		mpdSession = open_connection ();
 		f = mpd_send_repeat(mpdSession,1);
@@ -638,7 +594,7 @@ repeat(char **args, int n)
 		return f;
 	}
 
-	if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0)
+	if(strcasecmp(args,"off")==0 || strcasecmp(args,"False")==0 || (args-'0')==0)
    	{
 		mpdSession = open_connection ();
 		f = mpd_send_repeat(mpdSession,0);
@@ -656,23 +612,17 @@ repeat(char **args, int n)
  * accepts as args the standard args
  * the user can pass as parameters: on, off, true, false, 0, 1 case insensitive
  */
-bool
-single(char **args, int n)
+int
+single (struct argparse *self, const struct argparse_option *opt)
 {	
 	struct mpd_connection *mpdSession = NULL;
 	STATUS *status = NULL; 	
 	bool f;
+	char *args = * (char **) opt->value;
 
 	//check the number of argument
-	if(n>1)
-	{
-		STANDARD_USAGE_ERROR ("single");
-		return false;
-	}
-
 	//zero argument =  toggle
-	if(n==0)
-	{
+	if (args) {
 		bool value;
 		mpdSession = open_connection ();
 		status = get_current_status(mpdSession);
@@ -685,15 +635,14 @@ single(char **args, int n)
 	}
 
 	//if there is an attivation char single_kpd switch on
-	if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1)
-	{
+	if(strcasecmp(args,"on")==0 || strcasecmp(args,"True")==0 || (args[0]-'0')==1) {
 		mpdSession = open_connection ();
 		f = mpd_send_single(mpdSession,1);
 		close_connection (mpdSession);
 		return f;
 	}
 
-	if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0)
+	if(strcasecmp(args,"off")==0 || strcasecmp(args,"False")==0 || (args[0]-'0')==0)
    	{
 		mpdSession = open_connection ();
 		f = mpd_send_single(mpdSession,0);
@@ -725,461 +674,148 @@ check_limit(STATUS *status, int final_val)
 
 
 //go to a specific point of the song expressed in hours (h), minutes (m), seconds (s) or percentage
-bool
-seek(char **args, int n)
+int 
+seek (struct argparse *self, const struct argparse_option *opt)
 {
-	struct mpd_connection *mpdSession = NULL;
-	int num = 0, l = 0;
-	char time_val='\0';	
-	unsigned final_value = 0;
-	bool f;
-	STATUS *status = NULL;
+	return 0;
+	/*struct mpd_connection *mpdSession = NULL;*/
+	/*int num = 0, l = 0;*/
+	/*char time_val='\0';	*/
+	/*unsigned final_value = 0;*/
+	/*bool f;*/
+	/*STATUS *status = NULL;*/
 
-	mpdSession = open_connection ();
-	status = get_current_status(mpdSession);
-	close_connection (mpdSession);
+	/*mpdSession = open_connection ();*/
+	/*status = get_current_status(mpdSession);*/
+	/*close_connection (mpdSession);*/
 	
-	if(n==0){
-		STANDARD_USAGE_ERROR("seek");
-		return false;
-	}
+	/*//check if the song is in play o in pause*/
+	/*if(strcmp(status->state,"stop")==0) */
+	/*{*/
+		/*STANDARD_USAGE_ERROR("No song is being played\n");*/
+            /*return false;*/
+	/*}*/
+	
+	/*char args = * (char **) opt->value;*/
+	/*l = strlen(args[0]);*/
 
-	//check number of arguments
-	if(n>1)
-	{
-		fprintf(stdout,"Too many arguments!\n");
-		return false;
-	}
+	/*//check if the number is of the type num%s/m/h*/
+	/*if(args[0][l-2]=='%')*/
+	/*{*/
+		/*fprintf(stdout,"Command not valid\n");*/
+		/*return false;*/
+	/*}*/
 
-	//check if the song is in play o in pause
-	if(strcmp(status->state,"stop")==0) 
-	{
-		STANDARD_USAGE_ERROR("No song is in play or pause\n");
- 	   	return false;
-	}
+	/*//check if the argument is %*/
+	/*if(args[0][l-1]=='%')*/
+	/*{*/
+		/*sscanf(args[0],"%d%*c", &num);*/
 
-	l = strlen(args[0]);
+		/*//check the case -num%*/
+		/*if(num<0)*/
+		/*{*/
+			/*num *= (-1);*/
+		/*}*/
 
-	//check if the number is of the type num%s/m/h
-	if(args[0][l-2]=='%')
-	{
-		fprintf(stdout,"Command not valid\n");
-		return false;
-	}
-
-	//check if the argument is %
-	if(args[0][l-1]=='%')
-	{
-		sscanf(args[0],"%d%*c", &num);
-
-		//check the case -num%
-		if(num<0)
-		{
-			num *= (-1);
-		}
-
-		if(num>100)
-		{
-			STANDARD_USAGE_ERROR("Percentage is more than 100%\n");
-			return false;
-		}
+		/*if(num>100)*/
+		/*{*/
+			/*STANDARD_USAGE_ERROR("Percentage is more than 100%\n");*/
+			/*return false;*/
+		/*}*/
 		
-		//calculate the total time of the song and the respective percentage
-		int totalTime = status->song->duration_sec + status->song->duration_min * 60;
-		final_value = (unsigned) (totalTime / 100 ) * num;
-		//printf ("FIN = %d\n", final_value);
+		/*//calculate the total time of the song and the respective percentage*/
+		/*int totalTime = status->song->duration_sec + status->song->duration_min * 60;*/
+		/*final_value = (unsigned) (totalTime / 100 ) * num;*/
+		/*//printf ("FIN = %d\n", final_value);*/
 
-		mpdSession = open_connection ();
-		f = mpd_send_seek_pos(mpdSession, status->song->position, final_value);
-		close_connection (mpdSession);
-		free_status_st (status);
-		return f;
-	}
-	else
-	{
-		sscanf(args[0],"%d%c", &num, &time_val);
+		/*mpdSession = open_connection ();*/
+		/*f = mpd_send_seek_pos(mpdSession, status->song->position, final_value);*/
+		/*close_connection (mpdSession);*/
+		/*free_status_st (status);*/
+		/*return f;*/
+	/*}*/
+	/*else*/
+	/*{*/
+		/*sscanf(args[0],"%d%c", &num, &time_val);*/
 
-		switch(time_val)
-		{
-			case '\0':
-			case 's':	
-				if(!check_limit(status, num))
-				{
-					STANDARD_USAGE_ERROR("Edge not respected\n");
-					return false;
-				}
-				mpdSession = open_connection ();
-				f = mpd_send_seek_pos(mpdSession, status->song->position, (unsigned) num);
-				close_connection (mpdSession);
-				free_status_st (status);
-				return f;
+		/*switch(time_val)*/
+		/*{*/
+			/*case '\0':*/
+			/*case 's':	*/
+				/*if(!check_limit(status, num))*/
+				/*{*/
+					/*STANDARD_USAGE_ERROR("Edge not respected\n");*/
+					/*return false;*/
+				/*}*/
+				/*mpdSession = open_connection ();*/
+				/*f = mpd_send_seek_pos(mpdSession, status->song->position, (unsigned) num);*/
+				/*close_connection (mpdSession);*/
+				/*free_status_st (status);*/
+				/*return f;*/
 
-			case 'm':
-				num *= 60;
-				if(!check_limit(status, num))
-				{
-					STANDARD_USAGE_ERROR("Edge not respected\n");
-					return false;
-				}	
-				mpdSession = open_connection ();
-				f = mpd_send_seek_pos(mpdSession, status->song->position, (unsigned) num);
-				free_status_st (status);
-				close_connection (mpdSession);
-				return f;
+			/*case 'm':*/
+				/*num *= 60;*/
+				/*if(!check_limit(status, num))*/
+				/*{*/
+					/*STANDARD_USAGE_ERROR("Edge not respected\n");*/
+					/*return false;*/
+				/*}	*/
+				/*mpdSession = open_connection ();*/
+				/*f = mpd_send_seek_pos(mpdSession, status->song->position, (unsigned) num);*/
+				/*free_status_st (status);*/
+				/*close_connection (mpdSession);*/
+				/*return f;*/
 
-			case 'h':
-				num *= (60*60);
-				if(!check_limit(status, status->elapsedTime_sec + num))
-				{
-					STANDARD_USAGE_ERROR("Edge not respected\n");
-					return false;
-				}
-				mpdSession = open_connection ();
-				f = mpd_send_seek_pos(mpdSession, status->song->position, (unsigned) num);
-				close_connection (mpdSession);
-				free_status_st (status);
-				return f;
+			/*case 'h':*/
+				/*num *= (60*60);*/
+				/*if(!check_limit(status, status->elapsedTime_sec + num))*/
+				/*{*/
+					/*STANDARD_USAGE_ERROR("Edge not respected\n");*/
+					/*return false;*/
+				/*}*/
+				/*mpdSession = open_connection ();*/
+				/*f = mpd_send_seek_pos(mpdSession, status->song->position, (unsigned) num);*/
+				/*close_connection (mpdSession);*/
+				/*free_status_st (status);*/
+				/*return f;*/
 
-			default:
-				STANDARD_USAGE_ERROR("Command is not valid\n");
-				return false;
-		}
+			/*default:*/
+				/*STANDARD_USAGE_ERROR("Command is not valid\n");*/
+				/*return false;*/
+		/*}*/
 		
-	}	
-	return false;	
+	/*}	*/
+	/*return false;	*/
 }
-
-
-//go forward using time express in hours (h), minutes (m), seconds (s) or percentage  
-bool
-forward(char **args, int n)
-{
-	
-	struct mpd_connection *mpdSession = NULL;
-	int num = 0, l =0;
-	unsigned final_value = 0;
-	bool f = false;
-	char time_val = '\0';	
-	STATUS *status = NULL;
-
-	mpdSession = open_connection ();
-	status = get_current_status(mpdSession);
-	close_connection (mpdSession);
-	
-	if(n==0){
-		STANDARD_USAGE_ERROR("forward");
-		return false;
-	}
-	
-	//check number of arguments
-	if(n>1)
-	{
-		fprintf(stdout,"Too many arguments!\n");
-		return false;
-	}
-
-	//check if the song is in play o in pause
-	if(strcmp(status->state,"stop")==0) 
-	{
-		STANDARD_USAGE_ERROR("No song is in play or pause\n");
- 	   	return false;
-	}
-
-	l = strlen(args[0]);
-
-	//check if the number is of the type num%s/m/h or -num (negative number is not allowed in forward function)
-	if(args[0][l-2]=='%' || args[0][0]=='-')
-	{
-		fprintf(stdout,"Command not valid\n");
-		return false;
-	}
-
-	//check if the argument is %
-	if(args[0][l-1]=='%')
-	{
-		sscanf(args[0],"%d%*c", &num);
-
-		//check the case -num%
-		if(num<0)
-		{
-			num *= (-1);
-		}
-
-		if(num>100)
-		{
-			STANDARD_USAGE_ERROR("Percentage is more than 100%\n");
-			return false;
-		}
-
-		//calculate the total time of the song and then add the respective percentage
-		int totalTime = status->song->duration_sec + status->song->duration_min * 60;
-		final_value = (unsigned) (totalTime / 100 ) * num;
-		
-		final_value += (unsigned)  status->elapsedTime_sec;
-		
-		//check if the edges are respected
-		if(!check_limit(status, (int) final_value))
-		{
-			STANDARD_USAGE_ERROR("Edge not respected\n");
-			return false;
-		}	
-
-		mpdSession = open_connection ();
-		f = mpd_send_seek_pos(mpdSession, status->song->position, final_value);
-		close_connection (mpdSession);
-		free_status_st (status);
-		return f;
-	}
-			
-	sscanf(args[0],"%d%c", &num, &time_val);
-		
-	switch(time_val)
-	{
-		case '\0':	
-		case 's':
-			final_value = (unsigned)  status->elapsedTime_sec + num;
-			//printf ("%d + %d\n", status->elapsedTime_sec + status->elapsedTime_min * 60 + num);
-			//printf ("%d + %d\n", status->elapsedTime_sec + num);
-
-			if(!check_limit(status, status->elapsedTime_sec + num))
-			{
-				STANDARD_USAGE_ERROR("Edge not respected\n");
-				return false;
-			}	
-
-			//fprintf(stdout,"%d", final_value);
-			mpdSession = open_connection ();
-			f = mpd_send_seek_pos(mpdSession, status->song->position, final_value);
-			free_status_st (status);
-			close_connection (mpdSession);
-			return f;
-
-		case 'm':
-			num *= 60;
-			final_value = (unsigned)  status->elapsedTime_sec + num;
-
-			if(!check_limit(status, status->elapsedTime_sec + num))
-			{
-				STANDARD_USAGE_ERROR("Edge not respected\n");
-				return false;
-			}	
-
-			//fprintf(stdout,"%d", final_value);
-			mpdSession = open_connection ();
-			f = mpd_send_seek_pos(mpdSession, status->song->position, final_value);
-			free_status_st (status);
-			close_connection (mpdSession);
-			return f;
-
-		case 'h':
-			num *= (60*60);
-			//printf ("%d + %d\n", status->elapsedTime_sec + status->elapsedTime_min * 60 + num);
-			//printf ("%d + %d\n", status->elapsedTime_sec + num);
-			final_value = (unsigned)  status->elapsedTime_sec + num;
-
-			if(!check_limit(status, status->elapsedTime_sec + num))
-			{
-				STANDARD_USAGE_ERROR("Edge not respected\n");
-				return false;
-			}	
-
-			//fprintf(stdout,"%d", final_value);
-			mpdSession = open_connection ();
-			f = mpd_send_seek_pos(mpdSession, status->song->position, final_value);
-			close_connection (mpdSession);
-			free_status_st (status);
-			return f;
-
-		default:
-			STANDARD_USAGE_ERROR("Command is not valid\n");
-			break;
-	}
-
-	return f;
-}
-
-
-
-//go backward using time express in hours (h), minutes (m), seconds (s) or percentage  
-bool
-backward(char **args, int n)
-{
-	
-	struct mpd_connection *mpdSession = NULL;
-	int num = 0, l =0;
-	unsigned final_value = 0;
-	bool f = false;
-	char time_val = '\0';	
-	STATUS *status = NULL;
-
-	mpdSession = open_connection ();
-	status = get_current_status(mpdSession);
-	close_connection (mpdSession);
-
-	if(n==0){
-		STANDARD_USAGE_ERROR("backward");
-		return false;
-	}
-
-	//check number of arguments
-	if(n>1)
-	{
-		fprintf(stdout,"Too many arguments!\n");
-		return false;
-	}
-
-	//check if the song is in play o in pause
-	if(strcmp(status->state,"stop")==0) 
-	{
-		STANDARD_USAGE_ERROR("No song is in play or pause\n");
- 	   	return false;
-	}
-
-	l = strlen(args[0]);
-
-	//check if the number is of the type num%s/m/h or -num (negative number is not allowed in forward function)
-	if(args[0][l-2]=='%' || args[0][0]=='-')
-	{
-		fprintf(stdout,"Command not valid\n");
-		return false;
-	}
-
-	//check if the argument is %
-	if(args[0][l-1]=='%')
-	{
-		sscanf(args[0],"%d%*c", &num);
-
-		//check the case -num%
-		if(num<0)
-		{
-			num *= (-1);
-		}
-
-		if(num>100)
-		{
-			STANDARD_USAGE_ERROR("Percentage is more than 100%\n");
-			return false;
-		}
-		
-		//calculate the total time of the song and then subtract the respective percentage
-		int totalTime = status->song->duration_sec + status->song->duration_min * 60;
-		final_value = (unsigned) (totalTime / 100 ) * num;
-		
-		final_value = (unsigned)  status->elapsedTime_sec - final_value;
-		
-		//check if the edges are respected
-		if(!check_limit(status, final_value))
-		{
-			STANDARD_USAGE_ERROR("Edge not respected\n");
-			return false;
-		}	
-
-		mpdSession = open_connection ();
-		f = mpd_send_seek_pos(mpdSession, status->song->position, final_value);
-		close_connection (mpdSession);
-		free_status_st (status);
-		return f;
-	}
-			
-	sscanf(args[0],"%d%c", &num, &time_val);
-	
-	switch(time_val)
-	{
-		case '\0':	
-		case 's':
-			final_value = (unsigned)  status->elapsedTime_sec - num;
-			//printf ("%d + %d\n", status->elapsedTime_sec + status->elapsedTime_min * 60 + num);
-			//printf ("%d + %d\n", status->elapsedTime_sec + num);
-
-			if(!check_limit(status, status->elapsedTime_sec - num))
-			{
-				STANDARD_USAGE_ERROR("Edge not respected\n");
-				return false;
-			}	
-
-			//fprintf(stdout,"%d", final_value);
-			mpdSession = open_connection ();
-			f = mpd_send_seek_pos(mpdSession, status->song->position, final_value);
-			free_status_st (status);
-			close_connection (mpdSession);
-			return f;
-
-		case 'm':
-			num *= 60;
-			final_value = (unsigned)  status->elapsedTime_sec - num;
-
-			if(!check_limit(status,  status->elapsedTime_sec - num))
-			{
-				STANDARD_USAGE_ERROR("Edge not respected\n");
-				return false;
-			}	
-
-			//fprintf(stdout,"%d", final_value);
-			mpdSession = open_connection ();
-			f = mpd_send_seek_pos(mpdSession, status->song->position, final_value);
-			free_status_st (status);
-			close_connection (mpdSession);
-			return f;
-
-		case 'h':
-			num *= (60*60);
-			//printf ("%d + %d\n", status->elapsedTime_sec + status->elapsedTime_min * 60 + num);
-			//printf ("%d + %d\n", status->elapsedTime_sec + num);
-			final_value = (unsigned)  status->elapsedTime_sec - num;
-
-			if(!check_limit(status,  status->elapsedTime_sec - num))
-			{
-				STANDARD_USAGE_ERROR("Edge not respected\n");
-				return false;
-			}	
-
-			//fprintf(stdout,"%d", final_value);
-			mpdSession = open_connection ();
-			f = mpd_send_seek_pos(mpdSession, status->song->position, final_value);
-			close_connection (mpdSession);
-			free_status_st (status);
-			return f;
-
-		default:
-			STANDARD_USAGE_ERROR("Command is not valid\n");
-			break;
-	}
-
-	return f;
-}
-
-
 
 /* this function redirects stdout to /dev/null or reset stdout to original state.
  * it is used to suppress or enable output by the user and kpd
  * accepts standard arguments
  * accepts from the user: on, off, true, false, 0, 1, case insensivite
  */
-bool
-output_enable (char **args, int n)
+int
+output_enable (struct argparse *self, const struct argparse_option *opt)
 {
-	if (n != 1) {
+	char *args = * (char **) opt->value;
+
+	if(strcasecmp(args,"on")==0 || strcasecmp(args,"True")==0 || (args[0]-'0')==1) {
+		freopen ("/dev/stdout/", "w", stdout);
+		return true;
+	} else if(strcasecmp(args,"off")==0 || strcasecmp (args,"False") == 0 || (args[0] - '0') == 0) {
+		freopen ("/dev/null/", "w", stdout);
+		return true;
+	} else {
+		// at this point, the user didn't input on or off or true or false or 0 or 1 and standard usage error should be issued
 		STANDARD_USAGE_ERROR ("output-enable");
 		return false;
-	} else {
-		if(strcasecmp(args[0],"on")==0 || strcasecmp(args[0],"True")==0 || (args[0][0]-'0')==1) {
-			freopen ("/dev/stdout/", "w", stdout);
-			return true;
-		} else {
-			if(strcasecmp(args[0],"off")==0 || strcasecmp(args[0],"False")==0 || (args[0][0]-'0')==0) {
-				freopen ("/dev/null/", "w", stdout);
-				return true;
-			} else {
-				// at this point, the user didn't input on or off or true or false or 0 or 1 and standard usage error should be issued
-				STANDARD_USAGE_ERROR ("output-enable");
-				return false;
-			}
-		}
 	}
 }
 
-bool
-swap(char **args, int n){
+int 
+swap (struct argparse *self, const struct argparse_option *opt)
+{
+	char **args = * (char ***) opt->value;
+	int n = count_args (args);
 	/*struct mpd_connection *mpdSession = NULL;*/
 	int x, y,i=0;
 	STATUS *st = get_current_status ();
@@ -1215,8 +851,11 @@ swap(char **args, int n){
 	return true;
 }
 
-bool
-move(char **args, int n){
+int
+move (struct argparse *self, const struct argparse_option *opt)
+{
+	char **args = * (char ***) opt->value;
+	int n = count_args (args);
 	/*struct mpd_connection *mpdSession = NULL;*/
 	int x, y, i=0;
 	STATUS *st = get_current_status ();
@@ -1244,7 +883,7 @@ move(char **args, int n){
 		STANDARD_USAGE_ERROR ("move");
 	}
 
-	struct mpd_connection *mpdSession;
+	struct mpd_connection *mpdSession = NULL;
 	mpdSession = open_connection ();
 	mpd_send_move (mpdSession, x - 1, y - 1);
 	mpd_response_finish (mpdSession);
@@ -1252,14 +891,11 @@ move(char **args, int n){
 	return true;
 }
 
-bool 
-update (char **args, int n)
+int 
+update (struct argparse *self, const struct argparse_option *opt)
 {
 	struct mpd_connection *mpdSession = NULL;
 	bool f;
-	if(n != 0){
-		STANDARD_USAGE_ERROR("next");
-	}
 	mpdSession = open_connection ();
 	f = (mpd_run_update (mpdSession, NULL) > 0);
 	close_connection (mpdSession);
@@ -1279,16 +915,12 @@ destroy_search_results ()
 	destroy_results (results, resultsSize);
 }
 
-bool
-search_util (char **args, int n)
+int
+search_util (struct argparse *self, const struct argparse_option *opt)
 {
-	if (n != 1) {
-		STANDARD_USAGE_ERROR ("search");
-		return false;
-	}
-	// else number of arguments is correct
+	char *arg = * (char **) opt->value;
 	/*printf ("%s\n%s\n", filterSt, revFilterSt);*/
-	results = search_handler (args[0], &resultsSize, _DBlocation, filterSt, revFilterSt);
+	results = search_handler (arg, &resultsSize, _DBlocation, filterSt, revFilterSt);
 
 	/*	 search_handler does:
  	 *	 1. loads the db in memory
@@ -1391,28 +1023,11 @@ vfilter_helper (char **args, int n)
 	return true;
 }
 
-bool
-add(char **args, int n)
+int
+add (struct argparse *self, const struct argparse_option *opt)
 {
 	struct mpd_connection *mpdSession = NULL;
 	int i = 0;
-	
-	if (n != 0) {
-		STANDARD_USAGE_ERROR ("add");
-		return false;
-	}
-
-	/*while (i < resultsSize) {*/
-		/*if (mpd_run_check (mpdSession)) {*/ // run_check is not an exposed api. It is included in run.h
-			/*mpd_send_add(mpdSession, args[i]);*/
-			/*mpd_response_finish (mpdSession);*/
-		/*} else {*/
-			/*close_connection (mpdSession);*/
-			/*mpdSession = open_connection ();*/
-			/*--i;*/
-		/*}*/
-		/*++i;*/
-	/*}*/
 
 	for (i = 0; i < resultsSize; ++i) {
 		mpdSession = open_connection ();
@@ -1425,8 +1040,8 @@ add(char **args, int n)
 	return true;
 }
 
-bool
-shuffle (char **args, int n)
+int 
+shuffle (struct argparse *self, const struct argparse_option *opt)
 {
 	struct mpd_connection *mpdSession = NULL;
 	bool f;
@@ -1436,10 +1051,11 @@ shuffle (char **args, int n)
 	return f;
 }
 
-bool
-shuffle_range(char **args, int n){
+int 
+shuffle_range (struct argparse *self, const struct argparse_option *opt)
+{
 	/*struct mpd_connection *mpdSession = NULL;*/
-	int x, y,i=0;
+	int x, y, i = 0;
 	STATUS *st = get_current_status ();
 
 	i = st->queueLenght;
@@ -1449,8 +1065,10 @@ shuffle_range(char **args, int n){
 		return false;
 	}
 
+	if (! *(char ***)opt->value) STANDARD_USAGE_ERROR ("shuffle-range");
+	char **args = *(char ***) opt->value;
 	// control argument
-	if(n != 2){
+	if(count_args (args) != 2){
 		STANDARD_USAGE_ERROR("shuffle-range");
 	}
 
