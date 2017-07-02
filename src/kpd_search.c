@@ -291,23 +291,6 @@ filter_check (int flag, Filter_struct filter, list_t *listDB)
 	}
 }
 
-static bool
-rev_filter_check (int flag, Filter_struct filter, list_t *listDB)
-{
-	// check if rev_filter is issued
-	int i;
-	if (flag) {
-		for (i = 0; i < filter.size; ++i) {
-			if (!filter_items (filter, listDB, i)) {
-				return 1;
-			}
-		}
-		return 0;
-	} else {
-		return 1;
-	}
-}
-
 static void 
 destroy_filter_struct (Filter_struct filter)
 {
@@ -419,7 +402,7 @@ destroy_results (char **res, int size)
 
 
 static char **
-search (char *st, list_t *listDB, int *cnt, Filter_struct filter, int filterFlag, Filter_struct revFilter, int revFilterFlag)
+search (list_t *listDB, int *cnt, Filter_struct filter, int filterFlag)
 {
 	struct resList {
 		// will use a list to hold the result
@@ -437,9 +420,7 @@ search (char *st, list_t *listDB, int *cnt, Filter_struct filter, int filterFlag
 	head = resultsList; // head stores the root of the list
 	
 	while (listDB != NULL) {
-		if (is_contained (st, listDB) && 
-				filter_check (filterFlag, filter, listDB) && 
-				rev_filter_check (revFilterFlag, revFilter, listDB)) {
+		if (filter_check (filterFlag, filter, listDB)) {
 			// the if checks if the word is contained and is ok with filters
 			resultsList->name = get_complete_name (listDB);
 			// now allocate another node
@@ -470,7 +451,7 @@ search (char *st, list_t *listDB, int *cnt, Filter_struct filter, int filterFlag
 }
 
 char **
-search_handler (char *key, int *size, char *DBlocation, char *filterSt, char *revFilterSt)
+search_handler (int *size, char *DBlocation, char *filterSt)
 {
 	// This function is the main handler for the search
 	
@@ -479,8 +460,8 @@ search_handler (char *key, int *size, char *DBlocation, char *filterSt, char *re
 	directory_list_t *dir = NULL;
 
 	char buf[5000], **results;
-	int filterFlag, revFilterFlag;
-	Filter_struct filter, revFilter;
+	int filterFlag;
+	Filter_struct filter;
 	
 	if(fp == NULL){
 		fprintf(stderr, "No database found in %s\n", DBlocation);
@@ -499,41 +480,15 @@ search_handler (char *key, int *size, char *DBlocation, char *filterSt, char *re
 	} else {
 		filterFlag = 0;
 	}
-	if (revFilterSt != NULL) {
-		revFilterFlag = 1;
-		revFilter = parse_filter_struct (revFilterSt);
-	} else {
-		revFilterFlag = 0;
-	}
 	
 	kpdDB = return_to_head (kpdDB);
 	// now the search can start 
-	results = search (key, kpdDB, size, filter, filterFlag, revFilter, revFilterFlag);
+	results = search (kpdDB, size, filter, filterFlag);
 
 	destroy_nodes (kpdDB); // free the struct used to allocate the whole mpd db
 	if (filterFlag != false) {
 		destroy_filter_struct (filter);
 	}
-	if (revFilterFlag != false) {
-		destroy_filter_struct (revFilter);
-	}
 
-	/*destroy_results (results, size);*/
 	return results;
 }
-
-/*int main (int argc, char **argv)*/
-/*{*/
-	/*int i;*/
-	/*char **results;*/
-	/*results = search_handler (argv[1], &i, "/home/user/.mpd/database", NULL, NULL);*/
-/*int j;*/
-	/*for (j = 0; j < i; ++j) {*/
-		/*[>printf ("%s\n", results[j]);<]*/
-		/*free (results[j]);*/
-	/*}*/
-	/*free (results);*/
-
-
-	/*return 0;*/
-/*}*/

@@ -9,19 +9,20 @@
 #include "kpd_search.h"
 #include "include/argparse.h"
 
-static char *filterSt = NULL, *revFilterSt = NULL; 
+static char *filterSt = NULL;
 static char **results = NULL;
 static int resultsSize = 0;
 static bool printFullNames = false;
 
-int
+bool
 print_full_names (struct argparse *self, const struct argparse_option *opt)
 {	
-	char *args = * (char **) opt->value;
+	char *args = NULL;
+	if (opt->value != NULL) args = * (char **) opt->value;
 	/* 
 	 * in print functions, print full names instead of artist title and album
 	 */
-	if(args != NULL) {
+	if(args == NULL) {
 		printFullNames = !printFullNames;
 	} else if (strcasecmp(args,"on")==0 || strcasecmp(args,"True")==0 || (args[0]-'0')==1) {
 			printFullNames = true;
@@ -168,7 +169,7 @@ print_current_playlist(QUEUE* q)
 	}	
 	while(song != NULL){
 		i++;
-		if (song->artist != NULL && song->title != NULL && printFullNames) {
+		if (song->artist != NULL && song->title != NULL && !printFullNames) {
 			fprintf(stdout, "%d. %s - %s\n", i, song->artist, song->title);
 		} else {
 			fprintf (stdout, "%d. %s\n", i, song->uri);
@@ -181,7 +182,7 @@ print_current_playlist(QUEUE* q)
 	return;
 }
 
-int 
+bool 
 list (struct argparse *self, const struct argparse_option *opt)
 {
 	QUEUE* playlist = NULL;
@@ -195,7 +196,7 @@ list (struct argparse *self, const struct argparse_option *opt)
 	return true;
 }
 
-int 
+bool 
 pause (struct argparse *self, const struct argparse_option *opt)
 {
 	struct mpd_connection *mpdSession = NULL;
@@ -212,7 +213,7 @@ pause (struct argparse *self, const struct argparse_option *opt)
  * if arg, play the song specified by the number (-1 because mpd start from 0)
  * prototype is standard because it is called from parse_args
  */
-int
+bool
 play (struct argparse *self, const struct argparse_option *opt)
 {
 	/*char **args = *(char ***) opt->value;*/
@@ -272,7 +273,7 @@ play (struct argparse *self, const struct argparse_option *opt)
 	}
 }
 
-int
+bool
 next(struct argparse *self, const struct argparse_option *opt)
 {
 	struct mpd_connection *mpdSession = NULL;
@@ -289,7 +290,7 @@ next(struct argparse *self, const struct argparse_option *opt)
 	return true;
 }
 
-int
+bool
 previous (struct argparse *self, const struct argparse_option *opt)
 {
 	struct mpd_connection *mpdSession = NULL;
@@ -307,7 +308,7 @@ previous (struct argparse *self, const struct argparse_option *opt)
 }
 
 
-int
+bool
 stop (struct argparse *self, const struct argparse_option *opt)
 {	
 	struct mpd_connection *mpdSession = NULL;
@@ -343,7 +344,7 @@ compare_pos(const void *pos1, const void *pos2)
  * returns false if error
  * returns true if successful
  */
-int
+bool
 delete_range (struct argparse *self, const struct argparse_option *opt)
 {
 	struct mpd_connection *mpdSession = NULL;
@@ -406,7 +407,7 @@ convert_to_int(char *arg)
  * returns false if error,
  * returns true if done, and prints the playlist
  */
-int
+bool
 delete (struct argparse *self, const struct argparse_option *opt)
 {
 	// TODO: for brevity i leave the old logic with arrays
@@ -454,7 +455,7 @@ delete (struct argparse *self, const struct argparse_option *opt)
 	return true;
 }
 
-int
+bool
 clear (struct argparse *self, const struct argparse_option *opt)
 {	
 	struct mpd_connection *mpdSession = NULL;
@@ -465,7 +466,7 @@ clear (struct argparse *self, const struct argparse_option *opt)
 	return f;
 } 
 
-int
+bool
 random_kpd (struct argparse *self, const struct argparse_option *opt)
 {	
 	struct mpd_connection *mpdSession = NULL;
@@ -513,7 +514,7 @@ random_kpd (struct argparse *self, const struct argparse_option *opt)
  * accepts standard args
  * the user can pass as parameters: on, off, true, false, 0, 1 case insensitive
  */
-int
+bool
 consume (struct argparse *self, const struct argparse_option *opt)
 {	
 	struct mpd_connection *mpdSession = NULL;
@@ -562,7 +563,7 @@ consume (struct argparse *self, const struct argparse_option *opt)
  * this function accepts standard args
  * the user can pass as parameters: on, off, true, false, 0, 1 case insensitive
  */ 
-int
+bool
 repeat (struct argparse *self, const struct argparse_option *opt)
 {	
 	struct mpd_connection *mpdSession = NULL;
@@ -612,7 +613,7 @@ repeat (struct argparse *self, const struct argparse_option *opt)
  * accepts as args the standard args
  * the user can pass as parameters: on, off, true, false, 0, 1 case insensitive
  */
-int
+bool
 single (struct argparse *self, const struct argparse_option *opt)
 {	
 	struct mpd_connection *mpdSession = NULL;
@@ -674,9 +675,10 @@ check_limit(STATUS *status, int final_val)
 
 
 //go to a specific point of the song expressed in hours (h), minutes (m), seconds (s) or percentage
-int 
+bool 
 seek (struct argparse *self, const struct argparse_option *opt)
 {
+	fprintf (stderr, "seek not implemented yet");
 	return 0;
 	/*struct mpd_connection *mpdSession = NULL;*/
 	/*int num = 0, l = 0;*/
@@ -793,7 +795,7 @@ seek (struct argparse *self, const struct argparse_option *opt)
  * accepts standard arguments
  * accepts from the user: on, off, true, false, 0, 1, case insensivite
  */
-int
+bool
 output_enable (struct argparse *self, const struct argparse_option *opt)
 {
 	char *args = * (char **) opt->value;
@@ -811,7 +813,7 @@ output_enable (struct argparse *self, const struct argparse_option *opt)
 	}
 }
 
-int 
+bool 
 swap (struct argparse *self, const struct argparse_option *opt)
 {
 	char **args = * (char ***) opt->value;
@@ -851,7 +853,7 @@ swap (struct argparse *self, const struct argparse_option *opt)
 	return true;
 }
 
-int
+bool
 move (struct argparse *self, const struct argparse_option *opt)
 {
 	char **args = * (char ***) opt->value;
@@ -891,7 +893,7 @@ move (struct argparse *self, const struct argparse_option *opt)
 	return true;
 }
 
-int 
+bool 
 update (struct argparse *self, const struct argparse_option *opt)
 {
 	struct mpd_connection *mpdSession = NULL;
@@ -909,26 +911,7 @@ destroy_search_results ()
 	if (filterSt != NULL) {
 		free (filterSt);
 	}
-	if (revFilterSt != NULL) {
-		free (revFilterSt);
-	}
 	destroy_results (results, resultsSize);
-}
-
-int
-search_util (struct argparse *self, const struct argparse_option *opt)
-{
-	char *arg = * (char **) opt->value;
-	/*printf ("%s\n%s\n", filterSt, revFilterSt);*/
-	results = search_handler (arg, &resultsSize, _DBlocation, filterSt, revFilterSt);
-
-	/*	 search_handler does:
- 	 *	 1. loads the db in memory
- 	 *	 2. searches the key in the list that contains the db
- 	 *	 3. filters the results for filterSt and revFiltersSt
- 	 */
- 	print_search_results (results, resultsSize);
- 	return true;
 }
 
 void
@@ -955,19 +938,18 @@ check_for_type_words (char *w)
 }
 
 bool
-filter_helper (char **args, int n)
+filter_helper (struct argparse *self, const struct argparse_option *opt)
 {
 	/*
 	 * this function:
 	 * 1. checks the correctness of the filter arguments and count args size
 	 * 2. if 1 cleared, parse the filterString
 	 */
+	char **args = * (char ***) opt->value;
+	if (!args) return false;
+	int n = count_args (args);
 	int i, size = 0;
 	char sp[] = " ";
-	if (n == 0) {
-		STANDARD_USAGE_ERROR ("filter");
-		return false;
-	}
 
 	for (i = 0; i < n; ++i) {
 		size += strlen (args[i]);
@@ -985,45 +967,19 @@ filter_helper (char **args, int n)
 		strncat (filterSt, sp, strlen (sp));
 	}
 	filterSt[strlen(filterSt) - 1] = '\0';
+
+	results = search_handler (&resultsSize, _DBlocation, filterSt);
+
+	/*	 search_handler does:
+ 	 *	 1. loads the db in memory
+ 	 *	 2. searches the key in the list that contains the db
+ 	 *	 3. filters the results for filterSt and revFiltersSt
+ 	 */
+ 	print_search_results (results, resultsSize);
 	return true;
 }
 
 bool
-vfilter_helper (char **args, int n)
-{
-	/*
-	 * this function:
-	 * 1. checks the correctness of the filter arguments and count args size
-	 * 2. if 1 cleared, parse the filterString
-	 */
-	int i, size = 0;
-	char sp[] = " ";
-
-	if (n == 0) {
-		STANDARD_USAGE_ERROR ("vfilter");
-		return false;
-	}
-
-	for (i = 0; i < n; ++i) {
-		size += strlen (args[i]);
-		if (check_for_type_words (args[i]) && i > 0 && check_for_type_words (args[i - 1])) {
-			STANDARD_USAGE_ERROR ("filter");
-	 		return false; // there is something like Artist Album, so wrong usage
-		}
-	}
-	revFilterSt = calloc (size + n + 1, sizeof (char)); // +n is for spaces
-	// the whole filterSt situation could have been improved. Old python code was used where filterSt was a string
-	strncpy (revFilterSt, args[0], strlen (args[0]));
-	strncat (revFilterSt, sp, strlen (sp));
-	for (i = 1; i < n; ++i) {
-		strncat (revFilterSt, args[i], strlen (args[i]));
-		strncat (revFilterSt, sp, strlen (sp));
-	}
-	revFilterSt[strlen(revFilterSt) - 1] = '\0';
-	return true;
-}
-
-int
 add (struct argparse *self, const struct argparse_option *opt)
 {
 	struct mpd_connection *mpdSession = NULL;
@@ -1040,7 +996,7 @@ add (struct argparse *self, const struct argparse_option *opt)
 	return true;
 }
 
-int 
+bool 
 shuffle (struct argparse *self, const struct argparse_option *opt)
 {
 	struct mpd_connection *mpdSession = NULL;
@@ -1051,7 +1007,7 @@ shuffle (struct argparse *self, const struct argparse_option *opt)
 	return f;
 }
 
-int 
+bool 
 shuffle_range (struct argparse *self, const struct argparse_option *opt)
 {
 	/*struct mpd_connection *mpdSession = NULL;*/

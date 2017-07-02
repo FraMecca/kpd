@@ -25,7 +25,7 @@ typedef struct directory_list_t {
  * it wants a single key and a size pointer to store the size of the results;
  * it uses also a system of filters.
  */
-char ** search_handler (char *key, int *size, char *DBlocation, char *filterSt, char *revFilterSt);
+char ** search_handler (int *size, char *DBlocation, char *filterSt);
 	/*	 search_handler does:
  	 *	 1. loads the db in memory
  	 *	 2. searches the key in the list that contains the db

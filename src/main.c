@@ -17,8 +17,6 @@ char *tmpSt; // "single shot" string used for function that need arguments
 
 struct argparse_option options[] = {
 	OPT_HELP (),
-	/*OPT_ARRAY ('f',		"filter",			 NULL,	   "Filter the search using multiple keywords"),*/
-	/*OPT_ARRAY ('v',		"vfilter",			 NULL,	   "Same as filter but excludes"),*/
 	OPT_INTEGER ('p',		"play",				 &in,	   "Play a song from the playlist",   &play ),
 	OPT_BOOLEAN ('P',		"pause",			 NULL,	   "Toggle pause",                    &pause),
 	OPT_BOOLEAN ('n',		"next",				 NULL,	   "play next track in playlist",     &next),
@@ -29,7 +27,7 @@ struct argparse_option options[] = {
 	OPT_ARRAY   ( 0 ,		"shuffle-range",	 &tmpSt,   "Same as shuffle, for a subset",   &shuffle_range),
 	OPT_BOOLEAN ('u',		"update",			 NULL,	   "Update MPD database",             &update),
 	OPT_BOOLEAN ('a',		"add",				 NULL,	   "add tracks to playlist",          &add),
-	OPT_STRING  ('s',		"search",			 &searchSt,"Search tracks in MPD database",   &search_util),
+	OPT_ARRAY   ('s',		"search",			 &searchSt,"Search tracks in MPD database",   &filter_helper),
 	OPT_BOOLEAN ('l',		"list",				 NULL,	   "Print playlist",                  &list),
 	OPT_ARRAY   ('S',		"seek",				 NULL,	   "Seek [+-]track by duration or %", &seek),
 	OPT_STRING  ('r',		"random",			 NULL,	   "Toggle mpd random mode",          &random_kpd),
@@ -54,7 +52,6 @@ int
 main (int argc, char *argv[])
 {
 	int ret = EXIT_SUCCESS;
-	printf ("echo search con zero args, seek con + e - \ne anche argopt e uint invece di char\n");
 
 	// load structures into parse_args library
 	import_var_from_settings (); // import DBlocation, host, port to util.h
@@ -69,9 +66,12 @@ main (int argc, char *argv[])
 	}
 
 	struct argparse argparse;
-	argparse_init (&argparse, options, usage, 0);
+	argparse_init (&argparse, options, "kpd", usage, 0);
 	argparse_describe (&argparse, "\nKPD client for MPD\n", "");
-	argparse_parse (&argparse, argc, argv);
+	ret = argparse_parse (&argparse, argc, argv);
+	if (ret == -1) {
+		ret = 1;
+	}
 
 	return ret;
 }
