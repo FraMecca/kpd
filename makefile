@@ -5,6 +5,7 @@ INSTALL_PATH=/usr/local
 I = -I. -Iinclude -Ilib
 
 all:
+		mkdir -p build/
 		gcc $(ALL) -o build/main $(LFLAGS) $I
 clear_o:
 		rm ../build/*.o
