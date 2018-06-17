@@ -12,4 +12,9 @@ void main(string[] args)
 
 	auto conn = MPDConnection(host, port);
 	conn.play;
+	conn.consume(true);
+	conn.repeat(false);
+	conn.next;
+	conn.stop;
+	writeln(conn.status);
 }

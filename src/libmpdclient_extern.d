@@ -2,6 +2,8 @@ import std.string;
 import std.exception;
 import std.conv;
 
+import std.stdio; // TODO: remove
+
 class MPDException : Exception
 {
 	this(mpd_error err, string file = __FILE__, size_t line = __LINE__)
@@ -94,24 +96,6 @@ struct MPDConnection
 		this.timeout = timeout;
 	}
 
-	@property void clear()
-	{
-		auto conn = Connection(host, port, timeout);
-		enforce(mpd_send_clear(conn.c), new MPDException(mpd_connection_get_error(conn.c)));
-	}
-
-	@property void next()
-	{
-		auto conn = Connection(host, port, timeout);
-		enforce(mpd_send_next(conn.c), new MPDException(mpd_connection_get_error(conn.c)));
-	}								
-
-	@property void previous()
-	{
-		auto conn = Connection(host, port, timeout);
-		enforce(mpd_send_previous(conn.c), new MPDException(mpd_connection_get_error(conn.c)));
-	}
-
 	@property void pause()
 	{
 		auto conn = Connection(host, port, timeout);
@@ -124,8 +108,6 @@ struct MPDConnection
 	}
 	body {
 		auto conn = Connection(host, port, timeout);
-		import std.stdio;
-		writeln(status);
 		if (pos == -1 && status.state == mpd_state.MPD_STATE_PLAY) this.pause();
 		else enforce(mpd_send_play_pos(conn.c, pos), new MPDException(mpd_connection_get_error(conn.c)));
 	}
@@ -142,6 +124,16 @@ struct MPDConnection
     } body {
 		auto conn = Connection(host, port, timeout);
 		return Song(conn, pos);
+	}
+
+	static foreach(fun; ["consume", "repeat", "random", "single"]){
+		mixin("@property void " ~ fun ~ "(bool st){auto conn=Connection(host, port, timeout);
+				enforce(mpd_send_" ~ fun ~ "(conn.c, st), new MPDException(mpd_connection_get_error(conn.c)));}");
+	}
+
+	static foreach(fun; ["next", "previous", "clear", "stop", "shuffle"]){
+		mixin("@property void " ~ fun ~ "(){auto conn=Connection(host, port, timeout);
+				enforce(mpd_send_" ~ fun ~ "(conn.c), new MPDException(mpd_connection_get_error(conn.c)));}");
 	}
 }
 
@@ -173,6 +165,7 @@ extern (C):
 	mpd_error mpd_connection_get_error(mpd_connection *);
     mpd_status* mpd_run_status(mpd_connection *connection);
 	bool mpd_send_clear(mpd_connection *);
+	bool mpd_send_stop(mpd_connection *);
 	bool mpd_send_next(mpd_connection *);
 	bool mpd_send_previous(mpd_connection *);
 	bool mpd_send_toggle_pause(mpd_connection *);
@@ -188,3 +181,9 @@ extern (C):
 	mpd_song* mpd_run_current_song(mpd_connection*);
 	string mpd_song_get_tag(mpd_song*, mpd_tag_type, int);
 	uint mpd_status_get_queue_length(mpd_status*);
+	bool mpd_send_consume(mpd_connection*, bool);
+	bool mpd_send_repeat(mpd_connection*, bool);
+	bool mpd_send_random(mpd_connection*, bool);
+	bool mpd_send_single(mpd_connection*, bool);
+	bool mpd_send_shuffle(mpd_connection*);
+	bool mpd_send_update(mpd_connection*);
