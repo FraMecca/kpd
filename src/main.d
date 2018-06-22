@@ -2,6 +2,7 @@ import std.stdio;
 import std.string;
 import std.getopt;
 
+import database;
 import libmpdclient_extern;
 
 void main(string[] args)
@@ -16,5 +17,8 @@ void main(string[] args)
 	conn.repeat(false);
 	conn.next;
 	conn.stop;
-	writeln(conn.status);
+	auto gen = new DBParser("/home/user/.mpd/database");
+	foreach (song; gen.getSongs) {
+		writeln(song);
+	}
 }

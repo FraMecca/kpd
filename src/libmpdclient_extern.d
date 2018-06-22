@@ -135,6 +135,8 @@ struct MPDConnection
 		mixin("@property void " ~ fun ~ "(){auto conn=Connection(host, port, timeout);
 				enforce(mpd_send_" ~ fun ~ "(conn.c), new MPDException(mpd_connection_get_error(conn.c)));}");
 	}
+
+
 }
 
 private:
