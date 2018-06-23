@@ -18,7 +18,7 @@ void main(string[] args)
 	conn.next;
 	conn.stop;
 	auto gen = new DBParser("/home/user/.mpd/database");
-	foreach (song; gen.getSongs) {
+	foreach (song; gen.all) {
 		writeln(song);
 	}
 }
