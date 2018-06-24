@@ -27,7 +27,8 @@ struct Song {
 struct Playlist {
 	string name;
 }
-union Base { Song song; Playlist playlist; };
+
+private union Base { Song song; Playlist playlist; };
 alias DBUnion = TaggedAlgebraic!Base;
 //alias RT = Algebraic!(Song, Playlist);
 
