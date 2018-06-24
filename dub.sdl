@@ -3,5 +3,8 @@ name "kpd"
 description "Kyuss Player in D"
 authors "Francesco {Mecca,Galla`}"
 license "GPL-3.0"
-dependency "iopipe" version="~>0.1.2"
+
 lflags "-lmpdclient"
+
+dependency "iopipe" version="~>0.1.2"
+dependency "taggedalgebraic" version="~>0.10.11"
