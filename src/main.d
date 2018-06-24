@@ -18,7 +18,14 @@ void main(string[] args)
 	conn.next;
 	conn.stop;
 	auto gen = new DBParser("/home/user/.mpd/database");
-	foreach (song; gen.all) {
-		writeln(song);
+	foreach (elem; gen.all) {
+		final switch(elem.kind){
+			case DBUnion.Kind.song:
+				writeln("Song:", elem.toString);
+				break;
+			case DBUnion.Kind.playlist:
+				writeln("Playlist:", elem.toString);
+				break;
+		}
 	}
 }

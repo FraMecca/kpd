@@ -1,10 +1,9 @@
 import std.concurrency;
 import std.container;
-import std.variant;
+//import std.variant;
 import std.string;
 import std.conv;
 import std.typecons;
-import std.algorithm.mutation : move;
 import taggedalgebraic;
 import iopipe.textpipe;
 import iopipe.zip;
@@ -15,7 +14,7 @@ struct Song {
 	string artist;	
 	string album;
 	string title;
-	@property string uri;
+	string uri;
 	string genre;
 	string date;
 	string performer;
@@ -23,12 +22,14 @@ struct Song {
 	string track;
 	string albumArtist;
 	string disc;
-	~this(){}
 }
 
 struct Playlist {
 	string name;
 }
+union Base { Song song; Playlist playlist; };
+alias DBUnion = TaggedAlgebraic!Base;
+//alias RT = Algebraic!(Song, Playlist);
 
 import std.stdio : writeln;
 
@@ -38,16 +39,13 @@ class DBParser {
 	this(string filename) {
 		this.database = filename;
 	}
-
-	union Base { Song s; Playlist p; };
-	alias RT = TaggedAlgebraic!Base;
 	
-	@property Generator!RT all() {
-		return new Generator!RT (
+	@property Generator!DBUnion all() {
+		return new Generator!DBUnion (
 		{
 			File(database).refCounted.bufd.unzip.runEncoded!((input) {
 				string dir;
-				RT current;
+				DBUnion current;
 				foreach(line; input.byLineRange) { 
 					auto idx = line.indexOf(":");
 					string key = idx > 0 ? to!string(line[0 .. idx]) : to!string(line);
@@ -63,10 +61,11 @@ class DBParser {
 							break;
 						case "song_begin":
 							current = Song();
-							current.uri = dir ~ val;
+							current.get!Song.uri = dir ~ val;
 							break;
 						case "song_end":
-							yield(move(current));
+							assert(current != Song.init, to!string(current) ~ " " ~ dir);
+							yield(current);
 							break;
 						static foreach(tag; ["artist", "album", "title", 
 											 "genre", "date", "performer", "composer",
