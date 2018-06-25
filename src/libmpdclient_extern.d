@@ -115,6 +115,13 @@ struct MPDConnection
 		enforce(mpd_send_play_pos(conn.c, pos), new MPDException(mpd_connection_get_error(conn.c)));
 	}
 
+	@property void del(uint pos)
+    {
+		auto conn = Connection(host, port, timeout);
+        pos = pos == 0 ? 0 : pos - 1;
+		enforce(mpd_send_delete(conn.c, pos), new MPDException(mpd_connection_get_error(conn.c)));
+	}
+
     @property Status status()
     {
 		auto conn = Connection(host, port, timeout);
@@ -128,6 +135,7 @@ struct MPDConnection
 		auto conn = Connection(host, port, timeout);
 		return Song(conn, pos);
 	}
+
 	static foreach(fun; ["consume", "repeat", "random", "single"]){
 		mixin("@property void " ~ fun ~ "(string opt, string s){
                 auto conn=Connection(host, port, timeout);
@@ -140,12 +148,10 @@ struct MPDConnection
 				enforce(mpd_send_" ~ fun ~ "(conn.c, st), new MPDException(mpd_connection_get_error(conn.c)));}");
 	}
 
-	static foreach(fun; ["next", "previous", "clear", "stop", "shuffle"]){
+	static foreach(fun; ["next", "previous", "clear", "stop", "shuffle", "update"]){
 		mixin("@property void " ~ fun ~ "(){auto conn=Connection(host, port, timeout);
 				enforce(mpd_send_" ~ fun ~ "(conn.c), new MPDException(mpd_connection_get_error(conn.c)));}");
 	}
-
-
 }
 
 private:
@@ -181,6 +187,7 @@ extern (C):
 	bool mpd_send_previous(mpd_connection *);
 	bool mpd_send_toggle_pause(mpd_connection *);
 	bool mpd_send_play_pos(mpd_connection *, uint pos);
+	bool mpd_send_delete(mpd_connection *, uint pos);
 	bool mpd_status_get_random(mpd_status*);
 	bool mpd_status_get_repeat(mpd_status*);
 	bool mpd_status_get_single(mpd_status*);
