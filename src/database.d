@@ -25,7 +25,8 @@ struct Song {
 }
 
 struct Playlist {
-	string name;
+	string uri;
+    string title;
 }
 
 private union Base { Song song; Playlist playlist; };
@@ -68,6 +69,15 @@ class DBParser {
 							assert(current != Song.init, to!string(current) ~ " " ~ dir);
 							yield(current);
 							break;
+                        case "playlist_begin":
+							current = Playlist();
+							current.get!Playlist.uri = dir ~ val;
+                            current.get!Playlist.title = val;
+                            break;
+                        case "playlist_end":
+							assert(current != Playlist.init, to!string(current) ~ " " ~ dir);
+                            yield(current);
+                            break;
 						static foreach(tag; ["artist", "album", "title", 
 											 "genre", "date", "performer", "composer",
 											 "track", "albumArtist", "disc"]) { 
