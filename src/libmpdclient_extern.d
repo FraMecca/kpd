@@ -96,20 +96,23 @@ struct MPDConnection
 		this.timeout = timeout;
 	}
 
-	@property void pause()
+    @property void pause()
+	{
+		auto conn = Connection(host, port, timeout);
+		enforce(mpd_send_pause(conn.c), new MPDException(mpd_connection_get_error(conn.c)));
+	}
+
+	@property void play()
 	{
 		auto conn = Connection(host, port, timeout);
 		enforce(mpd_send_toggle_pause(conn.c), new MPDException(mpd_connection_get_error(conn.c)));
 	}
 
-	@property void play(int pos = -1)
-	in{
-		assert(pos >= -1);
-	}
-	body {
+	@property void play(uint pos)
+    {
 		auto conn = Connection(host, port, timeout);
-		if (pos == -1 && status.state == mpd_state.MPD_STATE_PLAY) this.pause();
-		else enforce(mpd_send_play_pos(conn.c, pos), new MPDException(mpd_connection_get_error(conn.c)));
+        pos = pos == 0 ? 0 : pos - 1;
+		enforce(mpd_send_play_pos(conn.c, pos), new MPDException(mpd_connection_get_error(conn.c)));
 	}
 
     @property Status status()
@@ -125,9 +128,15 @@ struct MPDConnection
 		auto conn = Connection(host, port, timeout);
 		return Song(conn, pos);
 	}
-
 	static foreach(fun; ["consume", "repeat", "random", "single"]){
-		mixin("@property void " ~ fun ~ "(bool st){auto conn=Connection(host, port, timeout);
+		mixin("@property void " ~ fun ~ "(string opt, string s){
+                auto conn=Connection(host, port, timeout);
+                bool st;
+                try {
+                    st = to!bool(s);
+                } catch (ConvException e) {
+                    throw new MPDException(\"--"~fun~" only accepts 'true' or 'false' as arguments.\");
+                }
 				enforce(mpd_send_" ~ fun ~ "(conn.c, st), new MPDException(mpd_connection_get_error(conn.c)));}");
 	}
 
@@ -189,3 +198,4 @@ extern (C):
 	bool mpd_send_single(mpd_connection*, bool);
 	bool mpd_send_shuffle(mpd_connection*);
 	bool mpd_send_update(mpd_connection*);
+	bool mpd_send_pause(mpd_connection*);
