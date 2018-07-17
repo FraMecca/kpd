@@ -99,27 +99,27 @@ struct MPDConnection
     @property void pause()
 	{
 		auto conn = Connection(host, port, timeout);
-		enforce(mpd_send_pause(conn.c), new MPDException(mpd_connection_get_error(conn.c)));
+		enforce(mpd_run_pause(conn.c), new MPDException(mpd_connection_get_error(conn.c)));
 	}
 
 	@property void play()
 	{
 		auto conn = Connection(host, port, timeout);
-		enforce(mpd_send_toggle_pause(conn.c), new MPDException(mpd_connection_get_error(conn.c)));
+		enforce(mpd_run_toggle_pause(conn.c), new MPDException(mpd_connection_get_error(conn.c)));
 	}
 
 	@property void play(uint pos)
     {
 		auto conn = Connection(host, port, timeout);
         pos = pos == 0 ? 0 : pos - 1;
-		enforce(mpd_send_play_pos(conn.c, pos), new MPDException(mpd_connection_get_error(conn.c)));
+		enforce(mpd_run_play_pos(conn.c, pos), new MPDException(mpd_connection_get_error(conn.c)));
 	}
 
 	@property void del(uint pos)
     {
 		auto conn = Connection(host, port, timeout);
         pos = pos == 0 ? 0 : pos - 1;
-		enforce(mpd_send_delete(conn.c, pos), new MPDException(mpd_connection_get_error(conn.c)));
+		enforce(mpd_run_delete(conn.c, pos), new MPDException(mpd_connection_get_error(conn.c)));
 	}
 
     @property Status status()
@@ -136,8 +136,9 @@ struct MPDConnection
 		return Song(conn, pos);
 	}
 
-	static foreach(fun; ["consume", "repeat", "random", "single"]){
-		mixin("@property void " ~ fun ~ "(string opt, string s){
+	static foreach(fun; ["consume", "repeat", "random", "single"])
+    {
+		mixin("@property void " ~ fun ~ "(string s){
                 auto conn=Connection(host, port, timeout);
                 bool st;
                 try {
@@ -145,13 +146,30 @@ struct MPDConnection
                 } catch (ConvException e) {
                     throw new MPDException(\"--"~fun~" only accepts 'true' or 'false' as arguments.\");
                 }
-				enforce(mpd_send_" ~ fun ~ "(conn.c, st), new MPDException(mpd_connection_get_error(conn.c)));}");
+				enforce(mpd_run_" ~ fun ~ "(conn.c, st), new MPDException(mpd_connection_get_error(conn.c)));}");
 	}
 
-	static foreach(fun; ["next", "previous", "clear", "stop", "shuffle", "update"]){
+    @property void backward(string st) {
+        assert(false);
+    }
+    
+    @property void forward(string st) {
+        assert(false);
+    }
+
+	static foreach(fun; ["next", "previous", "clear", "stop", "shuffle", "update"])
+    {
 		mixin("@property void " ~ fun ~ "(){auto conn=Connection(host, port, timeout);
-				enforce(mpd_send_" ~ fun ~ "(conn.c), new MPDException(mpd_connection_get_error(conn.c)));}");
+				enforce(mpd_run_" ~ fun ~ "(conn.c), new MPDException(mpd_connection_get_error(conn.c)));}");
 	}
+
+    @property void add(string uri)
+    {
+		auto conn = Connection(host, port, timeout);
+        if(!mpd_run_add(conn.c, uri.toStringz)) {
+            throw new MPDException(mpd_connection_get_error(conn.c));
+        }
+    }
 }
 
 private:
@@ -181,13 +199,13 @@ extern (C):
 	}
 	mpd_error mpd_connection_get_error(mpd_connection *);
     mpd_status* mpd_run_status(mpd_connection *connection);
-	bool mpd_send_clear(mpd_connection *);
-	bool mpd_send_stop(mpd_connection *);
-	bool mpd_send_next(mpd_connection *);
-	bool mpd_send_previous(mpd_connection *);
-	bool mpd_send_toggle_pause(mpd_connection *);
-	bool mpd_send_play_pos(mpd_connection *, uint pos);
-	bool mpd_send_delete(mpd_connection *, uint pos);
+	bool mpd_run_clear(mpd_connection *);
+	bool mpd_run_stop(mpd_connection *);
+	bool mpd_run_next(mpd_connection *);
+	bool mpd_run_previous(mpd_connection *);
+	bool mpd_run_toggle_pause(mpd_connection *);
+	bool mpd_run_play_pos(mpd_connection *, uint pos);
+	bool mpd_run_delete(mpd_connection *, uint pos);
 	bool mpd_status_get_random(mpd_status*);
 	bool mpd_status_get_repeat(mpd_status*);
 	bool mpd_status_get_single(mpd_status*);
@@ -199,10 +217,12 @@ extern (C):
 	mpd_song* mpd_run_current_song(mpd_connection*);
 	string mpd_song_get_tag(mpd_song*, mpd_tag_type, int);
 	uint mpd_status_get_queue_length(mpd_status*);
-	bool mpd_send_consume(mpd_connection*, bool);
-	bool mpd_send_repeat(mpd_connection*, bool);
-	bool mpd_send_random(mpd_connection*, bool);
-	bool mpd_send_single(mpd_connection*, bool);
-	bool mpd_send_shuffle(mpd_connection*);
-	bool mpd_send_update(mpd_connection*);
-	bool mpd_send_pause(mpd_connection*);
+	bool mpd_run_consume(mpd_connection*, bool);
+	bool mpd_run_repeat(mpd_connection*, bool);
+	bool mpd_run_random(mpd_connection*, bool);
+	bool mpd_run_single(mpd_connection*, bool);
+	bool mpd_run_shuffle(mpd_connection*);
+	bool mpd_run_update(mpd_connection*);
+	bool mpd_run_pause(mpd_connection*);
+    bool mpd_run_add(mpd_connection*, const char*);
+
