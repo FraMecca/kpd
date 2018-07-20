@@ -8,3 +8,4 @@ lflags "-lmpdclient"
 
 dependency "iopipe" version="~>0.1.2"
 dependency "taggedalgebraic" version="~>0.10.11"
+dependency "sdlang-d" version="~>0.10.4"

@@ -2,6 +2,7 @@ import std.algorithm;
 import std.traits;
 import std.typecons;
 import taggedalgebraic;
+import std.uni;
 import std.string;
 
 import std.conv;
@@ -13,9 +14,9 @@ enum Tag {ARTIST, ALBUM, TITLE, URI, GENRE, PERFORMER,COMPOSER, TRACK, ALBUMARTI
     DISC, ALL, PLAYLIST};
 
 // convert to lowercase and find
-auto find = (string a, string b) => a.toLower.canFind(b.toLower);
+auto find = (string a, string b) => a.asLowerCase.canFind(b.asLowerCase);
 
-bool search(DBUnion target, Tuple!(Tag, string)[] queries)
+bool search_queries(DBUnion target, Tuple!(Tag, string)[] queries)
 {
     if(queries.length == 0) return false; // if search is not specified
     // fails on first miss, true only if all queries satisfied

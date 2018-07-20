@@ -7,10 +7,13 @@ import std.algorithm;
 import std.conv;
 import std.exception;
 import std.traits;
+import std.file;
+import std.path;
+import sdlang;
 
-import kpd_search;
+import search;
 import database;
-import libmpdclient_extern;
+import libmpdclient;
 
 struct ParseArgs{
     bool quiet;
@@ -31,12 +34,16 @@ struct ParseArgs{
     bool shuffle;
     bool update;
     bool listall;
-    ulong playN = -1;
-    ulong delN = -1;
+    bool play;
+    ulong playN;
+    ulong delN;
     Tuple!(ulong, ulong) delR;
     Tuple!(ulong, ulong) shuffleR;
     Tuple!(ulong, ulong) swapR;
     string[] searchTermsR;
+	string host = "localhost";
+	int port = 6600;
+	string dblocation = "~/.mpd/database";
 
     
     immutable string[] oargs;
@@ -68,6 +75,7 @@ struct ParseArgs{
         if(oargs.length == idx + 1 && eqIdx == -1) {
             switch(opt){
                 case "play|p":
+                	play = true;
                     playN = 0;
                     break;
                 default:
@@ -78,6 +86,7 @@ struct ParseArgs{
             string arg2;
             switch(opt){
                 case "play|p":
+                	play = true;
                     playN = to!ulong(arg1);
                     break;
                 case "del|d":
@@ -108,8 +117,19 @@ struct ParseArgs{
     }
 
     this(string[] args){
-        oargs = args.idup;
         arraySep = ",";
+        oargs = args.idup;
+    	auto configs = ["/etc/kpd.conf", "~/.kpdrc", "~/.config/kpd.conf"];
+    	foreach(cfile; configs){
+    		cfile = expandTilde(cfile);
+    		if(cfile.exists){
+    			sdlang.Tag root;
+    			root = parseSource(readText(cfile));
+    			host = root.getTagValue!string("host", host);
+    			port = root.getTagValue!int("port", port);
+    			dblocation = root.getTagValue!string("db");
+    		}
+    	}
         rlst = getopt(args, config.caseSensitive,
                 "add|a",  "add to current playlist", &add,
                 "previous|b|prev",  "play previous song", &previous,
@@ -136,53 +156,52 @@ struct ParseArgs{
                 "swap",  "swap specified items", &opt_handler,
                 "quiet|q", "disable output", &quiet,
         );
+
     }
 }
 
 void main(string[] args)
 {
-    // flags for cli options
-
-
-    // TODO config file
     try {
-    	string backward;
-    	string forward;
-        bool list;
-        bool uris;
-        string seek;
 
-        //string host = "192.168.1.131";
-		string host = "localhost";
-		short port = 6600;
-    	auto conn = MPDConnection(host, port); 
+        auto pargs = ParseArgs(args); // constructor does parsing
 
-        auto parseArgs = ParseArgs(args);
-
-        if(parseArgs.rlst.helpWanted) {
-            defaultGetoptPrinter("kpd is a client for MPD.", parseArgs.rlst.options);
+        if(pargs.rlst.helpWanted) {
+            defaultGetoptPrinter("kpd is a client for MPD.", pargs.rlst.options);
             return;
         }
-        auto gen = new DBParser("/home/francesco/.mpd/mpd.db");
+
+		auto conn = MPDConnection(pargs.host, to!short(pargs.port));
 
         static foreach(m; __traits(allMembers, ParseArgs)) {
-            static if (m != "listall" && m != "add" && m != "quiet" && m != "list" && m != "uris") {
-                mixin("static if (is(typeof(ParseArgs."~m~") == bool)){ if(parseArgs."~m~") conn."~m~";}");
-                mixin("static if (is(typeof(ParseArgs."~m~") == string)){ if(parseArgs."~m~")
-                        conn."~m~"(parseArgs."~m~");}");
+            static if (m != "listall" && m != "add" && m != "quiet" && m != "list" && m != "uris" &&
+            		m != "host" && m != "port" && m != "dblocation" && m != "play") {
+                mixin("static if (is(typeof(ParseArgs."~m~") == bool)){ if(pargs."~m~") conn."~m~";}");
+                mixin("static if (is(typeof(ParseArgs."~m~") == string)){ if(pargs."~m~")
+                        conn."~m~"(pargs."~m~");}");
             }
         }
         
-        if (parseArgs.listall || parseArgs.add || parseArgs.searchTermsR.length > 0) {
+        if (pargs.listall || pargs.add || pargs.searchTermsR.length > 0) {
+        	auto gen = new DBParser(pargs.dblocation);
             gen.all
-                .tee!((a){if (parseArgs.listall) pretty_print(a, parseArgs.uris);}) // print db
-                .filter!(a => search(a, parseQueries(parseArgs.searchTermsR))) // search
-                .tee!((a){if (!parseArgs.quiet) pretty_print(a, parseArgs.uris);}) // print search results
-                .each!((a){if (parseArgs.add) conn.add(a.uri);});// add 
+                .tee!((a){if (pargs.listall) pretty_print(a, pargs.uris);}) // print db
+                .filter!(a => search_queries(a, parseQueries(pargs.searchTermsR))) // search
+                .tee!((a){if (!pargs.quiet) pretty_print(a, pargs.uris);}) // print search results
+                .each!((a){if (pargs.add) conn.add(a.uri);}); // add 
         }
 
+        if (pargs.play){
+        	if(pargs.playN == 0) conn.play;
+        	else conn.play(pargs.playN);
+        }
+
+        //if(!pargs.quiet && pargs.searchTermsR.length == 0 && !pargs.clear){
+            //writeln(conn.statusString);
+        //}
+
     } catch (Exception e){
-        stderr.writeln(e.msg);
+		stderr.writeln(e.msg);
     }
 }
 

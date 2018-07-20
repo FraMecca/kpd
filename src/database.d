@@ -11,7 +11,7 @@ import iopipe.bufpipe;
 import std.io;
 import std.file;
 
-import libmpdclient_extern;
+import libmpdclient;
 
 struct Song {
 	string artist;	

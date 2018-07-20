@@ -46,10 +46,16 @@ struct MPDConnection
     	uint duration_sec;
     	uint position;
 
-    	this(ref Connection conn, int pos) {
+    	this(ref Connection conn) {
 			mpd_song* song = mpd_run_current_song(conn.c);
-			static foreach(string ltag; ["title","artist","album"]) {
-				mixin("this."~ltag~"= mpd_song_get_tag(song,mpd_tag_type.MPD_TAG_"~ltag.toUpper~",0);");
+			if(song !is null){
+				static foreach(string ltag; ["title","artist","album"]) {
+					mixin("this."~ltag~"= mpd_song_get_tag(song,mpd_tag_type.MPD_TAG_"~ltag.toUpper~",0).fromStringz.to!string;");
+				}
+				auto duration_tot = mpd_song_get_duration(song);
+				duration_min = duration_tot / 60;
+				duration_sec = duration_tot % 60;
+				position = mpd_song_get_pos(song);
 			}
     	}	
 	}
@@ -84,9 +90,10 @@ struct MPDConnection
     	}
 	}
 
-	string host;
-	short port;
-	uint timeout;
+	immutable string host;
+	immutable short port;
+	immutable uint timeout;
+
 
 	public:
 	this(string host, short port, uint timeout = 1000)
@@ -99,7 +106,7 @@ struct MPDConnection
     @property void pause()
 	{
 		auto conn = Connection(host, port, timeout);
-		enforce(mpd_run_pause(conn.c), new MPDException(mpd_connection_get_error(conn.c)));
+		enforce(mpd_run_toggle_pause(conn.c), new MPDException(mpd_connection_get_error(conn.c)));
 	}
 
 	@property void play()
@@ -108,7 +115,7 @@ struct MPDConnection
 		enforce(mpd_run_toggle_pause(conn.c), new MPDException(mpd_connection_get_error(conn.c)));
 	}
 
-	@property void play(uint pos)
+	@property void play(ulong pos)
     {
 		auto conn = Connection(host, port, timeout);
         pos = pos == 0 ? 0 : pos - 1;
@@ -128,12 +135,10 @@ struct MPDConnection
 		return Status(conn);
 	}
 
-    @property Song song(int pos = -1)
-    in {
-    	assert(pos >= -1);
-    } body {
+    @property Song song()
+    {
 		auto conn = Connection(host, port, timeout);
-		return Song(conn, pos);
+		return Song(conn);
 	}
 
 	static foreach(fun; ["consume", "repeat", "random", "single"])
@@ -170,6 +175,44 @@ struct MPDConnection
             throw new MPDException(mpd_connection_get_error(conn.c));
         }
     }
+
+    @property string statusString()
+    {
+    	auto st = this.status;
+    	auto s = this.song;
+    	string ret;
+
+    	if(s.title != "") {
+            ret = s.artist ~ " - " ~ s.title ~ "\n" ~ s.album;
+        } else {
+        	ret ~= s.uri;
+        }
+        ret ~= "\n";
+		switch(st.state){
+			case mpd_state.MPD_STATE_PLAY:
+				ret ~= "(play)";
+				break;
+			case mpd_state.MPD_STATE_PAUSE:
+				ret ~= "(pause)";
+				break;
+			case mpd_state.MPD_STATE_STOP:
+				ret ~= "(stop)";
+				break;
+			default:
+				assert(false);
+		}
+
+		ret ~= " #" ~ s.position.to!string ~ "/" ~ st.queueLenght.to!string;
+		ret ~= "\t" ~ st.elapsedTimeMin.to!string ~ ":" ~ st.elapsedTimeSec.to!string ~ "/" ~ s.duration_min.to!string ~ ":" ~ s.duration_sec.to!string;
+		auto last = "";
+		static foreach(r; ["random", "consume", "repeat", "single", "crossfade", "update"]){
+			mixin("if(st."~r~") last ~= \""~r~":on \";");
+		}
+		if(last != "") ret ~= "\n" ~ last;
+
+        return ret;
+    }
+
 }
 
 private:
@@ -204,7 +247,7 @@ extern (C):
 	bool mpd_run_next(mpd_connection *);
 	bool mpd_run_previous(mpd_connection *);
 	bool mpd_run_toggle_pause(mpd_connection *);
-	bool mpd_run_play_pos(mpd_connection *, uint pos);
+	bool mpd_run_play_pos(mpd_connection *, ulong pos);
 	bool mpd_run_delete(mpd_connection *, uint pos);
 	bool mpd_status_get_random(mpd_status*);
 	bool mpd_status_get_repeat(mpd_status*);
@@ -213,9 +256,11 @@ extern (C):
 	bool mpd_status_get_update_id(mpd_status*); 
 	bool mpd_status_get_crossfade(mpd_status*);
 	uint mpd_status_get_elapsed_time(mpd_status*);
+	uint mpd_song_get_duration(mpd_song*);
+	uint mpd_song_get_pos(mpd_song*);
 	mpd_state mpd_status_get_state(mpd_status*);
 	mpd_song* mpd_run_current_song(mpd_connection*);
-	string mpd_song_get_tag(mpd_song*, mpd_tag_type, int);
+	char* mpd_song_get_tag(mpd_song*, mpd_tag_type, int);
 	uint mpd_status_get_queue_length(mpd_status*);
 	bool mpd_run_consume(mpd_connection*, bool);
 	bool mpd_run_repeat(mpd_connection*, bool);
