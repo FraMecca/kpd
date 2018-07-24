@@ -69,7 +69,7 @@ struct ParseArgs{
                 }
             }
         }
-        assert(idx > 0, to!string(idx));
+        enforce(idx > 0, "Error in parsing command line arguments");
         assert(eqIdx >= -1);
 
         if(oargs.length == idx + 1 && eqIdx == -1) {
