@@ -1,6 +1,8 @@
 import std.string;
+import std.concurrency;
 import std.exception;
 import std.conv;
+import std.range;
 
 import std.stdio; // TODO: remove
 
@@ -46,18 +48,34 @@ struct MPDConnection
     	uint duration_sec;
     	uint position;
 
+    	private void load_song(mpd_song* song) {
+			assert(song !is null);
+			static foreach(string ltag; ["title","artist","album"]) {
+				mixin("this."~ltag~"= mpd_song_get_tag(song,mpd_tag_type.MPD_TAG_"~ltag.toUpper~",0).fromStringz.to!string;");
+			}
+			auto duration_tot = mpd_song_get_duration(song);
+			duration_min = duration_tot / 60;
+			duration_sec = duration_tot % 60;
+			position = mpd_song_get_pos(song);
+		}
+
+
     	this(ref Connection conn) {
 			mpd_song* song = mpd_run_current_song(conn.c);
-			if(song !is null){
-				static foreach(string ltag; ["title","artist","album"]) {
-					mixin("this."~ltag~"= mpd_song_get_tag(song,mpd_tag_type.MPD_TAG_"~ltag.toUpper~",0).fromStringz.to!string;");
-				}
-				auto duration_tot = mpd_song_get_duration(song);
-				duration_min = duration_tot / 60;
-				duration_sec = duration_tot % 60;
-				position = mpd_song_get_pos(song);
-			}
+			load_song(song);
     	}	
+
+    	this(mpd_song *song) {
+			load_song(song);
+    	}	
+
+    	@property string toString(bool uris)
+    	{
+    		if (uris || this.title == "")
+        		return this.uri;
+    		else 
+            	return this.artist ~ " - " ~ this.album ~ " - " ~ this.title;
+		}
 	}
 
 	struct Status
@@ -112,7 +130,10 @@ struct MPDConnection
 	@property void play()
 	{
 		auto conn = Connection(host, port, timeout);
-		enforce(mpd_run_toggle_pause(conn.c), new MPDException(mpd_connection_get_error(conn.c)));
+		if (status.state == mpd_state.MPD_STATE_STOP)
+			enforce(mpd_run_play_pos(conn.c, 0), new MPDException(mpd_connection_get_error(conn.c)));
+		else
+			enforce(mpd_run_toggle_pause(conn.c), new MPDException(mpd_connection_get_error(conn.c)));
 	}
 
 	@property void play(ulong pos)
@@ -202,7 +223,7 @@ struct MPDConnection
 				assert(false);
 		}
 
-		ret ~= " #" ~ s.position.to!string ~ "/" ~ st.queueLenght.to!string;
+		ret ~= " #" ~ (s.position+1).to!string ~ "/" ~ st.queueLenght.to!string;
 		ret ~= "\t" ~ st.elapsedTimeMin.to!string ~ ":" ~ st.elapsedTimeSec.to!string ~ "/" ~ s.duration_min.to!string ~ ":" ~ s.duration_sec.to!string;
 		auto last = "";
 		static foreach(r; ["random", "consume", "repeat", "single", "crossfade", "update"]){
@@ -213,6 +234,25 @@ struct MPDConnection
         return ret;
     }
 
+    @property Song get_song_by_pos(ulong pos)
+    {
+		auto conn = Connection(host, port, timeout);
+		return Song(mpd_run_get_queue_song_pos(conn.c, pos));
+	}
+
+
+	@property Generator!Song playlist()
+    {
+		return new Generator!Song(
+				{
+    			auto st = this.status;
+    			foreach(i; iota(status.queueLenght)){
+    				auto song = get_song_by_pos(i);
+    				yield(song);
+    			}
+    		}
+    	);
+    }
 }
 
 private:
@@ -270,4 +310,4 @@ extern (C):
 	bool mpd_run_update(mpd_connection*);
 	bool mpd_run_pause(mpd_connection*);
     bool mpd_run_add(mpd_connection*, const char*);
-
+    mpd_song* mpd_run_get_queue_song_pos(mpd_connection *, ulong);

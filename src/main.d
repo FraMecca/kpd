@@ -196,9 +196,19 @@ void main(string[] args)
         	else conn.play(pargs.playN);
         }
 
-        //if(!pargs.quiet && pargs.searchTermsR.length == 0 && !pargs.clear){
-            //writeln(conn.statusString);
-        //}
+        if(pargs.list){
+        	auto highlight = conn.song.position;
+            foreach(i, r; conn.playlist.enumerate){
+				auto prt = (i+1).to!string ~ ". " ~ r.toString(pargs.uris);
+            	if(i == highlight)
+            		prt = "\033[95m" ~ prt ~ "\x1b[0m";
+            	writeln(prt);
+            }
+        }
+
+		if(!pargs.quiet && pargs.searchTermsR.length == 0 && !pargs.clear && !pargs.list && !pargs.listall){
+			writeln(conn.statusString);
+		}
 
     } catch (Exception e){
 		stderr.writeln(e.msg);
