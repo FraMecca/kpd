@@ -57,6 +57,7 @@ struct MPDConnection
 			duration_min = duration_tot / 60;
 			duration_sec = duration_tot % 60;
 			position = mpd_song_get_pos(song);
+			uri = mpd_song_get_uri(song).fromStringz.to!string;
 		}
 
 
@@ -311,3 +312,4 @@ extern (C):
 	bool mpd_run_pause(mpd_connection*);
     bool mpd_run_add(mpd_connection*, const char*);
     mpd_song* mpd_run_get_queue_song_pos(mpd_connection *, ulong);
+    char* mpd_song_get_uri(mpd_song *) 	;
