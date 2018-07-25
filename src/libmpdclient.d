@@ -47,6 +47,7 @@ struct MPDConnection
     	uint duration_min;
     	uint duration_sec;
     	uint position;
+        bool isDummy = false; // last element, dummy
 
     	private void load_song(mpd_song* song) {
 			assert(song !is null);
@@ -63,18 +64,20 @@ struct MPDConnection
 
     	this(ref Connection conn) {
 			mpd_song* song = mpd_run_current_song(conn.c);
-			load_song(song);
-    	}	
+            // check to avoid assertion failure on empty playlist
+            if (song !is null) load_song(song);
+            else this.isDummy = true;
+    	}
 
     	this(mpd_song *song) {
 			load_song(song);
-    	}	
+    	}
 
     	@property string toString(bool uris)
     	{
     		if (uris || this.title == "")
         		return this.uri;
-    		else 
+    		else
             	return this.artist ~ " - " ~ this.album ~ " - " ~ this.title;
 		}
 	}
@@ -203,6 +206,7 @@ struct MPDConnection
     	auto st = this.status;
     	auto s = this.song;
     	string ret;
+        if (s.isDummy) return "";
 
     	if(s.title != "") {
             ret = s.artist ~ " - " ~ s.title ~ "\n" ~ s.album;

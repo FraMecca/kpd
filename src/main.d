@@ -207,7 +207,8 @@ void main(string[] args)
         }
 
 		if(!pargs.quiet && pargs.searchTermsR.length == 0 && !pargs.clear && !pargs.list && !pargs.listall){
-			writeln(conn.statusString);
+            auto outstr = conn.statusString;
+            if (outstr != "") writeln(conn.statusString);
 		}
 
     } catch (Exception e){
