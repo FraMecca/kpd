@@ -125,6 +125,14 @@ struct MPDConnection
 		this.timeout = timeout;
 	}
 
+    @property void update()
+	{
+		auto conn = Connection(host, port, timeout);
+        // TODO avoid printing MPD_ERROR_SUCCESS on no error
+        // null is path to update (means update all db)
+		mpd_run_update(conn.c, null);
+	}
+
     @property void pause()
 	{
 		auto conn = Connection(host, port, timeout);
@@ -187,7 +195,7 @@ struct MPDConnection
         assert(false);
     }
 
-	static foreach(fun; ["next", "previous", "clear", "stop", "shuffle", "update"])
+	static foreach(fun; ["next", "previous", "clear", "stop", "shuffle"])
     {
 		mixin("@property void " ~ fun ~ "(){auto conn=Connection(host, port, timeout);
 				enforce(mpd_run_" ~ fun ~ "(conn.c), new MPDException(mpd_connection_get_error(conn.c)));}");
@@ -231,7 +239,7 @@ struct MPDConnection
 		ret ~= " #" ~ (s.position+1).to!string ~ "/" ~ st.queueLenght.to!string;
 		ret ~= "\t" ~ st.elapsedTimeMin.to!string ~ ":" ~ st.elapsedTimeSec.to!string ~ "/" ~ s.duration_min.to!string ~ ":" ~ s.duration_sec.to!string;
 		auto last = "";
-		static foreach(r; ["random", "consume", "repeat", "single", "crossfade", "update"]){
+		static foreach(r; ["random", "consume", "repeat", "single", "crossfade"]){
 			mixin("if(st."~r~") last ~= \""~r~":on \";");
 		}
 		if(last != "") ret ~= "\n" ~ last;
@@ -312,7 +320,7 @@ extern (C):
 	bool mpd_run_random(mpd_connection*, bool);
 	bool mpd_run_single(mpd_connection*, bool);
 	bool mpd_run_shuffle(mpd_connection*);
-	bool mpd_run_update(mpd_connection*);
+	bool mpd_run_update(mpd_connection*, const char*);
 	bool mpd_run_pause(mpd_connection*);
     bool mpd_run_add(mpd_connection*, const char*);
     mpd_song* mpd_run_get_queue_song_pos(mpd_connection *, ulong);
