@@ -259,7 +259,9 @@ struct MPDConnection
 		return new Generator!Song(
 				{
     			auto st = this.status;
-    			foreach(i; iota(status.queueLenght)){
+                auto len = status.queueLenght;
+                if(!len) return;
+    			foreach(i; iota(len)){
     				auto song = get_song_by_pos(i);
     				yield(song);
     			}
