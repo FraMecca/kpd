@@ -45,7 +45,6 @@ struct ParseArgs{
 	int port = 6600;
 	string dblocation = "~/.mpd/database";
 
-    
     immutable string[] oargs;
     GetoptResult rlst;
 
