@@ -36,8 +36,8 @@ struct ParseArgs{
     bool listall;
     bool play;
     ulong playN;
-    ulong delN;
-    Tuple!(ulong, ulong) delR;
+    Nullable!uint delN;
+    Nullable!(Tuple!(uint, uint)) delR; // TODO
     Tuple!(ulong, ulong) shuffleR;
     Tuple!(ulong, ulong) swapR;
     string[] searchTermsR;
@@ -89,13 +89,13 @@ struct ParseArgs{
                     playN = to!ulong(arg1);
                     break;
                 case "del|d":
-                    delN = to!ulong(arg1);
+                    delN = to!uint(arg1);
                     break;
                 case "del-range|D":
                     enforce(oargs.length >= idx+2, 
                             new GetOptException("Missing second value for argument " ~ lng ~ "."));
                     arg2 = oargs[idx+2];
-                    delR = tuple(to!ulong(arg1), to!ulong(arg2));
+                    delR = tuple(to!uint(arg1), to!uint(arg2));
                     break;
                 case "swap":
                     enforce(oargs.length >= idx+2, 
@@ -180,7 +180,7 @@ void main(string[] args)
                         conn."~m~"(pargs."~m~");}");
             }
         }
-        
+
         if (pargs.listall || pargs.add || pargs.searchTermsR.length > 0) {
         	auto gen = new DBParser(pargs.dblocation);
             gen.all
@@ -194,6 +194,10 @@ void main(string[] args)
         	if(pargs.playN == 0) conn.play;
         	else conn.play(pargs.playN);
         }
+
+		if (!pargs.delN.isNull){
+			conn.del(pargs.delN.get);
+		}
 
         if(pargs.list){
         	auto highlight = conn.song.position;

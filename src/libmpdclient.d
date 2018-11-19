@@ -85,13 +85,13 @@ struct MPDConnection
 	struct Status
 	{
 		mpd_state state;
-		bool random;                                             
+		bool random;
 		bool consume;
 		bool repeat;
 		bool single;
-		bool crossfade;                                          
-		bool update;                                             
-		int elapsedTimeMin;                                     
+		bool crossfade;
+		bool update;
+		int elapsedTimeMin;
 		int elapsedTimeSec;
 		int queueLenght;
 
@@ -190,7 +190,7 @@ struct MPDConnection
     @property void backward(string st) {
         assert(false);
     }
-    
+
     @property void forward(string st) {
         assert(false);
     }
