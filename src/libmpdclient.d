@@ -160,6 +160,14 @@ struct MPDConnection
 		enforce(mpd_run_delete(conn.c, pos), new MPDException(mpd_connection_get_error(conn.c)));
 	}
 
+	@property void move(uint start, uint end)
+    {
+		auto conn = Connection(host, port, timeout);
+        start = start == 0 ? 0 : start - 1;
+        end = end == 0 ? 0 : end - 1;
+		enforce(mpd_run_move(conn.c, start, end), new MPDException(mpd_connection_get_error(conn.c)));
+	}
+
     @property Status status()
     {
 		auto conn = Connection(host, port, timeout);
@@ -260,17 +268,17 @@ struct MPDConnection
     }
 }
 
-private:
 extern (C):
+	enum mpd_state 
+	{
+		MPD_STATE_UNKNOWN = 0, MPD_STATE_STOP = 1, MPD_STATE_PLAY = 2, MPD_STATE_PAUSE = 3
+	}
+private:
 	struct mpd_connection;
 	struct mpd_status;
 	struct mpd_song;
 	void mpd_connection_free(mpd_connection *);
 	mpd_connection* mpd_connection_new(const char*, short, uint);
-	enum mpd_state 
-	{
-		MPD_STATE_UNKNOWN = 0, MPD_STATE_STOP = 1, MPD_STATE_PLAY = 2, MPD_STATE_PAUSE = 3
-	}
 	enum mpd_error 
 	{
 		MPD_ERROR_SUCCESS = 0, MPD_ERROR_OOM, MPD_ERROR_ARGUMENT, MPD_ERROR_STATE,
@@ -294,6 +302,7 @@ extern (C):
 	bool mpd_run_toggle_pause(mpd_connection *);
 	bool mpd_run_play_pos(mpd_connection *, ulong pos);
 	bool mpd_run_delete(mpd_connection *, uint pos);
+	bool mpd_run_move(mpd_connection *, uint pos, uint post);
 	bool mpd_status_get_random(mpd_status*);
 	bool mpd_status_get_repeat(mpd_status*);
 	bool mpd_status_get_single(mpd_status*);
@@ -315,5 +324,6 @@ extern (C):
 	bool mpd_run_update(mpd_connection*, const char*);
 	bool mpd_run_pause(mpd_connection*);
     bool mpd_run_add(mpd_connection*, const char*);
-    mpd_song* mpd_run_get_queue_song_pos(mpd_connection *, ulong);
+	bool mpd_run_seek_pos(mpd_connection*, const uint, const float);
+	mpd_song* mpd_run_get_queue_song_pos(mpd_connection *, ulong);
     char* mpd_song_get_uri(mpd_song *) 	;
