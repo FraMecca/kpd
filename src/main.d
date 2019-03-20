@@ -19,8 +19,6 @@ struct ParseArgs{
     bool quiet;
     bool add; //
     bool previous;
-    string backward; //
-    string forward; //
     bool clear;
     bool list;
     bool next;
@@ -40,6 +38,7 @@ struct ParseArgs{
     Nullable!(Tuple!(uint, uint)) delR; // TODO
     Tuple!(ulong, ulong) shuffleR;
     Tuple!(ulong, ulong) swapR;
+    Tuple!(ulong, ulong) moveR;
     string[] searchTermsR;
 	string host = "localhost";
 	int port = 6600;
@@ -51,9 +50,15 @@ struct ParseArgs{
     void opt_handler(string opt)
     {
         // split long and short option and get original occurrence
-        auto div = opt.indexOf("|");
-        assert(div > 0);
-        auto lng = "--" ~ opt[0 .. div]; auto sht = "-" ~ opt[div+1 .. $];
+		ulong div;
+		if(opt.canFind("|"))
+			div = opt.indexOf("|");
+		else
+			div = opt.length;
+
+        assert(div > 0, "div > 0:" ~ div.to!string);
+        auto lng = "--" ~ opt[0 .. div];
+		auto sht = div == opt.length ? "" : "-" ~ opt[div+1 .. $];
         assert(sht.length < lng.length);
         auto idx = oargs.countUntil(sht);
         long eqIdx = -1;
@@ -61,7 +66,7 @@ struct ParseArgs{
         // manage options such as --play=2
         if(idx == -1) {
             foreach(i, param; oargs.enumerate){
-                if(param.canFind(sht~"=") || param.canFind(lng~"=")){
+                if((sht != "" &&param.canFind(sht~"=")) || param.canFind(lng~"=")){
                     idx = i;
                     eqIdx = oargs[idx].indexOf("=");
                     break;
@@ -103,6 +108,12 @@ struct ParseArgs{
                     arg2 = oargs[idx+2];
                     swapR = tuple(to!ulong(arg1), to!ulong(arg2));
                     break;
+                case "move":
+                    enforce(oargs.length >= idx+2, 
+                            new GetOptException("Missing second value for argument " ~ lng ~ "."));
+                    arg2 = oargs[idx+2];
+                    moveR = tuple(to!ulong(arg1), to!ulong(arg2));
+                    break;
                 case "shuffle-range":
                     enforce(oargs.length >= idx+2, 
                             new GetOptException("Missing second value for argument " ~ lng ~ "."));
@@ -132,8 +143,6 @@ struct ParseArgs{
         rlst = getopt(args, config.caseSensitive,
                 "add|a",  "add to current playlist", &add,
                 "previous|b|prev",  "play previous song", &previous,
-                "backward|B",  "seek backwards of nsec or %song", &backward,
-                "forward|",  "seek forward of nsec or %song", &forward,
                 "clear|c",  "clear current playlist", &clear,
                 "consume",  "toggle consume", &consume,
                 "del|d",  "del specified item from playlist", &opt_handler,
@@ -153,6 +162,7 @@ struct ParseArgs{
                 "shuffle-range",  "shuffle given range", &opt_handler,
                 "update|u",  "send update request to MPD", &update,
                 "swap",  "swap specified items", &opt_handler,
+                "move",  "move specified items", &opt_handler,
                 "quiet|q", "disable output", &quiet,
         );
 
@@ -162,9 +172,7 @@ struct ParseArgs{
 void main(string[] args)
 {
     try {
-
         auto pargs = ParseArgs(args); // constructor does parsing
-
         if(pargs.rlst.helpWanted) {
             defaultGetoptPrinter("kpd is a client for MPD.", pargs.rlst.options);
             return;
@@ -184,10 +192,16 @@ void main(string[] args)
         if (pargs.listall || pargs.add || pargs.searchTermsR.length > 0) {
         	auto gen = new DBParser(pargs.dblocation);
             gen.all
-                .tee!((a){if (pargs.listall) pretty_print(a, pargs.uris);}) // print db
+                .tee!((a){
+						if (pargs.listall) pretty_print(a, pargs.uris);
+					}) // print db
                 .filter!(a => search_queries(a, parseQueries(pargs.searchTermsR))) // search
-                .tee!((a){if (!pargs.quiet) pretty_print(a, pargs.uris);}) // print search results
-                .each!((a){if (pargs.add) conn.add(a.uri);}); // add 
+                .tee!((a){
+						if (!pargs.quiet) pretty_print(a, pargs.uris);
+					}) // print search results
+                .each!((a){
+						if (pargs.add) conn.add(a.uri);
+					}); // add 
         }
 
         if (pargs.play){
@@ -203,8 +217,18 @@ void main(string[] args)
         	auto highlight = conn.song.position;
             foreach(i, r; conn.playlist.enumerate){
 				auto prt = (i+1).to!string ~ ". " ~ r.toString(pargs.uris);
-            	if(i == highlight)
-            		prt = "\033[95m" ~ prt ~ "\x1b[0m";
+            	if(i == highlight){
+					switch(conn.status.state){
+						case mpd_state.MPD_STATE_PLAY:
+							prt = "\033[95m" ~ prt ~ "\x1b[0m"; break;
+						case mpd_state.MPD_STATE_PAUSE:
+							prt = "\033[93m" ~ prt ~ "\x1b[0m"; break;
+						case mpd_state.MPD_STATE_STOP:
+							prt = "\033[91m" ~ prt ~ "\x1b[0m"; break;
+						default:
+							assert(0);
+					}
+				}
             	writeln(prt);
             }
         }
@@ -225,11 +249,9 @@ void pretty_print(DBUnion s, bool uris)
         writeln(s.uri);
     } else {
         if(s.kind is DBUnion.Kind.song) {
-            auto prt = s.artist ~ " - " ~ s.album ~ " - " ~ s.title;
-            writeln(prt);
+            writeln(s.artist, " - ", s.album, " - ", s.title);
         } else {
             writeln(s.title);
         }
     }
 }
-
