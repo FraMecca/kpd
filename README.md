@@ -68,6 +68,6 @@ The search is way less strict: case-insensitive, no type field.
 The result of the search can be added to the playlist with `--add` or `-a` arguments. kpd can also be used in a pipe like this:
 
 ```
-$ kpd -s kyuss -f queen hula | kpd -a
+$ kpd -U -s kyuss -f queen hula | kpd -a
 ```
-but skips some commands such as `-f`.
+but skips some commands such as `-f` and accepts only full URIs.
