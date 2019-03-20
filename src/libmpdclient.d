@@ -235,7 +235,10 @@ struct MPDConnection
 		}
 
 		ret ~= " #" ~ (s.position+1).to!string ~ "/" ~ st.queueLenght.to!string;
-		ret ~= "\t" ~ st.elapsedTimeMin.to!string ~ ":" ~ st.elapsedTimeSec.to!string ~ "/" ~ s.duration_min.to!string ~ ":" ~ s.duration_sec.to!string;
+		ret ~= "\t" ~ st.elapsedTimeMin.format!("%02d") ~ ":"
+			~ st.elapsedTimeSec.format!("%02d")~ "/"
+			~ s.duration_min.format!("%02d") ~ ":"
+			~ s.duration_sec.format!("%02d");
 		auto last = "";
 		static foreach(r; ["random", "consume", "repeat", "single", "crossfade"]){
 			mixin("if(st."~r~") last ~= \""~r~":on \";");
