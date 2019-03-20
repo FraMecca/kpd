@@ -16,6 +16,11 @@ class MPDException : Exception
 	{
 		super(msg, file, line);
     }
+
+	this(const string cmd, const char* msg, string file = __FILE__, size_t line = __LINE__)
+	{
+		super("Command " ~ cmd ~ ": " ~ msg.fromStringz.to!string, file, line);
+    }
 }
 
 struct MPDConnection
@@ -134,30 +139,38 @@ struct MPDConnection
     @property void pause()
 	{
 		auto conn = Connection(host, port, timeout);
-		enforce(mpd_run_toggle_pause(conn.c), new MPDException(mpd_connection_get_error(conn.c)));
+		enforce(mpd_run_toggle_pause(conn.c), new MPDException("pause", mpd_connection_get_error_message(conn.c)));
 	}
 
 	@property void play()
 	{
 		auto conn = Connection(host, port, timeout);
 		if (status.state == mpd_state.MPD_STATE_STOP)
-			enforce(mpd_run_play_pos(conn.c, 0), new MPDException(mpd_connection_get_error(conn.c)));
+			enforce(mpd_run_play_pos(conn.c, 0), new MPDException(
+																  "play",
+																  mpd_connection_get_error_message(conn.c)));
 		else
-			enforce(mpd_run_toggle_pause(conn.c), new MPDException(mpd_connection_get_error(conn.c)));
+			enforce(mpd_run_toggle_pause(conn.c), new MPDException(
+																   "play",
+																   mpd_connection_get_error_message(conn.c)));
 	}
 
 	@property void play(ulong pos)
     {
 		auto conn = Connection(host, port, timeout);
         pos = pos == 0 ? 0 : pos - 1;
-		enforce(mpd_run_play_pos(conn.c, pos), new MPDException(mpd_connection_get_error(conn.c)));
+		enforce(mpd_run_play_pos(conn.c, pos), new MPDException(
+																"play",
+																mpd_connection_get_error_message(conn.c)));
 	}
 
 	@property void del(uint pos)
     {
 		auto conn = Connection(host, port, timeout);
         pos = pos == 0 ? 0 : pos - 1;
-		enforce(mpd_run_delete(conn.c, pos), new MPDException(mpd_connection_get_error(conn.c)));
+		enforce(mpd_run_delete(conn.c, pos), new MPDException(
+															  "delete",
+															  mpd_connection_get_error_message(conn.c)));
 	}
 
 	@property void move(uint start, uint end)
@@ -165,7 +178,9 @@ struct MPDConnection
 		auto conn = Connection(host, port, timeout);
         start = start == 0 ? 0 : start - 1;
         end = end == 0 ? 0 : end - 1;
-		enforce(mpd_run_move(conn.c, start, end), new MPDException(mpd_connection_get_error(conn.c)));
+		enforce(mpd_run_move(conn.c, start, end), new MPDException(
+																   "move",
+																   mpd_connection_get_error_message(conn.c)));
 	}
 
     @property Status status()
@@ -190,20 +205,22 @@ struct MPDConnection
                 } catch (ConvException e) {
                     throw new MPDException(\"--"~fun~" only accepts 'true' or 'false' as arguments.\");
                 }
-				enforce(mpd_run_" ~ fun ~ "(conn.c, st), new MPDException(mpd_connection_get_error(conn.c)));}");
+				enforce(mpd_run_" ~ fun ~ "(conn.c, st), new MPDException(\"" ~fun~"\",
+									mpd_connection_get_error_message(conn.c)));}");
 	}
 
 	static foreach(fun; ["next", "previous", "clear", "stop", "shuffle"])
     {
 		mixin("@property void " ~ fun ~ "(){auto conn=Connection(host, port, timeout);
-				enforce(mpd_run_" ~ fun ~ "(conn.c), new MPDException(mpd_connection_get_error(conn.c)));}");
-	}
+				enforce(mpd_run_" ~ fun ~ "(conn.c), new MPDException(\""~fun~"\",
+							mpd_connection_get_error_message(conn.c)));}");
+		}
 
     @property void add(string uri)
     {
 		auto conn = Connection(host, port, timeout);
         if(!mpd_run_add(conn.c, uri.toStringz)) {
-            throw new MPDException(mpd_connection_get_error(conn.c));
+            throw new MPDException("add - uri=\""~uri~"\"", mpd_connection_get_error_message(conn.c));
         }
     }
 
@@ -254,7 +271,6 @@ struct MPDConnection
 		return Song(mpd_run_get_queue_song_pos(conn.c, pos));
 	}
 
-
 	@property Generator!Song playlist()
     {
 		return new Generator!Song(
@@ -297,6 +313,7 @@ private:
 		MPD_TAG_ALBUM_ARTIST_SORT, MPD_TAG_ALBUM_SORT, MPD_TAG_COUNT
 	}
 	mpd_error mpd_connection_get_error(mpd_connection *);
+    char* mpd_connection_get_error_message(mpd_connection *) 	;
     mpd_status* mpd_run_status(mpd_connection *connection);
 	bool mpd_run_clear(mpd_connection *);
 	bool mpd_run_stop(mpd_connection *);
