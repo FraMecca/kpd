@@ -4,8 +4,6 @@ import std.exception;
 import std.conv;
 import std.range;
 
-import std.stdio; // TODO: remove
-
 class MPDException : Exception
 {
 	this(mpd_error err, string file = __FILE__, size_t line = __LINE__)
@@ -186,14 +184,6 @@ struct MPDConnection
                 }
 				enforce(mpd_run_" ~ fun ~ "(conn.c, st), new MPDException(mpd_connection_get_error(conn.c)));}");
 	}
-
-    @property void backward(string st) {
-        assert(false);
-    }
-
-    @property void forward(string st) {
-        assert(false);
-    }
 
 	static foreach(fun; ["next", "previous", "clear", "stop", "shuffle"])
     {
