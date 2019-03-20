@@ -216,7 +216,7 @@ void main(string[] args)
 				foreach(a; stdin.byLineCopy()){
 					if (pargs.add)
 						conn.add(a); // TODO use each!
-				};
+				}
 			}
 		}
 
