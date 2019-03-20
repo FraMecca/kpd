@@ -15,6 +15,10 @@ import search;
 import database;
 import libmpdclient;
 
+extern (C){
+	int isatty(const int fd);
+}
+
 struct ParseArgs{
     bool quiet;
     bool add; //
@@ -189,10 +193,11 @@ void main(string[] args)
             }
         }
 
-        if (pargs.listall || pargs.add || pargs.searchTermsR.length > 0) {
-        	auto gen = new DBParser(pargs.dblocation);
-            gen.all
-                .tee!((a){
+		if ((pargs.listall || pargs.add || pargs.searchTermsR.length > 0)) {
+			if(isatty(stdin.fileno) == 1){ // search on db only if interactive
+				auto gen = new DBParser(pargs.dblocation);
+				gen.all
+					.tee!((a){
 						if (pargs.listall) pretty_print(a, pargs.uris);
 					}) // print db
                 .filter!(a => search_queries(a, parseQueries(pargs.searchTermsR))) // search
@@ -202,7 +207,13 @@ void main(string[] args)
                 .each!((a){
 						if (pargs.add) conn.add(a.uri);
 					}); // add 
-        }
+			} else { // we are in a pipe
+				foreach(a; stdin.byLineCopy()){
+					if (pargs.add)
+						conn.add(a); // TODO use each!
+				};
+			}
+		}
 
         if (pargs.play){
         	if(pargs.playN == 0) conn.play;
