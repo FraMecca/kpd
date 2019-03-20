@@ -44,6 +44,7 @@ struct ParseArgs{
     Tuple!(ulong, ulong) swapR;
     Tuple!(ulong, ulong) moveR;
     string[] searchTermsR;
+    string[] filterTermsR;
 	string host = "localhost";
 	int port = 6600;
 	string dblocation = "~/.mpd/database";
@@ -162,6 +163,7 @@ struct ParseArgs{
                 "single",  "toggle single", &single,
                 "stop",  "toggle stop", &stop,
                 "search|s",  "search given key(s)", &searchTermsR,
+                "filter|f",  "filter given key(s) from search results", &filterTermsR,
                 "shuffle|t",  "shuffle current playlist", &shuffle,
                 "shuffle-range",  "shuffle given range", &opt_handler,
                 "update|u",  "send update request to MPD", &update,
@@ -194,13 +196,16 @@ void main(string[] args)
         }
 
 		if ((pargs.listall || pargs.add || pargs.searchTermsR.length > 0)) {
+			auto queries = parseQueries(pargs.searchTermsR);
+			auto negate = parseQueries(pargs.filterTermsR);
 			if(isatty(stdin.fileno) == 1){ // search on db only if interactive
 				auto gen = new DBParser(pargs.dblocation);
 				gen.all
 					.tee!((a){
 						if (pargs.listall) pretty_print(a, pargs.uris);
 					}) // print db
-                .filter!(a => search_queries(a, parseQueries(pargs.searchTermsR))) // search
+                .filter!(a => search_queries(a, queries))
+                .filter!(a => !search_queries(a, negate))
                 .tee!((a){
 						if (!pargs.quiet) pretty_print(a, pargs.uris);
 					}) // print search results
