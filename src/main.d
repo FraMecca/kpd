@@ -9,11 +9,15 @@ import std.exception;
 import std.traits;
 import std.file;
 import std.path;
+        import std.json : JSONValue;
 import sdlang;
 
 import search;
 import database;
 import libmpdclient;
+import jsonall;
+
+// TODO: filter does not work on multiple args: -f gardenia,stage
 
 extern (C){
 	int isatty(const int fd);
@@ -21,6 +25,7 @@ extern (C){
 
 struct ParseArgs{
     bool quiet;
+    bool listjson;
     bool add; //
     bool previous;
     bool clear;
@@ -161,6 +166,7 @@ struct ParseArgs{
                 "random|r",  "toggle random", &random,
                 "repeat",  "toggle repeat", &repeat,
                 "single",  "toggle single", &single,
+                "list-json",  "list everything in db as json object", &listjson,
                 "stop",  "toggle stop", &stop,
                 "search|s",  "search given key(s)", &searchTermsR,
                 "filter|f",  "filter given key(s) from search results", &filterTermsR,
@@ -188,14 +194,15 @@ void main(string[] args)
 
         static foreach(m; __traits(allMembers, ParseArgs)) {
             static if (m != "listall" && m != "add" && m != "quiet" && m != "list" && m != "uris" &&
-            		m != "host" && m != "port" && m != "dblocation" && m != "play") {
+            		m != "host" && m != "port" && m != "dblocation" && m != "play" && m != "listjson") {
                 mixin("static if (is(typeof(ParseArgs."~m~") == bool)){ if(pargs."~m~") conn."~m~";}");
                 mixin("static if (is(typeof(ParseArgs."~m~") == string)){ if(pargs."~m~")
                         conn."~m~"(pargs."~m~");}");
             }
         }
 
-		if ((pargs.listall || pargs.add || pargs.searchTermsR.length > 0)) {
+        JSONValue jsonList; jsonList.array = [];
+		if ((pargs.listall || pargs.listjson ||  pargs.add || pargs.searchTermsR.length > 0)) {
 			auto queries = parseQueries(pargs.searchTermsR);
 			auto negate = parseQueries(pargs.filterTermsR);
 			if(isatty(stdin.fileno) == 1){ // search on db only if interactive
@@ -204,6 +211,10 @@ void main(string[] args)
 					.tee!((a){
 						if (pargs.listall) pretty_print(a, pargs.uris);
 					}) // print db
+					.tee!((a){
+                            if (pargs.listjson)
+                                jsonList.array ~= jsonEncode(a);
+					}) // append to json
                 .filter!(a => search_queries(a, queries))
                 .filter!(a => !search_queries(a, negate))
                 .tee!((a){
@@ -248,6 +259,9 @@ void main(string[] args)
             	writeln(prt);
             }
         }
+
+        if(pargs.listjson)
+            writeln(jsonList);
 
 		if(!pargs.quiet && pargs.searchTermsR.length == 0 && !pargs.clear && !pargs.list && !pargs.listall){
             auto outstr = conn.statusString;
