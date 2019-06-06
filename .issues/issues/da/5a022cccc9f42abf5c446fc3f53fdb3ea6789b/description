@@ -1,0 +1,5 @@
+-f ignores comma divided arguments:
+```
+./kpd -s kyuss,valley -f white,gardenia
+```
+
