@@ -1,0 +1,14 @@
+{
+	"fileVersion": 1,
+	"versions": {
+		"commandr": "0.1.1",
+		"io": "0.2.4",
+		"iopipe": "0.1.7",
+		"libinputvisitor": "1.2.2",
+		"pegged": "0.4.4",
+		"sdlang-d": "0.10.5",
+		"sumtype": "0.4.1",
+		"taggedalgebraic": "0.10.13",
+		"unit-threaded": "0.7.55"
+	}
+}

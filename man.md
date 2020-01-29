@@ -38,10 +38,12 @@ If no command is given, the current status is printed.
 	Toggle consume mode if state is not specified
 
 `delete`
-	Aspettando Galla
 
-`delete range`
-	Aspettando Galla
+    Delete a song from the current playlist
+
+`delete range` <n,m>
+    
+    Delete all the song starting ranging from n to m. n must be greater than m.
 
 `-h, --help`
 
@@ -51,8 +53,9 @@ If no command is given, the current status is printed.
 
 		Prints entire playlist
 
-`-m, --move`
-	COMPLETa
+`-m, --move` <n,m>
+
+    Move a song from n to m.
 
 `-n, --next`
 
@@ -69,6 +72,7 @@ If no command is given, the current status is printed.
 `-b, --prev, --previous`
 
 	Starts playing previous song on playlist
+    
 `-N, --full-names` <on|off|true|false|0|1>
 	
 	Print song uri instead title, artist and album
@@ -86,9 +90,6 @@ If no command is given, the current status is printed.
 `--stop`
 
 	Stops playing
-
-`-S, --seek`
-	Aspettando Eug
 
 `--single` <on|off|true|false|0|1>
 

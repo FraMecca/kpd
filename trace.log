@@ -1,0 +1,34 @@
+------------------
+	    1	_D3std5stdio__T7writelnTAyaZQnFNfQjZv
+_D3std5stdio4File17LockingTextWriter__T3putTAyaZQjMFNfQkZv	1	23873	1377
+	    1	_D3std5stdio__T13trustedFwriteTaZQsFNbNiNePOS4core4stdcQBx8_IO_FILExAaZm
+------------------
+	    1	_D3std5stdio4File17LockingTextWriter__T3putTaZQhMFNfaZv
+_D3std5stdio4File17LockingTextWriter__T3putTaZQhMFNfaZ12trustedFPUTCFNbNiNeiPS4core4stdcQDe8_IO_FILEZi	1	60642	60642
+------------------
+	    1	_D3std5stdio__T7writelnTAyaZQnFNfQjZv
+_D3std5stdio4File17LockingTextWriter__T3putTaZQhMFNfaZv	1	66365	5723
+	    1	_D3std5stdio4File17LockingTextWriter__T3putTaZQhMFNfaZ12trustedFPUTCFNbNiNeiPS4core4stdcQDe8_IO_FILEZi
+------------------
+	    1	_D3std5stdio4File17LockingTextWriter__T3putTAyaZQjMFNfQkZv
+_D3std5stdio__T13trustedFwriteTaZQsFNbNiNePOS4core4stdcQBx8_IO_FILExAaZm	1	22496	22496
+------------------
+	    1	_Dmain
+_D3std5stdio__T7writelnTAyaZQnFNfQjZv	1	234250	144012
+	    1	_D3std5stdio4File17LockingTextWriter__T3putTAyaZQjMFNfQkZv
+	    1	_D3std5stdio4File17LockingTextWriter__T3putTaZQhMFNfaZv
+------------------
+_Dmain	0	235466	1216
+	    1	_D3std5stdio__T7writelnTAyaZQnFNfQjZv
+
+======== Timer frequency unknown, Times are in Megaticks ========
+
+  Num          Tree        Func        Per
+  Calls        Time        Time        Call
+
+      1           0           0           0     @safe void std.stdio.writeln!(immutable(char)[]).writeln(immutable(char)[])
+      1           0           0           0     nothrow @nogc @trusted int std.stdio.File.LockingTextWriter.put!(char).put(char).trustedFPUTC(int, core.stdc.stdio._IO_FILE*)
+      1           0           0           0     nothrow @nogc @trusted ulong std.stdio.trustedFwrite!(char).trustedFwrite(shared(core.stdc.stdio._IO_FILE)*, const(char[]))
+      1           0           0           0     @safe void std.stdio.File.LockingTextWriter.put!(char).put(char)
+      1           0           0           0     @safe void std.stdio.File.LockingTextWriter.put!(immutable(char)[]).put(immutable(char)[])
+      1           0           0           0     _Dmain

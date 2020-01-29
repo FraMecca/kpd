@@ -1,0 +1,13 @@
+{
+	"dub": {
+		"lastUpgrade": "2018-11-20T17:51:15.7947887",
+		"cachedUpgrades": {
+			"iopipe": "0.1.3",
+			"io": "0.2.2",
+			"libinputvisitor": "1.2.2",
+			"unit-threaded": "0.7.52",
+			"taggedalgebraic": "0.10.12",
+			"sdlang-d": "0.10.4"
+		}
+	}
+}

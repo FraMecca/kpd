@@ -21,7 +21,7 @@ extern (C){
 
 struct ParseArgs{
     bool quiet;
-    bool add; //
+    bool add;
     bool previous;
     bool clear;
     bool list;
@@ -183,6 +183,30 @@ void main(string[] args)
             defaultGetoptPrinter("kpd is a client for MPD.", pargs.rlst.options);
             return;
         }
+        {
+        import commandr;
+        auto a = new Program("kpd", "0.1")
+            .summary("kpd, a client for mpd.")
+            .author("Francesco Galla`, Francesco Mecca")
+            .add(new Flag("u", "update", "Send update request to mpd").name("update"))
+            .add(new Flag("q", "quiet", "Suppress most output").name("quiet"))
+            .add(new Flag("b", "previous", "Previous song").name("previous"))
+            .add(new Flag("n", "next", "Next song").name("next"))
+            .add(new Flag(null, "prev", "Previous song").name("prev"))
+            .add(new Flag("l", "list", "display current playlist").name("list"))
+            .add(new Flag("U", "display-uri", "display full uri of file").name("displayuri"))
+            .add(new Flag(null, "list-all", "display whole database").name("listall"))
+            .add(new Option("d", "delete", "Delete selected song from playlist").name("delete"))
+            .add(new Option(null, "delete-range", "Delete selected range of songs from playlist").name("deleterange"))
+            .add(new Option("p", "play", "play selected song or resume").name("play").defaultValue("")
+                 .validateEachWith((opt) { writeln(opt); return true; }, "test" ))
+          .parse(args);
+
+      writeln("verbosity level", a.occurencesOf("verbose"));
+      writeln("arg: ", a.arg("path"));
+        }
+      if(args.length >= 0) return;
+      else writeln("Continuing");
 
 		auto conn = MPDConnection(pargs.host, to!short(pargs.port));
 
