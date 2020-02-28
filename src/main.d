@@ -19,12 +19,24 @@ extern (C){
 	int isatty(const int fd);
 }
 
+int asInt (string st){
+    import core.stdc.stdlib : exit;
+    try{
+        return st.to!int;
+    }catch(Exception e){
+        stderr.writeln("Error: '" ~ st ~"' can't be parsed as integer");
+        exit(1);
+        assert(false);
+    }
+}
+
 struct ParseArgs{
     bool quiet;
-    bool add; //
+    bool add;
     bool previous;
     bool clear;
     bool list;
+    bool listall;
     bool next;
     bool uris; 
     bool pause;
@@ -35,11 +47,10 @@ struct ParseArgs{
     bool stop;
     bool shuffle;
     bool update;
-    bool listall;
     bool play;
     ulong playN;
     Nullable!uint delN;
-    Nullable!(Tuple!(uint, uint)) delR; // TODO
+    Tuple!(uint, uint) delR; // TODO
     Tuple!(ulong, ulong) shuffleR;
     Tuple!(ulong, ulong) swapR;
     Tuple!(ulong, ulong) moveR;
@@ -49,91 +60,9 @@ struct ParseArgs{
 	int port = 6600;
 	string dblocation = "~/.mpd/database";
 
-    immutable string[] oargs;
-    GetoptResult rlst;
-
-    void opt_handler(string opt)
-    {
-        // split long and short option and get original occurrence
-		ulong div;
-		if(opt.canFind("|"))
-			div = opt.indexOf("|");
-		else
-			div = opt.length;
-
-        assert(div > 0, "div > 0:" ~ div.to!string);
-        auto lng = "--" ~ opt[0 .. div];
-		auto sht = div == opt.length ? "" : "-" ~ opt[div+1 .. $];
-        assert(sht.length < lng.length);
-        auto idx = oargs.countUntil(sht);
-        long eqIdx = -1;
-        if(idx == -1) idx = oargs.countUntil(lng);
-        // manage options such as --play=2
-        if(idx == -1) {
-            foreach(i, param; oargs.enumerate){
-                if((sht != "" &&param.canFind(sht~"=")) || param.canFind(lng~"=")){
-                    idx = i;
-                    eqIdx = oargs[idx].indexOf("=");
-                    break;
-                }
-            }
-        }
-        enforce(idx > 0, "Error in parsing command line arguments");
-        assert(eqIdx >= -1);
-
-        if(oargs.length == idx + 1 && eqIdx == -1) {
-            switch(opt){
-                case "play|p":
-                	play = true;
-                    playN = 0;
-                    break;
-                default:
-                    throw new GetOptException("Missing value for argument " ~ lng ~ ".");
-            }
-        } else {
-            string arg1 = eqIdx != -1 ? oargs[idx][eqIdx+1 .. $] : oargs[idx+1];
-            string arg2;
-            switch(opt){
-                case "play|p":
-                	play = true;
-                    playN = to!ulong(arg1);
-                    break;
-                case "del|d":
-                    delN = to!uint(arg1);
-                    break;
-                case "del-range|D":
-                    enforce(oargs.length >= idx+2, 
-                            new GetOptException("Missing second value for argument " ~ lng ~ "."));
-                    arg2 = oargs[idx+2];
-                    delR = tuple(to!uint(arg1), to!uint(arg2));
-                    break;
-                case "swap":
-                    enforce(oargs.length >= idx+2, 
-                            new GetOptException("Missing second value for argument " ~ lng ~ "."));
-                    arg2 = oargs[idx+2];
-                    swapR = tuple(to!ulong(arg1), to!ulong(arg2));
-                    break;
-                case "move":
-                    enforce(oargs.length >= idx+2, 
-                            new GetOptException("Missing second value for argument " ~ lng ~ "."));
-                    arg2 = oargs[idx+2];
-                    moveR = tuple(to!ulong(arg1), to!ulong(arg2));
-                    break;
-                case "shuffle-range":
-                    enforce(oargs.length >= idx+2, 
-                            new GetOptException("Missing second value for argument " ~ lng ~ "."));
-                    arg2 = oargs[idx+2];
-                    shuffleR = tuple(to!ulong(arg1), to!ulong(arg2));
-                    break;
-                default:
-                    throw new GetOptException("Missing value for argument " ~ lng ~ ".");
-            }
-        }
-    }
-
-    this(string[] args){
+    import commandr;
+    this(ProgramArgs program){
         arraySep = ",";
-        oargs = args.idup;
     	auto configs = ["/etc/kpd.conf", "~/.kpdrc", "~/.config/kpd.conf"];
     	foreach(cfile; configs){
     		cfile = expandTilde(cfile);
@@ -145,44 +74,85 @@ struct ParseArgs{
     			dblocation = root.getTagValue!string("db");
     		}
     	}
-        rlst = getopt(args, config.caseSensitive,
-                "add|a",  "add to current playlist", &add,
-                "previous|b|prev",  "play previous song", &previous,
-                "clear|c",  "clear current playlist", &clear,
-                "consume",  "toggle consume", &consume,
-                "del|d",  "del specified item from playlist", &opt_handler,
-                "del-range|D",  "del specified range from playlist", &opt_handler,
-                "list|l",  "display current playlist", &list,
-                "list-all|L", "display the whole database", &listall,
-                "next|n",  "play next song", &next,
-                "display-uri|U",  "display URIs", &uris,
-                "play|p",  "toggle play or play specified item", &opt_handler,
-                "pause|P", "pause", &pause,
-                "random|r",  "toggle random", &random,
-                "repeat",  "toggle repeat", &repeat,
-                "single",  "toggle single", &single,
-                "stop",  "toggle stop", &stop,
-                "search|s",  "search given key(s)", &searchTermsR,
-                "filter|f",  "filter given key(s) from search results", &filterTermsR,
-                "shuffle|t",  "shuffle current playlist", &shuffle,
-                "shuffle-range",  "shuffle given range", &opt_handler,
-                "update|u",  "send update request to MPD", &update,
-                "swap",  "swap specified items", &opt_handler,
-                "move",  "move specified items", &opt_handler,
-                "quiet|q", "disable output", &quiet,
-        );
 
+        // now handle program from commandr
+        static foreach(m; __traits(allMembers, ParseArgs)) {
+                mixin("static if (is(typeof(ParseArgs."~m~") == bool)){ this."~m~" = program.flag(\""~m~"\");}");
+        }
+
+        auto lastArg = program.arg("");
+
+        if(lastArg) this.playN = lastArg.asInt;
+        if(program.flag("delete")) this.delN = lastArg.asInt;
+
+        this.searchTermsR = program.arg("search").split(",");
+        this.filterTermsR = program.arg("filter").split(",");
+
+        this.consume = program.arg("consume");
+        this.consume = program.arg("random");
+        this.consume = program.arg("repeat");
+        this.consume = program.arg("single");
+
+        if(program.arg("shufflerange"))
+            this.shuffleR = tuple(program.arg("shufflerange").asInt, lastArg.asInt);
+        if(program.arg("delrange"))
+            this.delR = tuple(program.arg("delrange").asInt, lastArg.asInt);
+        if(program.arg("swap"))
+            this.swapR = tuple(program.arg("swap").asInt, lastArg.asInt);
+        if(program.arg("move"))
+            this.moveR = tuple(program.arg("move").asInt, lastArg.asInt);
+            
     }
+}
+
+auto buildCliArgs(string[] args){
+    import commandr;
+    auto kargs = new Program("kpd", "0.0.1")
+        .summary("kpd is a client for MPD")
+        .author("Francesco Gallà and Francesco Mecca")
+
+        .add(new Flag("a", "add", "add elements to current playlist"))
+        .add(new Flag("l", "list", "display current playlist"))
+        .add(new Flag(null, "listall", "display whole database"))
+        .add(new Flag("c", "clear", "clear current playlist"))
+
+        .add(new Flag("b", "prev", "play previous song"))
+        .add(new Flag(null, "previous", "play previous song"))
+        .add(new Flag("n", "next", "play next song"))
+        .add(new Flag("p", "play", "play [n] or pause mpd"))
+        .add(new Flag("P", "pause", "pause mpd"))
+        .add(new Flag(null, "stop", "stop mpd"))
+
+        .add(new Flag("d", "del", "remove specified item from playlist"))
+        .add(new Option(null, "delrange", "remove specified range of elements from playlist"))
+        .add(new Flag("t", "shuffle", "shuffle current playlist"))
+        .add(new Option(null, "shufflerange", "shuffle given range"))
+        .add(new Option(null, "swap", "swap specified playlist elements"))
+        .add(new Option(null, "move", "move specified playlist elements"))
+
+        .add(new Option(null, "consume", "toggle consume")) // option because accepts only "true" or "false"
+        .add(new Option(null, "random", "toggle random")) // TODO: move to flag that toggles opposite
+        .add(new Option(null, "repeat", "toggle repeat")) // TODO: support on, off
+        .add(new Option(null, "single", "toggle single"))
+
+        .add(new Flag("u", "update", "send update request to mpd"))
+
+        .add(new Flag("q", "quiet", "disable output"))
+        .add(new Flag("U", "displayuri", "display uri of elements"))
+
+        .add(new Option("s", "search", "search given comma-separated key(s)"))
+        .add(new Option("f", "filter", "filter given comma-separated key(s) from search results"))
+
+        .add(new Argument("", "Optional argument (depending on command)")
+             .optional)
+        .parse(args);
+    return kargs;
 }
 
 void main(string[] args)
 {
     try {
-        auto pargs = ParseArgs(args); // constructor does parsing
-        if(pargs.rlst.helpWanted) {
-            defaultGetoptPrinter("kpd is a client for MPD.", pargs.rlst.options);
-            return;
-        }
+        auto pargs = ParseArgs(buildCliArgs(args));
 
 		auto conn = MPDConnection(pargs.host, to!short(pargs.port));
 
