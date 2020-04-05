@@ -19,16 +19,26 @@ extern (C){
 	int isatty(const int fd);
 }
 
-int asInt (string st){
+uint asUInt (string st){
     import core.stdc.stdlib : exit;
     try{
-        return st.to!int;
+        return st.to!uint;
     }catch(Exception e){
         stderr.writeln("Error: '" ~ st ~"' can't be parsed as integer");
         exit(1);
         assert(false);
     }
 }
+
+/* TODO: some options here can be left to config file
+ *  other must be moved to cli only.
+ * Tipical kprc file is only tree lines long and contains:
+ * host "localhost" \n port 6600 \n db "/home/user/.mpd/database"
+ * Doesn't need much more and I don't care at the moment for selecting a different host on the cli
+ * In this way we can remove the indirection of parsing a first structure (programArgs) 
+ * Then copy programArgs to ParseArgs that contains all the values of programArgs + configfile
+ * Maybe we can allow to specify a second config file
+ */ 
 
 struct ParseArgs{
     bool quiet;
@@ -50,13 +60,14 @@ struct ParseArgs{
     bool play;
     ulong playN;
     Nullable!uint delN;
-    Tuple!(uint, uint) delR; // TODO
-    Tuple!(ulong, ulong) shuffleR;
-    Tuple!(ulong, ulong) swapR;
-    Tuple!(ulong, ulong) moveR;
+    //TODO: not implemented
+    Nullable!(Tuple!(uint, uint)) delR;
+    Nullable!(Tuple!(uint, uint)) shuffleR;
+    Nullable!(Tuple!(uint, uint)) swapR;
+    Nullable!(Tuple!(uint, uint)) move;
     string[] searchTermsR;
     string[] filterTermsR;
-	string host = "localhost";
+    string host = "localhost";
 	int port = 6600;
 	string dblocation = "~/.mpd/database";
 
@@ -82,8 +93,8 @@ struct ParseArgs{
 
         auto lastArg = program.arg("");
 
-        if(lastArg) this.playN = lastArg.asInt;
-        if(program.flag("delete")) this.delN = lastArg.asInt;
+        if(lastArg) this.playN = lastArg.asUInt;
+        if(program.flag("del")) this.delN = lastArg.asUInt;
 
         this.searchTermsR = program.arg("search").split(",");
         this.filterTermsR = program.arg("filter").split(",");
@@ -93,15 +104,16 @@ struct ParseArgs{
         this.consume = program.arg("repeat");
         this.consume = program.arg("single");
 
-        if(program.arg("shufflerange"))
-            this.shuffleR = tuple(program.arg("shufflerange").asInt, lastArg.asInt);
-        if(program.arg("delrange"))
-            this.delR = tuple(program.arg("delrange").asInt, lastArg.asInt);
-        if(program.arg("swap"))
-            this.swapR = tuple(program.arg("swap").asInt, lastArg.asInt);
+        if(program.option("shufflerange"))
+            this.shuffleR = tuple(program.option("shufflerange").asUInt, lastArg.asUInt);
+        if(program.option("delrange"))
+            this.delR = tuple(program.option("delrange").asUInt, lastArg.asUInt);
+        if(program.option("swap"))
+            this.swapR = tuple(program.option("swap").asUInt, lastArg.asUInt);
         if(program.arg("move"))
-            this.moveR = tuple(program.arg("move").asInt, lastArg.asInt);
+            this.move = tuple(program.arg("move").asUInt, lastArg.asUInt);
             
+        writeln(program.option("swap"), program.option("move"));
     }
 }
 
@@ -195,9 +207,14 @@ void main(string[] args)
         	else conn.play(pargs.playN);
         }
 
-		if (!pargs.delN.isNull){
-			conn.del(pargs.delN.get);
-		}
+		if (!pargs.delN.isNull)	conn.del(pargs.delN.get);
+        // TODO: write as static foreach
+        /*
+		if (!pargs.move.isNull) conn.move(pargs.move.get);
+		if (!pargs.swapR.isNull) conn.swap(pargs.delR.get);
+		if (!pargs.delR.isNull)	conn.del_range(pargs.delR.get);
+		if (!pargs.shuffleR.isNull)	conn.shuffle_range(pargs.delR.get);
+        */
 
         if(pargs.list){
         	auto highlight = conn.song.position;

@@ -1,4 +1,5 @@
 import std.string;
+import std.typecons;
 import std.concurrency;
 import std.exception;
 import std.conv;
@@ -173,8 +174,41 @@ struct MPDConnection
 															  mpd_connection_get_error_message(conn.c)));
 	}
 
-	@property void move(uint start, uint end)
+	@property void del_range(Tuple!(uint, uint) tup)
     {
+        auto start = tup[0]; auto end = tup[1];
+		auto conn = Connection(host, port, timeout);
+        start = start == 0 ? 0 : start - 1;
+		enforce(mpd_run_delete_range(conn.c, start, end), new MPDException(
+															  "delete_range",
+															  mpd_connection_get_error_message(conn.c)));
+	}
+
+	@property void swap(Tuple!(uint, uint) tup)
+    {
+        auto start = tup[0]; auto end = tup[1];
+		auto conn = Connection(host, port, timeout);
+        start = start == 0 ? 0 : start - 1;
+		enforce(mpd_run_swap(conn.c, start, end), new MPDException(
+															  "swap",
+															  mpd_connection_get_error_message(conn.c)));
+	}
+    
+	@property void shuffle_range(Tuple!(uint, uint) tup)
+    {
+        auto start = tup[0]; auto end = tup[1];
+		auto conn = Connection(host, port, timeout);
+        start = start == 0 ? 0 : start - 1;
+		enforce(mpd_run_shuffle_range(conn.c, start, end), new MPDException(
+															  "shuffle_range",
+															  mpd_connection_get_error_message(conn.c)));
+	}
+
+	@property void move(Tuple!(uint, uint) tup)
+    {
+        auto start = tup[0]; auto end = tup[1];
+        import std.stdio;
+        writeln("MOOOOVE");
 		auto conn = Connection(host, port, timeout);
         start = start == 0 ? 0 : start - 1;
         end = end == 0 ? 0 : end - 1;
@@ -322,7 +356,10 @@ private:
 	bool mpd_run_toggle_pause(mpd_connection *);
 	bool mpd_run_play_pos(mpd_connection *, ulong pos);
 	bool mpd_run_delete(mpd_connection *, uint pos);
-	bool mpd_run_move(mpd_connection *, uint pos, uint post);
+    bool mpd_run_delete_range(mpd_connection *, uint start, uint end);
+    bool mpd_run_swap(mpd_connection *, uint start, uint end);
+    bool mpd_run_shuffle_range(mpd_connection *, uint start, uint end);
+    bool mpd_run_move(mpd_connection *, uint start, uint end);
 	bool mpd_status_get_random(mpd_status*);
 	bool mpd_status_get_repeat(mpd_status*);
 	bool mpd_status_get_single(mpd_status*);
