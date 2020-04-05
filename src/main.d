@@ -112,8 +112,6 @@ struct ParseArgs{
             this.swapR = tuple(program.option("swap").asUInt, lastArg.asUInt);
         if(program.arg("move"))
             this.move = tuple(program.arg("move").asUInt, lastArg.asUInt);
-            
-        writeln(program.option("swap"), program.option("move"));
     }
 }
 
