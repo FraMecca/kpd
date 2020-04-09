@@ -96,13 +96,13 @@ struct ParseArgs{
         if(lastArg) this.playN = lastArg.asUInt;
         if(program.flag("del")) this.delN = lastArg.asUInt;
 
-        this.searchTermsR = program.arg("search").split(",");
-        this.filterTermsR = program.arg("filter").split(",");
+        this.searchTermsR = program.option("search").split(",");
+        this.filterTermsR = program.option("filter").split(",");
 
-        this.consume = program.arg("consume");
-        this.consume = program.arg("random");
-        this.consume = program.arg("repeat");
-        this.consume = program.arg("single");
+        this.consume = program.option("consume");
+        this.consume = program.option("random");
+        this.consume = program.option("repeat");
+        this.consume = program.option("single");
 
         if(program.option("shufflerange"))
             this.shuffleR = tuple(program.option("shufflerange").asUInt, lastArg.asUInt);
@@ -110,7 +110,7 @@ struct ParseArgs{
             this.delR = tuple(program.option("delrange").asUInt, lastArg.asUInt);
         if(program.option("swap"))
             this.swapR = tuple(program.option("swap").asUInt, lastArg.asUInt);
-        if(program.arg("move"))
+        if(program.option("move"))
             this.move = tuple(program.arg("move").asUInt, lastArg.asUInt);
     }
 }
