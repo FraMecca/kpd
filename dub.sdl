@@ -6,7 +6,7 @@ license "GPL-3.0"
 
 lflags "-lmpdclient"
 
-dependency "iopipe" version="~>0.1.8"
+dependency "iopipe" version="~>0.2.3"
 dependency "taggedalgebraic" version="~>0.10.11"
 dependency "sdlang-d" version="~>0.10.4"
 dependency "commandr" version="~>0.1.1"
